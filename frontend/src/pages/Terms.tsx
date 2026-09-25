@@ -1,8 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 
+import CgpaTrail from '../components/CgpaTrail'
 import PageHeader from '../components/PageHeader'
 import { api } from '../lib/api'
-import { formatDate, formatGpa, formatNumber, termStatus } from '../lib/format'
+import { formatDate, formatNumber, termStatus } from '../lib/format'
 import { useDialogs, useTerm } from '../lib/hooks'
 import { t } from '../lib/i18n'
 
@@ -23,7 +24,7 @@ export default function Terms() {
       <ul className="term-list">
         {[...terms].reverse().map((term) => {
           const list = (courses.data ?? []).filter((c) => c.term_id === term.id)
-          const gpa = grades.data?.terms.find((g) => g.term_id === term.id)?.gpa
+          const row = grades.data?.terms.find((g) => g.term_id === term.id)
           const status = termStatus(term)
           const isActive = term.id === active?.id
           return (
@@ -42,8 +43,8 @@ export default function Terms() {
                     courses: formatNumber(list.length),
                     credits: formatNumber(list.reduce((s, c) => s + c.credits, 0), 1),
                   })}
-                  {gpa !== null && gpa !== undefined && <> · {t('terms.gpa', { gpa: formatGpa(gpa) })}</>}
                 </span>
+                {row && <CgpaTrail row={row} />}
               </button>
               <button className="btn btn-sm" disabled={isActive} onClick={() => setTermId(term.id)}>
                 {isActive ? t('terms.opened') : t('terms.open')}

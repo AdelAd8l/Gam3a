@@ -285,7 +285,8 @@ class TermGrades(BaseModel):
     gpa: float | None
     gpa_credits: float
     earned_credits: float
-    cgpa: float | None
+    cgpa_before: float | None  # cumulative GPA going into this term
+    cgpa: float | None  # cumulative GPA after this term
     cumulative_credits: float
     cumulative_points: float
     in_progress: int  # courses without a final grade yet

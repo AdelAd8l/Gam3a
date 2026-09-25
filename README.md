@@ -43,6 +43,7 @@
   - a one-click "set final grade" once everything is marked
 - **Your grade cut-offs:** A+ ≥ 97, A ≥ 93, A- ≥ 90 … by default. You can edit them to match your university, and set a default goal for every course.
 - **GPA and CGPA:** term and cumulative GPA on a **4.0** or **5.0** scale, with P/W/I grades excluded, and a chart across terms.
+- **CGPA before and after each term:** every term shows the CGPA going in, the term GPA and the CGPA coming out, with the change (e.g. 3.48 → 3.57 → 3.53, +0.05).
 - **"What do I need?":** the term GPA you need to reach a target CGPA.
 - **"Plan this term":** pick expected grades and see your projected GPA and CGPA without saving anything.
 - **Today page:** today's classes and study blocks with a *now* marker, what's due this week, and term stats.

@@ -2194,3 +2194,69 @@ code {
   direction: ltr;
   unicode-bidi: isolate;
 }
+
+/* ---- CGPA before → term → after ---------------------------------------------------- */
+
+.cgpa-trail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  padding: 10px 20px 4px;
+}
+
+.term-main .cgpa-trail {
+  margin-top: 8px;
+  padding: 10px 0 0;
+  border-top: 1px solid var(--rule);
+}
+
+.cgpa-trail > span:not(.cgpa-arrow) {
+  display: grid;
+  gap: 1px;
+}
+
+.cgpa-trail small {
+  color: var(--ink-2);
+  font-size: 0.74rem;
+}
+
+.cgpa-trail b {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.cgpa-arrow {
+  color: var(--ink-3);
+}
+
+[dir='rtl'] .cgpa-arrow {
+  transform: scaleX(-1);
+}
+
+.cgpa-delta {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-style: normal;
+}
+
+.cgpa-up {
+  color: #2c6a4d;
+}
+
+.cgpa-down {
+  color: var(--danger);
+}
+
+.cgpa-same {
+  color: var(--ink-3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cgpa-up {
+    color: #8fd0ad;
+  }
+}

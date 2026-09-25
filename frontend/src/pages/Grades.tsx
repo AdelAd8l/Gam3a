@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useLayoutEffect, useRef, useState } from 'react'
 
+import CgpaTrail from '../components/CgpaTrail'
 import PageHeader from '../components/PageHeader'
 import { api, type Course, type Grades as GradesData } from '../lib/api'
 import { formatGpa, formatNumber, GRADES, POINTS, SPECIAL_GRADES } from '../lib/format'
@@ -62,10 +63,8 @@ export default function Grades() {
               <section key={row.term_id} className="panel">
                 <div className="panel-head">
                   <h2>{row.name}</h2>
-                  <span className="faint num">
-                    {t('grades.termLine', { gpa: formatGpa(row.gpa), cgpa: formatGpa(row.cgpa) })}
-                  </span>
                 </div>
+                <CgpaTrail row={row} />
                 {list.length ? (
                   <table className="grade-table">
                     <thead>

@@ -21,6 +21,7 @@ def grades(user: User = Depends(current_user), db: Session = Depends(get_db)):
     for term in terms:
         mine = [c for c in courses if c.term_id == term.id]
         r = term_result((GradedCourse(c.credits, c.grade, c.in_gpa) for c in mine), user.scale)
+        cgpa_before = round(points / credits, 3) if credits else None
         points += r.points
         credits += r.gpa_credits
         earned += r.earned_credits
@@ -31,6 +32,7 @@ def grades(user: User = Depends(current_user), db: Session = Depends(get_db)):
                 start_date=term.start_date,
                 gpa=r.gpa,
                 gpa_credits=r.gpa_credits,
+                cgpa_before=cgpa_before,
                 earned_credits=r.earned_credits,
                 cgpa=round(points / credits, 3) if credits else None,
                 cumulative_credits=credits,

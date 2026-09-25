@@ -113,6 +113,7 @@ export interface TermGrades {
   gpa: number | null
   gpa_credits: number
   earned_credits: number
+  cgpa_before: number | null
   cgpa: number | null
   cumulative_credits: number
   cumulative_points: number

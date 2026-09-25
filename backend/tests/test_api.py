@@ -37,6 +37,8 @@ def test_gpa_and_cgpa_across_terms(client, user):
     g = client.get("/api/grades").json()
     assert [t["gpa"] for t in g["terms"]] == [3.5, 2.0]
     assert g["terms"][1]["cgpa"] == round(29 / 10, 3)
+    assert g["terms"][0]["cgpa_before"] is None  # first term: nothing before it
+    assert g["terms"][1]["cgpa_before"] == 3.5  # = CGPA after T1
     assert g["terms"][1]["in_progress"] == 1
     assert g["cgpa"] == 2.9 and g["total_credits"] == 10
 

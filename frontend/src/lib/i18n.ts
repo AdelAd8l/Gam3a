@@ -290,6 +290,10 @@ const en = {
   'settings.cutoffsHint': 'The minimum course percentage for each letter at your university.',
   'settings.defaultTarget': 'Default goal for every course',
   'settings.reset': 'Reset to defaults',
+  'cgpa.before': 'CGPA before',
+  'cgpa.after': 'CGPA after',
+  'cgpa.first': 'First term',
+  'cgpa.pending': 'Once grades are in',
 }
 
 export type Key = keyof typeof en
@@ -577,6 +581,10 @@ const ar: Record<Key, string> = {
   'settings.cutoffsHint': 'أقل نسبة مئوية لكل تقدير في جامعتك.',
   'settings.defaultTarget': 'الهدف الافتراضي لكل مادة',
   'settings.reset': 'استعادة الافتراضي',
+  'cgpa.before': 'التراكمي قبل',
+  'cgpa.after': 'التراكمي بعد',
+  'cgpa.first': 'أول فصل',
+  'cgpa.pending': 'بعد رصد الدرجات',
 }
 
 // Server messages (from the API's `detail`) shown in forms.
