@@ -48,6 +48,30 @@ startOfflineSync(queryClient)
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'))
+  keepUpToDate(navigator.serviceWorker)
+}
+
+/** An installed app is usually resumed, not reopened, so it would keep an old version for days.
+ * Look for a new one whenever the app comes back to the screen; when it takes over, reload,
+ * but not while a form is open: then wait until the app is next put away. */
+function keepUpToDate(sw: ServiceWorkerContainer) {
+  let installed = !!sw.controller // the very first install isn't an update
+  let pending = false
+  const busy = () => !!document.querySelector('dialog[open]') || document.activeElement?.matches('input, textarea, select')
+  sw.addEventListener('controllerchange', () => {
+    const update = installed
+    installed = true
+    if (!update) return
+    if (document.hidden || !busy()) window.location.reload()
+    else pending = true
+  })
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (pending) window.location.reload()
+    } else {
+      void sw.getRegistration().then((reg) => reg?.update()).catch(() => {})
+    }
+  })
 }
 
 createRoot(document.getElementById('root')!).render(
