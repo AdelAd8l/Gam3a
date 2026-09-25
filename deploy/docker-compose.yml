@@ -1,0 +1,107 @@
+# Runs Tally and Gam3a 24/7 on one server, with HTTPS, a shared Postgres,
+# daily backups and a DuckDNS updater. See README.md in this folder.
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      TALLY_DOMAIN: ${TALLY_DOMAIN}
+      GAM3A_DOMAIN: ${GAM3A_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - tally
+      - gam3a
+
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: postgres
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d gam3a"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  tally:
+    build: https://github.com/AdelAd8l/tally.git#main
+    restart: unless-stopped
+    environment:
+      TALLY_DATABASE_URL: postgresql://app:${POSTGRES_PASSWORD}@db:5432/tally
+      TALLY_SECRET_KEY: ${TALLY_SECRET_KEY}
+      TALLY_COOKIE_SECURE: "true"
+      TALLY_ALLOW_SIGNUP: ${ALLOW_SIGNUP:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  gam3a:
+    build: https://github.com/AdelAd8l/Gam3a.git#main
+    restart: unless-stopped
+    environment:
+      GAM3A_DATABASE_URL: postgresql://app:${POSTGRES_PASSWORD}@db:5432/gam3a
+      GAM3A_SECRET_KEY: ${GAM3A_SECRET_KEY}
+      GAM3A_COOKIE_SECURE: "true"
+      GAM3A_ALLOW_SIGNUP: ${ALLOW_SIGNUP:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Dumps both databases every day at 03:00 UTC into ./backups, keeping 14 days.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      PGHOST: db
+      PGUSER: app
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          wait=$$(( (3 * 3600 - $$(date +%s) % 86400 + 86400) % 86400 ))
+          sleep $$(( wait > 0 ? wait : 86400 ))
+          stamp=$$(date +%Y-%m-%d)
+          for db in tally gam3a; do
+            pg_dump --no-owner --no-acl "$$db" | gzip > "/backups/$$db-$$stamp.sql.gz" && echo "backed up $$db"
+          done
+          find /backups -name '*.sql.gz' -mtime +14 -delete
+        done
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # Keeps both DuckDNS names pointing at this server's IP (checks every 5 minutes).
+  duckdns:
+    image: curlimages/curl:latest
+    restart: unless-stopped
+    environment:
+      DUCKDNS_TOKEN: ${DUCKDNS_TOKEN}
+      DUCKDNS_DOMAINS: ${DUCKDNS_DOMAINS}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while true; do
+          echo "$$(date -u +%FT%TZ) duckdns: $$(curl -fsS "https://www.duckdns.org/update?domains=$$DUCKDNS_DOMAINS&token=$$DUCKDNS_TOKEN&ip=")"
+          sleep 300
+        done
+
+volumes:
+  pgdata:
+  caddy-data:
+  caddy-config:

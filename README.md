@@ -82,6 +82,15 @@
 
 > The free Render plan sleeps after 15 idle minutes, so the first open after a break takes about 30–50 s.
 
+## Run it 24/7 on your own server
+
+[`deploy/`](deploy/README.md) sets up one server, such as the Oracle Cloud free tier, to run **Tally and Gam3a** with:
+
+- HTTPS on your own (DuckDNS) names
+- Postgres
+- daily backups
+- one-command updates
+
 ## Run it locally
 
 ### Docker
