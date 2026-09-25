@@ -34,6 +34,7 @@ def user_out(user: User) -> UserOut:
         points=user_points(user),
         bands=user_bands(user),
         is_admin=user.is_admin,
+        has_password=user.has_password,
         must_change_password=user.must_change_password,
         timezone=user.timezone or "Africa/Cairo",
         timezone_auto=user.timezone_auto,
@@ -69,6 +70,8 @@ def register(data: RegisterIn, response: Response, db: Session = Depends(get_db)
 @router.post("/login", response_model=UserOut)
 def login(data: LoginIn, response: Response, db: Session = Depends(get_db)):
     user = db.scalar(select(User).where(User.email == data.email.lower()))
+    if user is not None and not user.password_hash:
+        raise HTTPException(401, "This account signs in with Google. Use Continue with Google.")
     if user is None or not verify_password(data.password, user.password_hash):
         raise HTTPException(401, "Email or password is incorrect")
     set_session_cookie(response, user)
@@ -126,7 +129,8 @@ def update_me(data: UserUpdate, user: User = Depends(current_user), db: Session 
 def change_password(
     data: PasswordChange, response: Response, user: User = Depends(current_user), db: Session = Depends(get_db)
 ):
-    if not verify_password(data.current_password, user.password_hash):
+    # An account made with Google has no password yet: it can set one without the old one.
+    if user.password_hash and not verify_password(data.current_password, user.password_hash):
         raise HTTPException(400, "Current password is incorrect")
     if data.new_password == data.current_password:
         raise HTTPException(422, "Choose a password different from the current one")

@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
+import GoogleButton from '../components/GoogleButton'
 import Logo from '../components/Logo'
 import { api, type Scale } from '../lib/api'
 import { formatTime, weekdayName } from '../lib/format'
-import { setLang, t, useLang } from '../lib/i18n'
+import { setLang, t, useLang, type Key } from '../lib/i18n'
 import { browserTimeZone } from '../lib/push'
 import { LanguageSwitch } from './Settings'
 
@@ -31,9 +32,9 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     queryKey: ['health'],
     queryFn: () =>
       fetch('/api/health').then(
-        (r) => r.json() as Promise<{ signup?: boolean; demo?: { email: string; password: string } }>,
+        (r) => r.json() as Promise<{ signup?: boolean; google?: boolean; demo?: { email: string; password: string } }>,
       ),
-    staleTime: Infinity,
+    staleTime: 0,
   })
 
   const submit = useMutation({
@@ -54,6 +55,8 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
     submit.mutate(undefined)
   }
 
+  const [params] = useSearchParams()
+  const googleResult = ['cancelled', 'expired', 'failed', 'closed', 'unverified'].find((r) => r === params.get('google'))
   const demo = health.data?.demo
   // Only offer sign-up once the server confirms it's open (no flash of the link when closed).
   const signupOpen = health.data?.signup === true
@@ -68,6 +71,16 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
         <div className="auth-form-wrap">
           <h1>{signup ? t('auth.signupTitle') : t('auth.loginTitle')}</h1>
           <p className="muted auth-lede">{signup ? t('auth.signupLede') : t('auth.loginLede')}</p>
+
+          {googleResult && <p className="form-error">{t(`auth.google_${googleResult}` as Key)}</p>}
+          {health.data?.google && (
+            <>
+              <GoogleButton lang={lang} />
+              <p className="auth-or">
+                <span>{t('auth.or')}</span>
+              </p>
+            </>
+          )}
 
           <form className="stack" onSubmit={onSubmit}>
             {signup && (

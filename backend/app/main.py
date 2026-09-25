@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from . import migrate, notify, seed
 from .config import get_settings
 from .database import Base, engine, get_db
-from .routers import admin, assessments, auth, busy, courses, google, grades, plan, push, terms
+from .routers import admin, assessments, auth, busy, courses, google, google_login, grades, plan, push, terms
 from .site_settings import signup_open
 
 
@@ -30,14 +30,18 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Gam3a", version="1.0.0", lifespan=lifespan)
 
-for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin, google):
+for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin, google, google_login):
     app.include_router(module.router)
 
 
 @app.get("/api/health", tags=["meta"])
 def health(db: Session = Depends(get_db)):
     settings = get_settings()
-    body: dict = {"status": "ok", "signup": signup_open(db)}
+    body: dict = {
+        "status": "ok",
+        "signup": signup_open(db),
+        "google": bool(settings.google_client_id and settings.google_client_secret),
+    }
     if settings.demo:
         body["demo"] = {"email": seed.DEMO_EMAIL, "password": seed.DEMO_PASSWORD}
     return body

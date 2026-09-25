@@ -6,7 +6,7 @@ from datetime import UTC, datetime, timedelta
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
@@ -24,6 +24,8 @@ class GoogleStatus(BaseModel):
     connected: bool
     email: str = ""
     include_study: bool = True
+    class_reminder: int = 10
+    deadline_reminder: int = 1440
     last_sync: datetime | None = None
     last_error: str = ""
     calendars: int = 0
@@ -31,7 +33,9 @@ class GoogleStatus(BaseModel):
 
 
 class GoogleSettings(BaseModel):
-    include_study: bool
+    include_study: bool | None = None
+    class_reminder: int | None = Field(default=None, ge=0, le=24 * 60)  # minutes, 0 = none
+    deadline_reminder: int | None = Field(default=None, ge=0, le=14 * 24 * 60)
 
 
 def _redirect_uri(request: Request) -> str:
@@ -49,6 +53,8 @@ def _status(db: Session, user: User) -> GoogleStatus:
         connected=True,
         email=link.email,
         include_study=link.include_study,
+        class_reminder=link.class_reminder,
+        deadline_reminder=link.deadline_reminder,
         last_sync=link.last_sync,
         last_error=link.last_error,
         calendars=count(GoogleCalendar),
@@ -144,7 +150,8 @@ def save_settings(data: GoogleSettings, user: User = Depends(current_user), db: 
     link = db.get(GoogleLink, user.id)
     if link is None:
         raise HTTPException(409, "Google Calendar isn't connected")
-    link.include_study = data.include_study
+    for field, value in data.model_dump(exclude_none=True).items():
+        setattr(link, field, value)
     db.commit()
     gc.sync(db, user)
     return _status(db, user)

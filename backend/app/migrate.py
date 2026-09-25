@@ -18,6 +18,7 @@ COLUMNS = [
     ("users", "timezone", "VARCHAR(64) NOT NULL DEFAULT 'Africa/Cairo'"),
     ("users", "lang", "VARCHAR(2) NOT NULL DEFAULT 'en'"),
     ("users", "timezone_auto", "BOOLEAN NOT NULL DEFAULT TRUE"),
+    ("users", "google_sub", "VARCHAR(255)"),
     ("users", "notify_classes", "BOOLEAN NOT NULL DEFAULT TRUE"),
     ("users", "class_lead", "INTEGER NOT NULL DEFAULT 15"),
     ("users", "notify_deadlines", "BOOLEAN NOT NULL DEFAULT TRUE"),
@@ -26,6 +27,8 @@ COLUMNS = [
     ("users", "must_change_password", "BOOLEAN NOT NULL DEFAULT FALSE"),
     ("users", "session_version", "INTEGER NOT NULL DEFAULT 0"),
     ("courses", "target_grade", "VARCHAR(3)"),
+    ("google_links", "class_reminder", "INTEGER NOT NULL DEFAULT 10"),
+    ("google_links", "deadline_reminder", "INTEGER NOT NULL DEFAULT 1440"),
     ("assessments", "points_earned", "FLOAT"),
     ("assessments", "points_max", "FLOAT"),
 ]

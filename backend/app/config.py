@@ -21,8 +21,9 @@ class Settings(BaseSettings):
     # starting point: the admin must choose a new one at first sign-in.
     admin_email: str = "adool1832007@gmail.com"
     admin_password: str = "admin"
-    # Google Calendar sync (optional). From Google Cloud: an OAuth client of type "Web application"
-    # whose redirect URI is <public_url>/api/google/callback. Leave empty to hide the feature.
+    # Google (optional): "Continue with Google" and Calendar sync. From Google Cloud: an OAuth client
+    # of type "Web application" with the redirect URIs <public_url>/api/auth/google/callback and
+    # <public_url>/api/google/callback. Leave empty to hide both.
     google_client_id: str = ""
     google_client_secret: str = ""
     # The site's own address, e.g. https://gam3a.duckdns.org (worked out from requests if empty).

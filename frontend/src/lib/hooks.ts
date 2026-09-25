@@ -15,6 +15,10 @@ export function useMe() {
       }
     },
     staleTime: Infinity,
+    // "Not signed in" is always checked again: after "Continue with Google" the browser comes back
+    // signed in, and a saved answer from the sign-in page would hide that. (A signed-in user still
+    // starts from the saved copy, so the app opens offline.)
+    refetchOnMount: (query) => (query.state.data == null ? 'always' : false),
   })
 }
 

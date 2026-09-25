@@ -214,16 +214,27 @@ def _at(day: date, hhmm: str) -> str:
     return datetime.combine(day, time(h, m)).isoformat()
 
 
-NO_REMINDERS = {"useDefault": False, "overrides": []}  # Gam3a sends its own reminders
+NO_REMINDERS = {"useDefault": False, "overrides": []}
+UNTIMED_DUE_MINUTES = 9 * 60  # a deadline without a time counts as due at 09:00 (as in Gam3a's notifications)
+
+
+def _popup(minutes: int) -> dict:
+    """Google's own pop-up reminder, `minutes` before the event starts (Google allows up to 4 weeks)."""
+    if minutes < 0:
+        return NO_REMINDERS
+    return {"useDefault": False, "overrides": [{"method": "popup", "minutes": min(minutes, 40320)}]}
 KIND_NAMES = {"lecture": "Lecture", "lab": "Lab", "section": "Section", "tutorial": "Tutorial"}
 
 
-def desired(db: Session, user: User, include_study: bool) -> Wanted:
+def desired(db: Session, user: User, link: GoogleLink) -> Wanted:
     """Everything that should be on Google for this user right now."""
     from .routers.plan import build_plan  # late import: routers import this module
 
     tz = _zone(user.timezone)
     today = datetime.now(ZoneInfo(tz)).date()
+    include_study = link.include_study
+    class_lead = link.class_reminder if link.class_reminder is not None else 10
+    deadline_lead = link.deadline_reminder if link.deadline_reminder is not None else 1440
     wanted = Wanted()
     terms = db.scalars(select(Term).where(Term.user_id == user.id, Term.end_date >= today)).all()
     for term in terms:
@@ -251,7 +262,7 @@ def desired(db: Session, user: User, include_study: bool) -> Wanted:
                     "start": {"dateTime": _at(day, m.start), "timeZone": tz},
                     "end": {"dateTime": _at(day, m.end), "timeZone": tz},
                     "recurrence": [until],
-                    "reminders": NO_REMINDERS,
+                    "reminders": _popup(class_lead) if class_lead > 0 else NO_REMINDERS,
                 },
             )
         if include_study:
@@ -284,13 +295,17 @@ def desired(db: Session, user: User, include_study: bool) -> Wanted:
                 "transparency": "transparent",
                 "reminders": NO_REMINDERS,
             }
+            # Reminders count from the event's start, so aim them at the due time itself.
+            lead = deadline_lead if deadline_lead > 0 and not a.done else -1
             if a.due_time:  # a half-hour block ending at the due time
                 due = datetime.combine(a.due_date, time(*map(int, a.due_time.split(":"))))
                 body["start"] = {"dateTime": (due - timedelta(minutes=30)).isoformat(), "timeZone": tz}
                 body["end"] = {"dateTime": due.isoformat(), "timeZone": tz}
-            else:
+                body["reminders"] = _popup(max(0, lead - 30) if lead > 0 else -1)
+            else:  # all-day: Google counts from midnight; the deadline itself is 09:00
                 body["start"] = {"date": a.due_date.isoformat()}
                 body["end"] = {"date": (a.due_date + timedelta(days=1)).isoformat()}
+                body["reminders"] = _popup(max(0, lead - UNTIMED_DUE_MINUTES) if lead > 0 else -1)
             wanted.events[f"a{a.id}"] = (c.id, body)
     return wanted
 
@@ -314,7 +329,7 @@ def sync(db: Session, user: User, force: bool = False) -> bool:
     if not lock.acquire(blocking=False):
         return False  # another sync for this user is running
     try:
-        wanted = desired(db, user, link.include_study)
+        wanted = desired(db, user, link)
         digest = wanted.digest()
         if digest == link.state_digest and not force:
             return False

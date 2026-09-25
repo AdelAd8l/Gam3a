@@ -2874,3 +2874,37 @@ code {
   margin: 0;
   font-size: 0.9rem;
 }
+
+.google-reminders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px 14px;
+}
+
+/* ---- "Continue with Google" ------------------------------------------------------ */
+
+.btn-google {
+  gap: 10px;
+  margin-bottom: 4px;
+  border-color: var(--rule-strong);
+  background: var(--field);
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.auth-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  color: var(--ink-3);
+  font-size: 0.82rem;
+}
+
+.auth-or::before,
+.auth-or::after {
+  flex: 1;
+  height: 1px;
+  background: var(--rule);
+  content: '';
+}

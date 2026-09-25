@@ -21,6 +21,7 @@ export interface User {
   bands: Record<string, number>
   is_admin: boolean
   must_change_password: boolean
+  has_password: boolean
   timezone: string
   timezone_auto: boolean
   lang: 'en' | 'ar'
@@ -34,6 +35,8 @@ export interface GoogleStatus {
   connected: boolean
   email: string
   include_study: boolean
+  class_reminder: number
+  deadline_reminder: number
   last_sync: string | null
   last_error: string
   calendars: number
@@ -236,7 +239,7 @@ export const api = {
   adminDeleteUser: (id: number) => request<void>('DELETE', `/admin/users/${id}`),
   googleStatus: () => request<GoogleStatus>('GET', '/google/status'),
   googleSync: () => request<GoogleStatus>('POST', '/google/sync'),
-  googleSettings: (data: { include_study: boolean }) => request<GoogleStatus>('PUT', '/google/settings', data),
+  googleSettings: (data: Partial<Pick<GoogleStatus, 'include_study' | 'class_reminder' | 'deadline_reminder'>>) => request<GoogleStatus>('PUT', '/google/settings', data),
   googleDisconnect: (removeCalendars: boolean) =>
     request<GoogleStatus>('POST', `/google/disconnect?remove_calendars=${removeCalendars}`),
   adminSettings: () => request<SiteSettings>('GET', '/admin/settings'),

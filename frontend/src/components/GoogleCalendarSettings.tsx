@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 
 import { api, type GoogleStatus } from '../lib/api'
+import { durationLabel } from '../lib/format'
 import { t, type Key } from '../lib/i18n'
 
 const RESULTS: Record<string, { key: Key; ok: boolean }> = {
@@ -10,6 +11,16 @@ const RESULTS: Record<string, { key: Key; ok: boolean }> = {
   cancelled: { key: 'google.resultCancelled', ok: false },
   expired: { key: 'google.resultExpired', ok: false },
   failed: { key: 'google.resultFailed', ok: false },
+}
+
+const CLASS_LEADS = [0, 5, 10, 15, 30, 60]
+const DEADLINE_LEADS = [0, 60, 180, 720, 1440, 2880]
+
+function leadLabel(minutes: number) {
+  if (minutes === 0) return t('google.reminderOff')
+  if (minutes === 1440) return t('google.before', { time: t('notify.day') })
+  if (minutes === 2880) return t('google.before', { time: t('notify.twoDays') })
+  return t('google.before', { time: durationLabel(minutes) })
 }
 
 function ago(iso: string | null) {
@@ -105,6 +116,37 @@ export default function GoogleCalendarSettings() {
             />
             {t('google.includeStudy')}
           </label>
+          <div className="google-reminders">
+            <label className="field">
+              <span>{t('google.classReminder')}</span>
+              <select
+                className="select"
+                value={s.class_reminder}
+                onChange={(e) => save.mutate({ class_reminder: Number(e.target.value) })}
+              >
+                {[...new Set([...CLASS_LEADS, s.class_reminder])].sort((a, b) => a - b).map((m) => (
+                  <option key={m} value={m}>
+                    {leadLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field">
+              <span>{t('google.deadlineReminder')}</span>
+              <select
+                className="select"
+                value={s.deadline_reminder}
+                onChange={(e) => save.mutate({ deadline_reminder: Number(e.target.value) })}
+              >
+                {[...new Set([...DEADLINE_LEADS, s.deadline_reminder])].sort((a, b) => a - b).map((m) => (
+                  <option key={m} value={m}>
+                    {leadLabel(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <p className="faint help">{t('google.doubleAlerts')}</p>
           <p className="faint help">{t('google.howItWorks')}</p>
           {(sync.error || save.error) && <p className="danger-text">{(sync.error ?? save.error)!.message}</p>}
 

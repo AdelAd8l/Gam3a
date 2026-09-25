@@ -42,6 +42,8 @@ export default function Settings() {
     onSuccess: () => {
       setCurrent('')
       setNext('')
+      // an account made with Google now has a password too
+      void qc.invalidateQueries({ queryKey: ['me'] })
     },
   })
   const remove = useMutation({
@@ -180,8 +182,8 @@ export default function Settings() {
 
       <section className="settings-section">
         <div className="settings-intro">
-          <h3>{t('settings.password')}</h3>
-          <p className="muted">{t('settings.passwordHint')}</p>
+          <h3>{t(user.has_password ? 'settings.password' : 'settings.setPassword')}</h3>
+          <p className="muted">{t(user.has_password ? 'settings.passwordHint' : 'settings.setPasswordHint')}</p>
         </div>
         <form
           className="stack panel panel-pad"
@@ -190,10 +192,12 @@ export default function Settings() {
             password.mutate()
           }}
         >
-          <label className="field">
-            <span>{t('settings.current')}</span>
-            <input className="input" dir="ltr" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
-          </label>
+          {user.has_password && (
+            <label className="field">
+              <span>{t('settings.current')}</span>
+              <input className="input" dir="ltr" type="password" autoComplete="current-password" value={current} onChange={(e) => setCurrent(e.target.value)} required />
+            </label>
+          )}
           <label className="field">
             <span>{t('settings.newPassword')}</span>
             <input className="input" dir="ltr" type="password" autoComplete="new-password" minLength={8} value={next} onChange={(e) => setNext(e.target.value)} required />

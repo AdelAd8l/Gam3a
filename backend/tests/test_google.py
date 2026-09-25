@@ -127,7 +127,7 @@ def test_connect_sends_to_google_and_back(client, term, google):
     assert event["summary"] == "CSE221 · Lecture" and event["location"] == "Hall 3"
     assert event["start"] == {"dateTime": "2026-09-21T10:00:00", "timeZone": "Africa/Cairo"}  # first Monday of term
     assert event["recurrence"] == ["RRULE:FREQ=WEEKLY;UNTIL=20261231T235959Z"]
-    assert event["reminders"] == {"useDefault": False, "overrides": []}  # Gam3a notifies, not Google
+    assert event["reminders"] == {"useDefault": False, "overrides": [{"method": "popup", "minutes": 10}]}
 
 
 def test_the_refresh_token_is_stored_encrypted(client, term, google):
@@ -238,3 +238,40 @@ def test_background_sync_rebuilds_a_calendar_deleted_on_google(client, term, goo
     summaries = [e["summary"] for e in cal["events"].values()]
     assert any(s.endswith("Lecture") for s in summaries) and any(s.startswith("HW") for s in summaries)
     assert client.get("/api/google/status").json()["last_error"] == ""
+
+
+def _reminder(event):
+    overrides = event["reminders"]["overrides"]
+    return overrides[0]["minutes"] if overrides else None
+
+
+def test_calendar_reminders_before_classes_and_deadlines(client, term, google, user):
+    course = add_course(client, term["id"], code="MTH203", meetings=[LECTURE])
+    for body in (
+        {"title": "Timed", "due_date": "2026-10-01", "due_time": "23:59"},
+        {"title": "Untimed", "due_date": "2026-10-02"},
+        {"title": "Finished", "due_date": "2026-10-03", "done": True},
+    ):
+        client.post("/api/assessments", json={"course_id": course["id"], **body})
+    connect(client)
+    events = {e["summary"].split(" · ")[0]: e for e in google.all_events()}
+    assert _reminder(events["MTH203"]) == 10  # the lecture
+    # a timed deadline: the event starts 30 min before it is due, so 1 day before the due time
+    assert _reminder(events["Timed"]) == 1440 - 30
+    # no time: due at 09:00, so 09:00 the day before = 15 h before that day's midnight
+    assert _reminder(events["Untimed"]) == 1440 - 9 * 60
+    assert _reminder(events["✓ Finished"]) is None  # nothing to remind once it's done
+    study = next(e for e in google.all_events() if e["summary"].startswith("Study"))
+    assert _reminder(study) is None
+
+
+def test_reminder_times_can_be_changed_or_turned_off(client, term, google, user):
+    course = add_course(client, term["id"], code="MTH203", meetings=[LECTURE])
+    client.post("/api/assessments", json={"course_id": course["id"], "title": "HW", "due_date": "2026-10-02"})
+    connect(client)
+    status = client.put("/api/google/settings", json={"class_reminder": 30, "deadline_reminder": 0}).json()
+    assert (status["class_reminder"], status["deadline_reminder"]) == (30, 0)
+    events = {e["summary"].split(" · ")[0]: e for e in google.all_events()}
+    assert _reminder(events["MTH203"]) == 30
+    assert _reminder(events["HW"]) is None
+    assert client.put("/api/google/settings", json={"class_reminder": -5}).status_code == 422

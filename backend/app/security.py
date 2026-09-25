@@ -18,6 +18,8 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, hashed: str) -> bool:
+    if not hashed:  # an account made with Google has no password
+        return False
     return bcrypt.checkpw(password.encode(), hashed.encode())
 
 

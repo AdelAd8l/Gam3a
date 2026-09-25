@@ -217,61 +217,66 @@ When asking for help, paste the output of `systemctl status apps@<app>` and the 
 
 ---
 
-## 6. Google Calendar sync (Gam3a)
+## 6. Google: "Continue with Google" (both apps) and Calendar sync (Gam3a)
 
-Each person can connect their Google Calendar from **Gam3a → Settings → Google Calendar**.
-Gam3a then keeps one calendar per course, in the course's colour, with its weekly classes,
-deadlines and (optionally) study sessions, and updates it within a minute of any change.
+- **Continue with Google** on the sign-in page of both apps: signs in with a Google account, or
+  creates the account the first time (only while sign-ups are open). It asks Google only for the
+  name and email address. Accounts made this way have no password; one can be added in Settings.
+- **Google Calendar sync** (Gam3a, Settings → Google Calendar): one calendar per course in the
+  course's colour, with its classes, deadlines and (optionally) study sessions, kept up to date
+  within a minute. Google reminders on those events: 10 minutes before each class and 1 day before
+  each deadline by default (changeable in Settings, or off).
 
-For that, Google needs to know the app. You do this **once**, about 10 minutes:
+Each app needs its own "OAuth client" from Google, made **once**. Gam3a's also covers the Calendar.
 
-### A. In Google Cloud (on your computer)
+### A. Gam3a's Google client (on your computer, ~10 minutes)
 
-1. Open <https://console.cloud.google.com>, sign in, and create a project named **Gam3a**
-   (project picker at the top → **New project**).
-2. **APIs & Services → Library** → search **Google Calendar API** → **Enable**.
-3. **Google Auth Platform** (called "OAuth consent screen" in older menus) → **Get started**:
-   - App name **Gam3a**, support email: yours.
-   - Audience: **External**.
-   - Contact email: yours → agree → **Create**.
-4. **Data access → Add or remove scopes** → tick `.../auth/calendar` (Google Calendar API), plus
-   `openid` and `.../auth/userinfo.email` → **Update** → **Save**.
-5. **Audience → Publish app** → confirm ("In production").
-   Leaving it in *Testing* makes Google disconnect everyone every 7 days.
-6. **Clients → Create client** → type **Web application**, name *Gam3a server*.
-   Under **Authorized redirect URIs** add exactly:
-   `https://gam3a.duckdns.org/api/google/callback` → **Create**.
-7. Copy the **Client ID** and **Client secret** shown (keep the secret private).
+1. Open <https://console.cloud.google.com>, create a project named **Gam3a**.
+2. **APIs & Services → Library** → **Google Calendar API** → **Enable**.
+3. **Google Auth Platform** ("OAuth consent screen" in older menus) → **Get started**:
+   app name **Gam3a**, your email, audience **External** → **Create**.
+4. **Data access → Add or remove scopes**: `openid`, `.../auth/userinfo.email`,
+   `.../auth/userinfo.profile` and `.../auth/calendar` → **Update** → **Save**.
+5. **Audience → Publish app** ("In production"). In *Testing*, Google signs everyone out every 7 days.
+6. **Clients → Create client** → **Web application**. **Authorized redirect URIs**, both:
+   - `https://gam3a.duckdns.org/api/auth/google/callback` (sign-in)
+   - `https://gam3a.duckdns.org/api/google/callback` (Calendar)
+7. Copy the **Client ID** and **Client secret**.
 
-### B. On the server
+If you already made this client for the Calendar: open it (**Clients** → your client), add the
+first redirect URI above, **Save**, and you're done (no new keys needed).
+
+### B. Tally's Google client (~5 minutes)
+
+Same as A but simpler: a new project named **Tally**, no Calendar API, scopes `openid`,
+`.../auth/userinfo.email`, `.../auth/userinfo.profile` only, **Publish app**, and one redirect URI:
+`https://tally-me.duckdns.org/api/auth/google/callback`. (A separate project means Google's screen
+says "Tally", not "Gam3a".)
+
+### C. On the server
 
 ```bash
 cd ~/gam3a && git pull
-sudo ./deploy/micro/update.sh gam3a
-sudo ./deploy/micro/google.sh        # paste the Client ID, then the secret
+sudo ./deploy/micro/update.sh
+sudo ./deploy/micro/google.sh gam3a    # paste Gam3a's Client ID, then its secret
+sudo ./deploy/micro/google.sh tally    # paste Tally's
 ```
 
-The keys are stored in `/etc/apps/install.env` and `/etc/apps/gam3a.env` (root only), so
-re-running `install.sh` keeps them.
-
-### C. In Gam3a (each person, on phone or computer)
-
-**Settings → Google Calendar → Connect Google Calendar**, choose the Google account and allow
-access. Because this is your own app and not reviewed by Google, Google first shows
-**"Google hasn't verified this app"**: tap **Advanced → Go to gam3a.duckdns.org**. That is
-expected for a personal app (Google allows up to 100 people this way).
-
-On a Samsung phone the calendars also appear in **Samsung Calendar** (menu → Manage calendars →
-your Google account) with the same colours.
+(If you already ran `google.sh` for Gam3a's Calendar, only the Tally line is new.)
+The keys are stored in `/etc/apps/install.env` and `/etc/apps/<app>.env` (root only).
 
 ### Good to know
 
-- Gam3a only creates, changes and deletes **its own** calendars; other calendars are never touched.
-- Change a course's name or colour **in Gam3a**; Google follows. Changes made in Google to
-  Gam3a's events are overwritten on the next change in Gam3a.
-- Only current and upcoming terms are synced. Google reminders are off for these events
-  (Gam3a already notifies you).
-- If someone deletes a Gam3a calendar in Google, it's made again on the next sync.
-- If someone removes Gam3a's access in their Google account, Gam3a shows
-  "Google access was removed" in Settings until they connect again.
-- **Disconnect** in Settings can also delete the Gam3a calendars from Google.
+- Sign-in asks only for name and email, so there's no "unverified app" warning for it. Connecting
+  **Google Calendar** does show **"Google hasn't verified this app"**: tap **Advanced → Go to
+  gam3a.duckdns.org**. Expected for a personal app (up to 100 people).
+- Continue with Google signs in to an existing account with the same email (the Google account is
+  linked to it), including the admin account. Google only accepts verified emails.
+- Closing sign-ups on the Admin page also stops new accounts through Google; existing ones still sign in.
+- **Calendar:** Gam3a only touches the calendars it makes. Change a course's name or colour in
+  Gam3a, not in Google. Only current and upcoming terms are synced. A Gam3a calendar deleted in
+  Google is made again. If access is removed in the Google account, Settings says so until you
+  connect again. **Disconnect** can also delete the Gam3a calendars. On Samsung phones they appear
+  in Samsung Calendar too (menu → Manage calendars → your Google account).
+- Gam3a's own notifications and the Google Calendar reminders are separate: turn either off in
+  Settings if you only want one alert.

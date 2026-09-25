@@ -26,7 +26,9 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     name: Mapped[str] = mapped_column(String(80))
-    password_hash: Mapped[str] = mapped_column(String(255))
+    password_hash: Mapped[str] = mapped_column(String(255))  # "" = signs in with Google only
+    # The Google account ("sub") used with "Continue with Google", if any.
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     university: Mapped[str] = mapped_column(String(120), default="")
     # GPA scale: "4" (A+/A = 4.0) or "5" (A+ = 5.0, used across the Gulf).
     scale: Mapped[str] = mapped_column(String(2), default="4")
@@ -58,6 +60,10 @@ class User(Base):
     # Bumped when the password changes, so sessions signed with the old one stop working.
     session_version: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+    @property
+    def has_password(self) -> bool:
+        return bool(self.password_hash)
 
 
 class Term(Base):
@@ -184,6 +190,9 @@ class GoogleLink(Base):
     email: Mapped[str] = mapped_column(String(255), default="")
     refresh_token: Mapped[str] = mapped_column(Text)  # encrypted with the server's secret key
     include_study: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Google Calendar pop-up reminders, in minutes before (0 = none).
+    class_reminder: Mapped[int] = mapped_column(Integer, default=10)
+    deadline_reminder: Mapped[int] = mapped_column(Integer, default=1440)
     state_digest: Mapped[str] = mapped_column(String(64), default="")  # what was last sent
     last_sync: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_error: Mapped[str] = mapped_column(String(300), default="")
