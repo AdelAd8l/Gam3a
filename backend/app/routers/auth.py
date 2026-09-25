@@ -53,6 +53,7 @@ def register(data: RegisterIn, response: Response, db: Session = Depends(get_db)
         raise HTTPException(409, "An account with this email already exists")
     user = User(
         email=email,
+        timezone=data.timezone or "Africa/Cairo",
         name=data.name.strip(),
         password_hash=hash_password(data.password),
         university=data.university.strip(),

@@ -2629,3 +2629,132 @@ code {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
+
+/* ---- small phones (360–520 px): keep every page inside the screen ------------------ */
+
+@media (max-width: 520px) {
+  /* Grades: tighter columns so Course / Credits / Grade / Points all fit. */
+  .grade-table th,
+  .grade-table td {
+    padding: 6px 6px;
+  }
+
+  .grade-table th:first-child,
+  .grade-table td:first-child {
+    padding-inline-start: 14px;
+  }
+
+  .grade-table th:last-child,
+  .grade-table td:last-child {
+    padding-inline-end: 14px;
+  }
+
+  .select-grade {
+    width: 62px;
+    padding-inline: 6px;
+  }
+
+  /* Settings → Grading: narrower number boxes. */
+  .grading-table th,
+  .grading-table td {
+    padding-inline: 4px;
+  }
+
+  .pct-input {
+    gap: 3px;
+  }
+
+  .pct-input .input,
+  .points-input {
+    width: 56px;
+    padding-inline: 6px;
+  }
+
+  .grade-cell {
+    width: 2.6em;
+  }
+
+  .bands-table td:first-child {
+    width: auto;
+  }
+
+  .band-letters {
+    font-size: 0.75rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  /* Schedule: all seven days in one row instead of a strip that scrolls sideways. */
+  .day-tabs {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    overflow: visible;
+  }
+
+  .day-tabs button {
+    min-width: 0;
+    padding: 0 2px;
+    font-size: 0.8rem;
+  }
+
+  /* Coursework table on a course page. */
+  .work-table th,
+  .work-table td {
+    padding-inline: 6px;
+  }
+
+  .work-table th:first-child,
+  .work-table td:first-child {
+    padding-inline-start: 14px;
+  }
+
+  .work-table th:last-child,
+  .work-table td:last-child {
+    padding-inline-end: 14px;
+  }
+}
+
+/* Summary figures: columns may shrink below their content, and long amounts
+   (Arabic numbers, big net worth) scale down instead of pushing the page sideways. */
+@media (max-width: 1000px) {
+  .figures:not(.figures-3) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 420px) {
+  .figure {
+    min-width: 0;
+  }
+
+  .figures:not(.figures-3) .figure:nth-child(even) {
+    padding-inline-start: 12px;
+  }
+
+  .figure-value {
+    font-size: clamp(1.15rem, 6.4vw, 1.7rem);
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 359px) {
+  .grade-table {
+    font-size: 0.84rem;
+  }
+
+  .select-grade {
+    width: 56px;
+  }
+}
+
+.zone-differs {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-size: 0.85rem;
+}
+
+.zone-differs .link-quiet {
+  font-weight: 600;
+}

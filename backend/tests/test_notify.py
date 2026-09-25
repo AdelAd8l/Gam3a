@@ -113,3 +113,13 @@ def test_settings_validation(client, user):
     assert client.patch("/api/auth/me", json={"timezone": "Mars/Base"}).status_code == 422
     me = client.patch("/api/auth/me", json={"timezone": "Asia/Dubai", "class_lead": 30, "deadline_lead": 180}).json()
     assert (me["timezone"], me["class_lead"], me["deadline_lead"]) == ("Asia/Dubai", 30, 180)
+
+
+def test_signup_keeps_the_phones_time_zone(client):
+    body = {"email": "dubai@example.com", "name": "D", "password": "password123", "timezone": "Asia/Dubai"}
+    assert client.post("/api/auth/register", json=body).json()["timezone"] == "Asia/Dubai"
+    client.post("/api/auth/logout")
+    bad = {**body, "email": "mars@example.com", "timezone": "Mars/Base"}
+    assert client.post("/api/auth/register", json=bad).status_code == 422
+    plain = {k: v for k, v in body.items() if k != "timezone"} | {"email": "cairo@example.com"}
+    assert client.post("/api/auth/register", json=plain).json()["timezone"] == "Africa/Cairo"

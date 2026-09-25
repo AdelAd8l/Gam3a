@@ -14,6 +14,17 @@ Scale = Literal["4", "5"]
 Lang = Literal["en", "ar"]
 
 
+def check_timezone(v: str | None) -> str | None:
+    """An IANA zone like Africa/Cairo or Asia/Dubai (what notifications are timed in)."""
+    if v is None:
+        return v
+    try:
+        ZoneInfo(v)
+    except (ZoneInfoNotFoundError, ValueError):
+        raise ValueError("Unknown time zone") from None
+    return v
+
+
 class ORM(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -32,6 +43,13 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     university: str = Field(default="", max_length=120)
     scale: Scale = "4"
+    # The phone's time zone at sign-up; changed later only from Settings.
+    timezone: str | None = Field(default=None, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, v: str | None) -> str | None:
+        return check_timezone(v)
 
 
 class LoginIn(BaseModel):
@@ -82,8 +100,7 @@ class UserUpdate(BaseModel):
     @field_validator("timezone")
     @classmethod
     def valid_timezone(cls, v: str | None) -> str | None:
-        if v is None:
-            return v
+        return check_timezone(v)
         try:
             ZoneInfo(v)
         except (ZoneInfoNotFoundError, ValueError):

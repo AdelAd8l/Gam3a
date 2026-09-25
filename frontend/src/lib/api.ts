@@ -181,7 +181,7 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
 export const api = {
   me: () => request<User>('GET', '/auth/me'),
   login: (email: string, password: string) => request<User>('POST', '/auth/login', { email, password }),
-  register: (data: { name: string; email: string; password: string; university: string; scale: Scale }) =>
+  register: (data: { name: string; email: string; password: string; university: string; scale: Scale; timezone: string }) =>
     request<User>('POST', '/auth/register', data),
   logout: () => request<void>('POST', '/auth/logout'),
   updateMe: (data: Partial<Omit<User, 'id' | 'email'>>) => request<User>('PATCH', '/auth/me', data),

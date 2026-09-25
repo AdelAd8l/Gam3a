@@ -5,6 +5,7 @@ import { api, type User } from '../lib/api'
 import { durationLabel } from '../lib/format'
 import { t } from '../lib/i18n'
 import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
+import TimeZoneField from './TimeZoneField'
 
 const CLASS_LEADS = [5, 10, 15, 30, 60]
 const DEADLINE_LEADS = [60, 180, 720, 1440, 2880]
@@ -41,6 +42,7 @@ export default function NotificationSettings({ user }: { user: User }) {
     class_lead: u.class_lead,
     notify_deadlines: u.notify_deadlines,
     deadline_lead: u.deadline_lead,
+    timezone: u.timezone,
   })
   const [prefs, setPrefs] = useState(() => pick(user))
   const latest = useRef(0)
@@ -129,7 +131,8 @@ export default function NotificationSettings({ user }: { user: User }) {
         </label>
         {prefs.notify_deadlines && leadSelect(prefs.deadline_lead, DEADLINE_LEADS, 'deadline_lead', t('notify.deadlines'))}
       </div>
-      <p className="faint help">{t('notify.untimed', { zone: user.timezone })}</p>
+      <TimeZoneField value={prefs.timezone} onChange={(timezone) => change({ timezone })} />
+      <p className="faint help">{t('notify.untimed')}</p>
 
       <div className="form-foot">
         {test.isSuccess && <span className="faint">{t('notify.testSent')}</span>}

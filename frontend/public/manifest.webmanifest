@@ -28,11 +28,29 @@
   "shortcuts": [
     {
       "name": "Schedule",
-      "url": "/schedule"
+      "short_name": "Schedule",
+      "url": "/schedule",
+      "icons": [
+        {
+          "src": "/shortcut-schedule.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
     },
     {
       "name": "Deadlines",
-      "url": "/deadlines"
+      "short_name": "Deadlines",
+      "url": "/deadlines",
+      "icons": [
+        {
+          "src": "/shortcut-deadlines.png",
+          "sizes": "192x192",
+          "type": "image/png",
+          "purpose": "any"
+        }
+      ]
     }
   ]
 }

@@ -6,6 +6,7 @@ import Logo from '../components/Logo'
 import { api, type Scale } from '../lib/api'
 import { formatTime, weekdayName } from '../lib/format'
 import { setLang, t, useLang } from '../lib/i18n'
+import { browserTimeZone } from '../lib/push'
 import { LanguageSwitch } from './Settings'
 
 // A day from a timetable, drawn as the sign-in page artwork.
@@ -40,7 +41,7 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       creds
         ? api.login(creds.email, creds.password)
         : signup
-          ? api.register({ name, email, password, university, scale })
+          ? api.register({ name, email, password, university, scale, timezone: browserTimeZone() })
           : api.login(email, password),
     onSuccess: (user) => {
       qc.setQueryData(['me'], user)

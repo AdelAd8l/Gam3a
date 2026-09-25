@@ -59,7 +59,7 @@ self.addEventListener('push', (event) => {
       body: data.body || '',
       tag: data.tag,
       icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      badge: '/badge-96.png',
       data: { url: data.url || '/' },
     }),
   )
