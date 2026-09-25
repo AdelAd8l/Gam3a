@@ -27,7 +27,7 @@
 ## Features
 
 - **Terms** with start and end dates, and a "week 5 of 15" progress bar. Switch between terms from the sidebar.
-- **Courses** with code, credit hours, instructor, color and weekly class times: lectures, sections, labs and tutorials, each with day, time and room.
+- **Courses** with code, credit hours, instructor, color and weekly class times: lectures, sections, labs and tutorials, each with day, time and room. Type a start time and the end fills itself in one class-length later (1 h 40 min by default, changeable in Settings).
 - **My timings:** your fixed commitments (job, gym, commute), the hours you like to study, session length, study hours per credit and rest days.
 - **Auto-generated study plan:** sessions are sized by credit hours and fitted around classes and commitments, spread across the week (see [how it works](#how-the-study-planner-works)).
 - **Clash detection:** overlapping classes or commitments are flagged.

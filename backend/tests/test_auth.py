@@ -9,6 +9,7 @@ def test_register_sets_session(client, user):
     assert user["email"] == "ada@example.com"
     me = client.get("/api/auth/me").json()
     assert me["name"] == "Ada" and me["scale"] == "4" and me["week_start"] == 5
+    assert me["class_minutes"] == 100  # 1 h 40 min
 
 
 def test_duplicate_email_is_rejected(client, user):
@@ -37,6 +38,8 @@ def test_update_profile_and_password(client, user):
     r = client.patch("/api/auth/me", json={"university": "Faculty of Engineering", "scale": "5", "week_start": 6})
     assert r.json()["scale"] == "5" and r.json()["week_start"] == 6
     assert client.patch("/api/auth/me", json={"scale": "7"}).status_code == 422
+    assert client.patch("/api/auth/me", json={"class_minutes": 90}).json()["class_minutes"] == 90
+    assert client.patch("/api/auth/me", json={"class_minutes": 5}).status_code == 422
     bad = client.post("/api/auth/password", json={"current_password": "nope", "new_password": "new-password"})
     assert bad.status_code == 400
 

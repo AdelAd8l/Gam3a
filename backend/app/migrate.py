@@ -12,6 +12,7 @@ from sqlalchemy.engine import Engine
 COLUMNS = [
     ("users", "cutoffs", "VARCHAR(400) NOT NULL DEFAULT ''"),
     ("users", "default_target", "VARCHAR(3) NOT NULL DEFAULT 'A'"),
+    ("users", "class_minutes", "INTEGER NOT NULL DEFAULT 100"),
     ("courses", "target_grade", "VARCHAR(3)"),
     ("assessments", "points_earned", "FLOAT"),
     ("assessments", "points_max", "FLOAT"),

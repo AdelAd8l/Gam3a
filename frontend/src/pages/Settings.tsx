@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
-import { formatNumber, GRADES, weekdayName } from '../lib/format'
+import { durationLabel, formatNumber, GRADES, weekdayName } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
 
@@ -18,6 +18,7 @@ export default function Settings() {
   const [university, setUniversity] = useState(user.university)
   const [scale, setScale] = useState<Scale>(user.scale)
   const [weekStart, setWeekStart] = useState(user.week_start)
+  const [classMinutes, setClassMinutes] = useState(user.class_minutes)
   const [cutoffs, setCutoffs] = useState<Record<string, string>>(() =>
     Object.fromEntries(Object.entries(user.cutoffs).map(([k, v]) => [k, String(v)])),
   )
@@ -30,7 +31,7 @@ export default function Settings() {
     onSuccess: (u) => qc.setQueryData(['me'], u),
   })
   const academic = useMutation({
-    mutationFn: () => api.updateMe({ scale, week_start: weekStart }),
+    mutationFn: () => api.updateMe({ scale, week_start: weekStart, class_minutes: classMinutes }),
     onSuccess: async (u) => {
       qc.setQueryData(['me'], u)
       await refresh()
@@ -143,6 +144,19 @@ export default function Settings() {
                 </option>
               ))}
             </select>
+          </label>
+          <label className="field">
+            <span>{t('settings.classLength')}</span>
+            <select className="select" value={classMinutes} onChange={(e) => setClassMinutes(Number(e.target.value))}>
+              {[...new Set([50, 60, 75, 80, 90, 100, 110, 120, 150, 180, user.class_minutes])]
+                .sort((a, b) => a - b)
+                .map((m) => (
+                  <option key={m} value={m}>
+                    {durationLabel(m)}
+                  </option>
+                ))}
+            </select>
+            <small className="faint">{t('settings.classLengthHint')}</small>
           </label>
           <div className="form-foot">
             {academic.isSuccess && <span className="faint">{t('settings.saved')}</span>}

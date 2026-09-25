@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { api, type Course, type Meeting, type MeetingKind } from '../lib/api'
-import { formatNumber, GRADES, SPECIAL_GRADES, weekOrder, weekdayName } from '../lib/format'
+import { addMinutes, formatNumber, GRADES, SPECIAL_GRADES, weekOrder, weekdayName } from '../lib/format'
 import { useCourses, useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Icon from './Icon'
@@ -37,6 +37,11 @@ export default function CourseDialog({ open, course, onClose }: Props) {
   const updateMeeting = (i: number, patch: Partial<Meeting>) =>
     setMeetings((list) => list.map((m, j) => (j === i ? { ...m, ...patch } : m)))
 
+  // Typing a start time fills in the end one class-length later (1 h 40 min by default).
+  // The end stays editable for longer labs.
+  const setStart = (i: number, start: string) =>
+    updateMeeting(i, start ? { start, end: addMinutes(start, user.class_minutes) } : { start })
+
   const addMeeting = () =>
     setMeetings((list) => {
       const last = list[list.length - 1]
@@ -44,7 +49,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
         ...list,
         last
           ? { ...last, id: undefined, weekday: days[(days.indexOf(last.weekday) + 1) % 7] }
-          : { weekday: days[0], start: '10:00', end: '11:30', kind: 'lecture', location: '' },
+          : { weekday: days[0], start: '10:00', end: addMinutes('10:00', user.class_minutes), kind: 'lecture', location: '' },
       ]
     })
 
@@ -178,7 +183,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
                 type="time"
                 aria-label={t('common.from')}
                 value={m.start}
-                onChange={(e) => updateMeeting(i, { start: e.target.value })}
+                onChange={(e) => setStart(i, e.target.value)}
                 required
               />
               <input

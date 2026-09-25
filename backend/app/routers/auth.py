@@ -30,6 +30,7 @@ def user_out(user: User) -> UserOut:
         week_start=user.week_start,
         cutoffs=user_cutoffs(user),
         default_target=user.default_target if user.default_target in SCALES[user.scale] else "A",
+        class_minutes=user.class_minutes or 100,
     )
 
 

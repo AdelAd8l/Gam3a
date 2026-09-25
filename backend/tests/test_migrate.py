@@ -12,7 +12,7 @@ def test_adds_missing_columns_to_an_old_database(tmp_path):
     added = upgrade(engine)
     assert "users.cutoffs" in added and "assessments.points_max" in added
     cols = {c["name"] for c in inspect(engine).get_columns("users")}
-    assert {"cutoffs", "default_target"} <= cols
+    assert {"cutoffs", "default_target", "class_minutes"} <= cols
     with engine.connect() as conn:
         assert conn.execute(text("SELECT default_target FROM users")).scalar() == "A"
     assert upgrade(engine) == []  # idempotent

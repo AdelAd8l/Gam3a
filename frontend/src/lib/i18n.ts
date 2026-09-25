@@ -294,6 +294,11 @@ const en = {
   'cgpa.after': 'CGPA after',
   'cgpa.first': 'First term',
   'cgpa.pending': 'Once grades are in',
+  'time.hm': '{h} h {m} min',
+  'time.h': '{h} h',
+  'time.m': '{m} min',
+  'settings.classLength': 'Class length',
+  'settings.classLengthHint': 'When you type a class start time, the end is filled in this much later. You can still change it.',
 }
 
 export type Key = keyof typeof en
@@ -585,6 +590,11 @@ const ar: Record<Key, string> = {
   'cgpa.after': 'التراكمي بعد',
   'cgpa.first': 'أول فصل',
   'cgpa.pending': 'بعد رصد الدرجات',
+  'time.hm': '{h} س و{m} د',
+  'time.h': '{h} س',
+  'time.m': '{m} د',
+  'settings.classLength': 'مدة المحاضرة',
+  'settings.classLengthHint': 'عند كتابة وقت بداية المحاضرة، يُملأ وقت نهايتها تلقائياً بعد هذه المدة. يمكنك تعديله.',
 }
 
 // Server messages (from the API's `detail`) shown in forms.

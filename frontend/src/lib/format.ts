@@ -1,7 +1,7 @@
 // Date, time and number helpers. Output follows the current app language.
 
 import type { Term } from './api'
-import { locale } from './i18n'
+import { locale, t } from './i18n'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -42,6 +42,19 @@ export const toMinutes = (hhmm: string) => {
 }
 
 export const fromMinutes = (minutes: number) => `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`
+
+/** "10:00" + 100 → "11:40", capped at 23:59. */
+export function addMinutes(hhmm: string, minutes: number) {
+  return fromMinutes(Math.min(23 * 60 + 59, toMinutes(hhmm) + minutes))
+}
+
+/** 100 → "1 h 40 min" / "1 س 40 د" */
+export function durationLabel(minutes: number) {
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  if (!h) return t('time.m', { m })
+  return m ? t('time.hm', { h, m }) : t('time.h', { h })
+}
 
 /** "10:00" → "10:00 AM" / "10:00 ص" */
 export function formatTime(hhmm: string) {

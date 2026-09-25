@@ -15,6 +15,7 @@ export interface User {
   week_start: number
   cutoffs: Record<string, number>
   default_target: string
+  class_minutes: number
 }
 export interface Term {
   id: number

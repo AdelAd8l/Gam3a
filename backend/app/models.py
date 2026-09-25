@@ -36,6 +36,8 @@ class User(Base):
     cutoffs: Mapped[str] = mapped_column(String(400), default="")
     # The grade new courses aim for.
     default_target: Mapped[str] = mapped_column(String(3), default="A")
+    # Usual length of one class, used to fill in end times (1 h 40 min by default).
+    class_minutes: Mapped[int] = mapped_column(Integer, default=100)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 

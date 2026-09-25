@@ -46,6 +46,7 @@ class UserOut(BaseModel):
     week_start: int
     cutoffs: dict[str, float]  # effective cut-offs for the user's scale
     default_target: str
+    class_minutes: int
 
 
 class UserUpdate(BaseModel):
@@ -55,6 +56,7 @@ class UserUpdate(BaseModel):
     week_start: int | None = Field(default=None, ge=0, le=6)
     cutoffs: dict[str, float] | None = None
     default_target: str | None = Field(default=None, max_length=3)
+    class_minutes: int | None = Field(default=None, ge=15, le=360)
 
     @field_validator("cutoffs")
     @classmethod
