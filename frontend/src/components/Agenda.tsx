@@ -29,11 +29,8 @@ export default function Agenda({ blocks, courses, now, onBlock }: Props) {
               style={{ '--c': course?.color ?? 'var(--ink-3)' } as React.CSSProperties}
               onClick={() => onBlock?.(b)}
             >
-              <span className="agenda-time num">
-                {formatTime(b.start)}
-                <span className="faint">{formatTime(b.end)}</span>
-              </span>
               <span className="agenda-body">
+                <span className="agenda-time num">{formatTime(b.start)}</span>
                 <strong>
                   {b.kind === 'study' ? `${t('block.study')} · ` : ''}
                   {course && b.kind !== 'busy' ? course.name : b.title}
@@ -43,6 +40,7 @@ export default function Agenda({ blocks, courses, now, onBlock }: Props) {
                   {b.kind === 'study' ? course?.code : ''}
                   {b.kind === 'busy' ? t('block.busy') : ''}
                 </span>
+                <span className="agenda-time agenda-end num">{formatTime(b.end)}</span>
               </span>
             </button>
           </li>

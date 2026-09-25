@@ -61,12 +61,17 @@ export default function WeekGrid({ blocks, days, restDays, courses, today, onBlo
                     onClick={() => onBlock?.(b)}
                     title={`${b.title} · ${formatTime(b.start)} – ${formatTime(b.end)}`}
                   >
+                    {height >= 42 && <span className="slot-time num">{formatTime(b.start)}</span>}
                     <strong>{b.kind === 'study' ? `${t('block.study')} · ${b.title}` : b.title}</strong>
-                    {height > 34 && (
-                      <span>
-                        {formatTime(b.start)}
-                        {b.kind === 'class' && b.detail ? ` · ${blockDetail(b.detail)}` : ''}
-                      </span>
+                    {height >= 70 && b.kind === 'class' && b.detail && <span>{blockDetail(b.detail)}</span>}
+                    {height >= 42 ? (
+                      <span className="slot-time slot-end num">{formatTime(b.end)}</span>
+                    ) : (
+                      height > 34 && (
+                        <span className="num">
+                          {formatTime(b.start)} – {formatTime(b.end)}
+                        </span>
+                      )
                     )}
                   </button>
                 )

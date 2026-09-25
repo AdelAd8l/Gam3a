@@ -950,11 +950,9 @@ code {
 }
 
 .agenda-item {
-  display: grid;
-  grid-template-columns: 76px minmax(0, 1fr);
-  gap: 14px;
+  display: block;
   width: 100%;
-  padding: 10px 12px;
+  padding: 7px 12px 6px;
   border: 0;
   border-inline-start: 3px solid var(--c);
   border-radius: 4px;
@@ -990,14 +988,15 @@ code {
   box-shadow: 0 0 0 2px var(--accent);
 }
 
+/* Start time small at the top of the card, end time small in its bottom corner. */
 .agenda-time {
-  display: grid;
-  font-size: 0.86rem;
-  line-height: 1.35;
+  color: var(--ink-2);
+  font-size: 0.74rem;
+  line-height: 1.2;
 }
 
-.agenda-time .faint {
-  font-size: 0.78rem;
+.agenda-end {
+  justify-self: end;
 }
 
 .agenda-body {
@@ -1152,6 +1151,18 @@ code {
   color: var(--ink-2);
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.slot .slot-time {
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+/* The end time sits in the bottom corner of the class box. */
+.slot .slot-end {
+  position: absolute;
+  bottom: 3px;
+  inset-inline-end: 7px;
 }
 
 .slot-study {
