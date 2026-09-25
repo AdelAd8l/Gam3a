@@ -7,6 +7,7 @@ import { useCourses, useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Icon from './Icon'
 import Modal from './Modal'
+import ColorField from './ColorField'
 import { PALETTE } from './palette'
 
 const KINDS: MeetingKind[] = ['lecture', 'section', 'lab', 'tutorial']
@@ -145,22 +146,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
           </label>
         </div>
 
-        <fieldset className="field palette">
-          <legend>{t('courses.color')}</legend>
-          <div className="palette-grid">
-            {PALETTE.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className="palette-chip"
-                style={{ background: c }}
-                aria-label={c}
-                aria-pressed={color.toLowerCase() === c.toLowerCase()}
-                onClick={() => setColor(c)}
-              />
-            ))}
-          </div>
-        </fieldset>
+        <ColorField value={color} onChange={setColor} />
 
         <fieldset className="field meetings">
           <legend>{t('courses.classTimes')}</legend>

@@ -2758,3 +2758,64 @@ code {
 .zone-differs .link-quiet {
   font-weight: 600;
 }
+
+/* ---- course color: suggested chips or a custom color ------------------------------- */
+
+.color-mode {
+  margin-bottom: 10px;
+}
+
+.color-custom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+}
+
+.color-wheel {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.color-wheel input {
+  width: 46px;
+  height: 38px;
+  padding: 3px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--field);
+  cursor: pointer;
+}
+
+.color-wheel input::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-wheel input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
+.color-wheel input::-moz-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+
+.color-hex .input {
+  width: 124px;
+  font-family: var(--mono);
+  text-transform: uppercase;
+}
+
+.color-hex .input[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.color-hint {
+  flex-basis: 100%;
+  font-size: 0.82rem;
+}
