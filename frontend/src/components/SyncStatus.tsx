@@ -23,7 +23,7 @@ export default function SyncStatus() {
       <i className="sync-dot" aria-hidden="true" />
       <span>
         {!online ? t('sync.offline') : syncing ? t('sync.syncing') : t('sync.waitingTitle')}
-        {pending > 0 && <> · {t('sync.waiting', { n: formatNumber(pending) })}</>}
+        {pending > 0 && <> · {pending === 1 ? t('sync.waitingOne') : t('sync.waiting', { n: formatNumber(pending) })}</>}
       </span>
       {online && !syncing && pending > 0 && (
         <button className="link-quiet" onClick={() => void syncNow()}>
