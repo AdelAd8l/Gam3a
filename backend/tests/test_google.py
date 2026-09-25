@@ -50,6 +50,7 @@ class FakeGoogle:
             if cal is None:
                 return 404, {}
             cal["color"] = (json_body["backgroundColor"], json_body["foregroundColor"])
+            cal["shown"] = json_body.get("selected") is True and json_body.get("hidden") is False
             return 200, {}
         if parts == ["calendars"] and method == "POST":
             cid = self._id("cal")
@@ -119,10 +120,12 @@ def test_connect_sends_to_google_and_back(client, term, google):
     assert query["access_type"] == ["offline"]
     status = client.get("/api/google/status").json()
     assert status["connected"] and status["email"] == "adel@gmail.com" and status["last_error"] == ""
+    assert status["last_sync"].endswith(("Z", "+00:00"))  # UTC, so the phone shows its own local time
     # one calendar for the course, in its color, with the weekly class
     (cal,) = google.calendars.values()
     assert cal["body"]["summary"] == "CSE221 · Data Structures"
     assert cal["color"] == ("#E91E63", "#FFFFFF")
+    assert cal["shown"]  # ticked in the person's calendar list, so its events are visible
     (event,) = [e for e in cal["events"].values() if e["summary"].endswith("Lecture")]
     assert event["summary"] == "CSE221 · Lecture" and event["location"] == "Hall 3"
     assert event["start"] == {"dateTime": "2026-09-21T10:00:00", "timeZone": "Africa/Cairo"}  # first Monday of term

@@ -157,3 +157,14 @@ def test_signup_setting_survives_a_restart(client):
     client.put("/api/admin/settings", json={"allow_signup": False})
     with TestClient(app) as fresh:  # a new start of the app, same database
         assert fresh.get("/api/health").json()["signup"] is False
+
+
+def test_times_are_sent_with_their_time_zone(client):
+    """SQLite drops the zone; without it the browser shows UTC times as local ones."""
+    from datetime import UTC, datetime, timedelta
+
+    ready_admin(client)
+    (row,) = client.get("/api/admin/users").json()
+    joined = datetime.fromisoformat(row["created_at"])
+    assert joined.utcoffset() == timedelta(0)
+    assert abs(datetime.now(UTC) - joined) < timedelta(minutes=5)

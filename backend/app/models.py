@@ -6,10 +6,10 @@ Times of day are stored as "HH:MM" strings and weekdays as 0=Monday … 6=Sunday
 
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Date, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .database import Base
+from .database import Base, UTCDateTime
 
 
 def _now() -> datetime:
@@ -59,7 +59,7 @@ class User(Base):
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     # Bumped when the password changes, so sessions signed with the old one stop working.
     session_version: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=_now)
 
     @property
     def has_password(self) -> bool:
@@ -157,7 +157,7 @@ class PushSubscription(Base):
     endpoint: Mapped[str] = mapped_column(String(1000), unique=True)
     p256dh: Mapped[str] = mapped_column(String(200))
     auth: Mapped[str] = mapped_column(String(100))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=_now)
 
 
 class SentNotice(Base):
@@ -169,7 +169,7 @@ class SentNotice(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = _user_fk()
     key: Mapped[str] = mapped_column(String(80))
-    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+    sent_at: Mapped[datetime] = mapped_column(UTCDateTime, default=_now, index=True)
 
 
 class AppKey(Base):
@@ -194,9 +194,9 @@ class GoogleLink(Base):
     class_reminder: Mapped[int] = mapped_column(Integer, default=10)
     deadline_reminder: Mapped[int] = mapped_column(Integer, default=1440)
     state_digest: Mapped[str] = mapped_column(String(64), default="")  # what was last sent
-    last_sync: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_sync: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     last_error: Mapped[str] = mapped_column(String(300), default="")
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=_now)
 
 
 class GoogleCalendar(Base):

@@ -1,11 +1,33 @@
 from collections.abc import Iterator
+from datetime import UTC, datetime
 
-from sqlalchemy import create_engine, event
+from sqlalchemy import DateTime, TypeDecorator, create_engine, event
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .config import get_settings
+
+
+class UTCDateTime(TypeDecorator):
+    """A moment in time, always handed back in UTC.
+
+    SQLite keeps no time zone, so without this a time read back is "naive" and goes out to
+    the browser without its "+00:00", which then shows it as local time (hours off).
+    """
+
+    impl = DateTime(timezone=True)
+    cache_ok = True
+
+    def process_bind_param(self, value: datetime | None, dialect) -> datetime | None:
+        if value is not None and value.tzinfo is not None:
+            value = value.astimezone(UTC)
+        return value
+
+    def process_result_value(self, value: datetime | None, dialect) -> datetime | None:
+        if value is not None:
+            value = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+        return value
 
 
 class Base(DeclarativeBase):
