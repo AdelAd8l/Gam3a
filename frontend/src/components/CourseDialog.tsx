@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { api, type Course, type Meeting, type MeetingKind } from '../lib/api'
-import { GRADES, SPECIAL_GRADES, weekOrder, weekdayName } from '../lib/format'
+import { formatNumber, GRADES, SPECIAL_GRADES, weekOrder, weekdayName } from '../lib/format'
 import { useCourses, useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Icon from './Icon'
@@ -31,6 +31,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
   const [color, setColor] = useState(course?.color ?? PALETTE[existing.length % PALETTE.length])
   const [grade, setGrade] = useState(course?.grade ?? '')
   const [inGpa, setInGpa] = useState(course?.in_gpa ?? true)
+  const [target, setTarget] = useState(course?.target_grade ?? '')
   const [meetings, setMeetings] = useState<Meeting[]>(course?.meetings ?? [])
 
   const updateMeeting = (i: number, patch: Partial<Meeting>) =>
@@ -59,6 +60,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
           color,
           grade: grade || null,
           in_gpa: grade === 'P' ? false : inGpa,
+          target_grade: target || null,
           meetings: meetings.map(({ weekday, start, end, kind, location }) => ({
             weekday,
             start,
@@ -222,7 +224,20 @@ export default function CourseDialog({ open, course, onClose }: Props) {
           </button>
         </fieldset>
 
-        <div className="grid-2">
+        <div className="grid-3">
+          <label className="field">
+            <span>{t('course.target')}</span>
+            <select className="select" value={target} onChange={(e) => setTarget(e.target.value)}>
+              <option value="">
+                {user.default_target} ({formatNumber(user.cutoffs[user.default_target] ?? 0, 1)}%+)
+              </option>
+              {GRADES[user.scale].map((g) => (
+                <option key={g} value={g}>
+                  {g} ({formatNumber(user.cutoffs[g] ?? 0, 1)}%+)
+                </option>
+              ))}
+            </select>
+          </label>
           <label className="field">
             <span>{t('courses.grade')}</span>
             <select className="select" value={grade} onChange={(e) => setGrade(e.target.value)}>

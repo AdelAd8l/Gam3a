@@ -13,6 +13,8 @@ export interface User {
   university: string
   scale: Scale
   week_start: number
+  cutoffs: Record<string, number>
+  default_target: string
 }
 export interface Term {
   id: number
@@ -44,11 +46,25 @@ export interface Course {
   color: string
   grade: string | null
   in_gpa: boolean
+  target_grade: string | null
   meetings: Meeting[]
-  current_score: number | null
-  graded_weight: number
+  progress: Progress
 }
-export type CourseInput = Omit<Course, 'id' | 'current_score' | 'graded_weight'>
+export interface Progress {
+  target_grade: string
+  target_percent: number
+  graded_weight: number
+  listed_weight: number
+  earned: number
+  remaining_weight: number
+  current: number | null
+  current_letter: string | null
+  max_possible: number
+  max_letter: string
+  required: number | null
+  status: 'secured' | 'on_track' | 'needs' | 'out_of_reach' | 'no_data'
+}
+export type CourseInput = Omit<Course, 'id' | 'progress'>
 export interface Busy {
   id: number
   term_id: number
@@ -67,6 +83,8 @@ export interface Assessment {
   due_time: string | null
   weight: number | null
   score: number | null
+  points_earned: number | null
+  points_max: number | null
   done: boolean
 }
 export type AssessmentInput = Omit<Assessment, 'id'>
@@ -172,6 +190,7 @@ export const api = {
   calendarUrl: (termId: number, study: boolean) => withQuery(`/api/terms/${termId}/calendar.ics`, { study: String(study) }),
 
   courses: (termId?: number) => request<Course[]>('GET', '/courses', undefined, { term_id: termId }),
+  course: (id: number) => request<Course>('GET', `/courses/${id}`),
   saveCourse: (data: CourseInput, id?: number) =>
     id ? request<Course>('PUT', `/courses/${id}`, data) : request<Course>('POST', '/courses', data),
   setGrade: (id: number, grade: string | null) => request<Course>('PUT', `/courses/${id}/grade`, { grade }),

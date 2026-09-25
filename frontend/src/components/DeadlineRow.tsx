@@ -32,7 +32,13 @@ export function DeadlineRow({ item, course, onToggle, onOpen }: Props) {
           <span>{course?.code || course?.name}</span>
           <span className="faint">· {t(`akind.${item.kind}`)}</span>
           {item.weight !== null && <span className="faint">· {t('deadlines.weight', { n: formatNumber(item.weight, 1) })}</span>}
-          {item.score !== null && <span className="faint">· {t('deadlines.score', { n: formatNumber(item.score, 1) })}</span>}
+          {item.points_earned !== null && item.points_max !== null ? (
+            <span className="faint num">
+              · {formatNumber(item.points_earned, 2)} / {formatNumber(item.points_max, 2)}
+            </span>
+          ) : (
+            item.score !== null && <span className="faint">· {t('deadlines.score', { n: formatNumber(item.score, 1) })}</span>
+          )}
         </span>
       </button>
       {item.due_date && (

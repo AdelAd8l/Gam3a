@@ -32,6 +32,10 @@ class User(Base):
     scale: Mapped[str] = mapped_column(String(2), default="4")
     # First day of the week in timetables (5 = Saturday, common in Egypt).
     week_start: Mapped[int] = mapped_column(Integer, default=5)
+    # Minimum percentage for each letter, as JSON: {"A+": 97, "A": 93, ...}. Empty = defaults.
+    cutoffs: Mapped[str] = mapped_column(String(400), default="")
+    # The grade new courses aim for.
+    default_target: Mapped[str] = mapped_column(String(3), default="A")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
@@ -64,6 +68,7 @@ class Course(Base):
     color: Mapped[str] = mapped_column(String(7), default="#3E5C8A")
     grade: Mapped[str | None] = mapped_column(String(3), nullable=True)
     in_gpa: Mapped[bool] = mapped_column(Boolean, default=True)
+    target_grade: Mapped[str | None] = mapped_column(String(3), nullable=True)  # None = user's default
 
 
 class Meeting(Base):
@@ -109,6 +114,9 @@ class Assessment(Base):
     due_time: Mapped[str | None] = mapped_column(String(5), nullable=True)
     weight: Mapped[float | None] = mapped_column(Float, nullable=True)  # % of the course grade
     score: Mapped[float | None] = mapped_column(Float, nullable=True)  # % achieved
+    # Raw marks as written on the paper, e.g. 28 / 30. When both are set, score = earned / max.
+    points_earned: Mapped[float | None] = mapped_column(Float, nullable=True)
+    points_max: Mapped[float | None] = mapped_column(Float, nullable=True)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
 
 

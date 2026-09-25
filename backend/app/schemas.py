@@ -37,13 +37,15 @@ class LoginIn(BaseModel):
     password: str
 
 
-class UserOut(ORM):
+class UserOut(BaseModel):
     id: int
     email: str
     name: str
     university: str
     scale: Scale
     week_start: int
+    cutoffs: dict[str, float]  # effective cut-offs for the user's scale
+    default_target: str
 
 
 class UserUpdate(BaseModel):
@@ -51,6 +53,17 @@ class UserUpdate(BaseModel):
     university: str | None = Field(default=None, max_length=120)
     scale: Scale | None = None
     week_start: int | None = Field(default=None, ge=0, le=6)
+    cutoffs: dict[str, float] | None = None
+    default_target: str | None = Field(default=None, max_length=3)
+
+    @field_validator("cutoffs")
+    @classmethod
+    def valid_cutoffs(cls, v: dict[str, float] | None) -> dict[str, float] | None:
+        if v is None:
+            return v
+        if any(x < 0 or x > 100 for x in v.values()):
+            raise ValueError("Cut-offs must be between 0 and 100")
+        return v
 
 
 class PasswordChange(BaseModel):
@@ -132,6 +145,7 @@ class CourseIn(BaseModel):
     color: str = Field(default="#3E5C8A", pattern=r"^#[0-9A-Fa-f]{6}$")
     grade: str | None = Field(default=None, max_length=3)
     in_gpa: bool = True
+    target_grade: str | None = Field(default=None, max_length=3)
     meetings: list[MeetingIn] = Field(default_factory=list, max_length=20)
 
 
@@ -146,9 +160,23 @@ class CourseOut(ORM):
     grade: str | None
     in_gpa: bool
     meetings: list[MeetingOut] = []
-    # Weighted average of scored assessments, and how much of the course weight is scored.
-    current_score: float | None = None
-    graded_weight: float = 0
+    target_grade: str | None = None  # as stored (None = user's default)
+    progress: "ProgressOut | None" = None
+
+
+class ProgressOut(BaseModel):
+    target_grade: str  # effective target
+    target_percent: float
+    graded_weight: float
+    listed_weight: float
+    earned: float
+    remaining_weight: float
+    current: float | None
+    current_letter: str | None
+    max_possible: float
+    max_letter: str
+    required: float | None
+    status: str
 
 
 class GradeIn(BaseModel):
@@ -191,7 +219,21 @@ class AssessmentIn(BaseModel):
     due_time: str | None = Field(default=None, pattern=HHMM)
     weight: float | None = Field(default=None, ge=0, le=100)
     score: float | None = Field(default=None, ge=0, le=150)
+    points_earned: float | None = Field(default=None, ge=0)
+    points_max: float | None = Field(default=None, gt=0, le=10000)
     done: bool = False
+
+    @model_validator(mode="after")
+    def derive_score(self):
+        if self.points_earned is not None:
+            if self.points_max is None:
+                raise ValueError("Enter what the item is out of, e.g. 28 / 30")
+            if self.points_earned > self.points_max * 1.5:
+                raise ValueError("The mark is higher than the item is out of")
+            # Raw marks win: store the percentage they work out to.
+            self.score = round(self.points_earned / self.points_max * 100, 4)
+            self.done = True
+        return self
 
 
 class AssessmentOut(ORM):
@@ -203,6 +245,8 @@ class AssessmentOut(ORM):
     due_time: str | None
     weight: float | None
     score: float | None
+    points_earned: float | None
+    points_max: float | None
     done: bool
 
 
@@ -254,3 +298,6 @@ class GradesOut(BaseModel):
     total_credits: float
     earned_credits: float
     points: float
+
+
+CourseOut.model_rebuild()

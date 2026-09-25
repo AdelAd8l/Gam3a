@@ -64,3 +64,105 @@ def required_gpa(current_points: float, current_credits: float, target: float, n
     if next_credits <= 0:
         return None
     return round((target * (current_credits + next_credits) - current_points) / next_credits, 3)
+
+
+# ---- course percentages → letters -------------------------------------------------
+
+# Minimum course percentage for each letter. The 4.0 defaults follow the common
+# A+ ≥ 97, A ≥ 93, A- ≥ 90 … ladder; every user can override them in Settings.
+DEFAULT_CUTOFFS: dict[str, dict[str, float]] = {
+    "4": {
+        "A+": 97, "A": 93, "A-": 90,
+        "B+": 87, "B": 83, "B-": 80,
+        "C+": 77, "C": 73, "C-": 70,
+        "D+": 67, "D": 60, "F": 0,
+    },
+    "5": {
+        "A+": 95, "A": 90, "B+": 85, "B": 80,
+        "C+": 75, "C": 70, "D+": 65, "D": 60, "F": 0,
+    },
+}
+
+
+def cutoffs_for(scale: str, custom: dict[str, float] | None) -> dict[str, float]:
+    """The user's cut-offs for their scale, falling back to the defaults letter by letter."""
+    base = dict(DEFAULT_CUTOFFS[scale])
+    for letter, value in (custom or {}).items():
+        if letter in base and letter != "F":
+            base[letter] = float(value)
+    return base
+
+
+def letter_for(percent: float, cutoffs: dict[str, float]) -> str:
+    for letter, minimum in sorted(cutoffs.items(), key=lambda kv: -kv[1]):
+        if percent >= minimum - 1e-9:
+            return letter
+    return "F"
+
+
+@dataclass
+class Graded:
+    weight: float | None  # % of the course grade
+    score: float | None  # % achieved on this item
+
+
+@dataclass
+class CourseProgress:
+    graded_weight: float  # how much of the course has been marked
+    listed_weight: float  # how much of the course the student has entered so far
+    earned: float  # course points secured (out of 100)
+    remaining_weight: float  # 100 − graded_weight (includes coursework not entered yet)
+    current: float | None  # average on what's been marked
+    max_possible: float  # earned + everything still to come
+    required: float | None  # average needed on the remaining weight to hit the target
+    status: str  # "secured" | "on_track" | "needs" | "out_of_reach" | "no_data"
+
+
+def course_progress(items: Iterable[Graded], target: float) -> CourseProgress:
+    graded_weight = earned = listed = 0.0
+    for item in items:
+        if not item.weight:
+            continue
+        listed += item.weight
+        if item.score is not None:
+            graded_weight += item.weight
+            earned += item.weight * item.score / 100
+    remaining = max(0.0, 100 - graded_weight)
+    current = earned / graded_weight * 100 if graded_weight else None
+    required = (target - earned) / remaining * 100 if remaining > 1e-9 else None
+    max_possible = earned + remaining
+
+    if earned >= target - 1e-9:
+        status = "secured"
+    elif max_possible < target - 1e-9:
+        status = "out_of_reach"
+    elif current is None:
+        status = "no_data"
+    elif required is not None and current >= required - 1e-9:
+        status = "on_track"
+    else:
+        status = "needs"
+    return CourseProgress(
+        graded_weight=round(graded_weight, 2),
+        listed_weight=round(listed, 2),
+        earned=round(earned, 2),
+        remaining_weight=round(remaining, 2),
+        current=round(current, 2) if current is not None else None,
+        max_possible=round(max_possible, 2),
+        required=round(max(required, 0), 2) if required is not None else None,
+        status=status,
+    )
+
+
+def parse_cutoffs(raw: str) -> dict[str, float]:
+    import json
+
+    try:
+        data = json.loads(raw) if raw else {}
+        return {str(k): float(v) for k, v in data.items()} if isinstance(data, dict) else {}
+    except (ValueError, TypeError):
+        return {}
+
+
+def user_cutoffs(user) -> dict[str, float]:
+    return cutoffs_for(user.scale, parse_cutoffs(user.cutoffs))

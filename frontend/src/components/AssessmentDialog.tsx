@@ -29,7 +29,11 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
   const [date, setDate] = useState(item ? (item.due_date ?? '') : addDays(todayISO(), 7))
   const [time, setTime] = useState(item?.due_time ?? '')
   const [weight, setWeight] = useState(item?.weight?.toString() ?? '')
-  const [score, setScore] = useState(item?.score?.toString() ?? '')
+  // Marks as written on the paper; older items that only have a % show as "x / 100".
+  const [earned, setEarned] = useState(
+    item?.points_earned?.toString() ?? (item?.score != null && item.points_max == null ? String(item.score) : ''),
+  )
+  const [outOf, setOutOf] = useState(item?.points_max?.toString() ?? (item?.score != null ? '100' : ''))
   const [done, setDone] = useState(item?.done ?? false)
 
   const save = useMutation({
@@ -42,8 +46,11 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
           due_date: date || null,
           due_time: date && time ? time : null,
           weight: numOrNull(weight),
-          score: numOrNull(score),
-          done: done || numOrNull(score) !== null,
+          score: null,
+          points_earned: numOrNull(earned),
+          // A mark without "out of" is read as a percentage.
+          points_max: numOrNull(outOf) ?? (numOrNull(earned) !== null ? 100 : null),
+          done: done || numOrNull(earned) !== null,
         },
         item?.id,
       ),
@@ -121,33 +128,49 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
               <input className="input" type="time" value={time} disabled={!date} onChange={(e) => setTime(e.target.value)} />
             </label>
           </div>
-          <div className="grid-2">
-            <label className="field">
-              <span>{t('deadlines.weightLabel')}</span>
+          <label className="field">
+            <span>{t('deadlines.weightLabel')}</span>
+            <input
+              className="input"
+              type="number"
+              inputMode="decimal"
+              min={0}
+              max={100}
+              step="any"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+            />
+          </label>
+          <div className="field">
+            <span>
+              {t('deadlines.mark')} <span className="faint">({t('common.optional')})</span>
+            </span>
+            <div className="mark-pair" dir="ltr">
               <input
                 className="input"
                 type="number"
                 inputMode="decimal"
                 min={0}
-                max={100}
                 step="any"
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                aria-label={t('deadlines.mark')}
+                placeholder="28"
+                value={earned}
+                onChange={(e) => setEarned(e.target.value)}
               />
-            </label>
-            <label className="field">
-              <span>{t('deadlines.scoreLabel')}</span>
+              <span className="faint">/</span>
               <input
                 className="input"
                 type="number"
                 inputMode="decimal"
                 min={0}
-                max={150}
                 step="any"
-                value={score}
-                onChange={(e) => setScore(e.target.value)}
+                aria-label={t('deadlines.outOf')}
+                placeholder="30"
+                value={outOf}
+                onChange={(e) => setOutOf(e.target.value)}
               />
-            </label>
+            </div>
+            <small className="faint">{t('deadlines.markHelp')}</small>
           </div>
           <label className="check">
             <input type="checkbox" checked={done} onChange={(e) => setDone(e.target.checked)} />

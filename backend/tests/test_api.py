@@ -1,3 +1,5 @@
+import pytest
+
 from .conftest import add_course
 
 LECTURE = {"weekday": 6, "start": "10:00", "end": "11:30", "kind": "lecture", "location": "Hall 3"}
@@ -47,7 +49,7 @@ def test_assessments_and_course_score(client, term):
     client.post("/api/assessments", json={**base, "title": "Final", "weight": 60, "due_date": "2026-12-20"})
     client.post("/api/assessments", json={**base, "title": "Someday"})
     course = client.get("/api/courses").json()[0]
-    assert course["current_score"] == 65.0 and course["graded_weight"] == 40
+    assert course["progress"]["current"] == 65.0 and course["progress"]["graded_weight"] == 40
     upcoming = client.get("/api/assessments", params={"open_only": True, "start": "2026-10-02"}).json()
     assert [a["title"] for a in upcoming] == ["Final"]
     everything = client.get("/api/assessments", params={"term_id": term["id"]}).json()
@@ -95,3 +97,54 @@ def test_deleting_term_cascades(client, term):
     assert client.delete(f"/api/terms/{term['id']}").status_code == 204
     assert client.get("/api/courses").json() == []
     assert client.get("/api/assessments").json() == []
+
+
+def test_raw_marks_become_scores(client, term):
+    c = add_course(client, term["id"])
+    r = client.post("/api/assessments", json={"course_id": c["id"], "title": "Project", "weight": 30,
+                                              "points_earned": 28, "points_max": 30})
+    item = r.json()
+    assert item["score"] == pytest.approx(93.3333, abs=0.001) and item["done"] is True
+    assert client.post("/api/assessments", json={"course_id": c["id"], "title": "X", "points_earned": 3}).status_code == 422
+    assert client.post("/api/assessments", json={"course_id": c["id"], "title": "X", "points_earned": 50,
+                                                 "points_max": 5}).status_code == 422
+
+
+def test_required_to_reach_target(client, term):
+    # Aim for an A (93%). Project 28/30 worth 30%, Quiz 1 3/5 worth 10%.
+    c = add_course(client, term["id"], target_grade="a")
+    assert c["target_grade"] == "A"
+    base = {"course_id": c["id"]}
+    client.post("/api/assessments", json={**base, "title": "Project", "weight": 30, "points_earned": 28, "points_max": 30})
+    client.post("/api/assessments", json={**base, "title": "Quiz 1", "weight": 10, "points_earned": 3, "points_max": 5})
+    client.post("/api/assessments", json={**base, "title": "Final", "weight": 60, "points_max": 60})
+    p = client.get(f"/api/courses/{c['id']}").json()["progress"]
+    # earned = 28 + 6 = 34 of the 40% marked so far
+    assert p["earned"] == 34.0 and p["graded_weight"] == 40 and p["remaining_weight"] == 60
+    assert p["current"] == 85.0 and p["current_letter"] == "B"  # B+ starts at 87
+    # need (93 - 34) / 60 = 98.33% on the rest
+    assert p["required"] == pytest.approx(98.33, abs=0.01)
+    assert p["target_percent"] == 93 and p["status"] == "needs"
+    assert p["max_possible"] == 94.0 and p["max_letter"] == "A"
+
+
+def test_secured_and_out_of_reach(client, term):
+    c = add_course(client, term["id"], target_grade="A+")
+    client.post("/api/assessments", json={"course_id": c["id"], "title": "Midterm", "weight": 50, "score": 80})
+    p = client.get(f"/api/courses/{c['id']}").json()["progress"]
+    assert p["status"] == "out_of_reach" and p["max_possible"] == 90  # 97 no longer possible
+    c2 = add_course(client, term["id"], target_grade="B")
+    client.post("/api/assessments", json={"course_id": c2["id"], "title": "Everything", "weight": 90, "score": 100})
+    assert client.get(f"/api/courses/{c2['id']}").json()["progress"]["status"] == "secured"
+
+
+def test_default_target_and_custom_cutoffs(client, term):
+    c = add_course(client, term["id"])
+    assert c["progress"]["target_grade"] == "A" and c["progress"]["target_percent"] == 93
+    me = client.patch("/api/auth/me", json={"cutoffs": {"A": 91, "A+": 95}, "default_target": "A+"}).json()
+    assert me["cutoffs"]["A"] == 91 and me["cutoffs"]["A-"] == 90  # untouched letters keep defaults
+    assert me["default_target"] == "A+"
+    assert client.get(f"/api/courses/{c['id']}").json()["progress"]["target_percent"] == 95
+    # A cut-off that isn't above the grade below it is rejected
+    assert client.patch("/api/auth/me", json={"cutoffs": {"A": 90}}).status_code == 422
+    assert client.put(f"/api/courses/{c['id']}", json={**c, "target_grade": "P"}).status_code == 422

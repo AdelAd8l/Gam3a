@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom'
+
 import PageHeader from '../components/PageHeader'
+import StatusBadge from '../components/StatusBadge'
 import { formatNumber, formatTime, toMinutes, weekOrder, weekdayName } from '../lib/format'
 import { useCourses, useDialogs, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -48,12 +51,11 @@ export default function Courses() {
 
       <div className="course-grid">
         {courses.map((c) => (
-          <button
+          <Link
             key={c.id}
-            type="button"
+            to={`/courses/${c.id}`}
             className="course-card"
             style={{ '--c': c.color } as React.CSSProperties}
-            onClick={() => editCourse(c)}
           >
             <div className="course-top">
               <span className="course-code num">{c.code}</span>
@@ -79,17 +81,22 @@ export default function Courses() {
             <div className="course-foot">
               {c.grade ? (
                 <span className="grade-badge">{c.grade}</span>
-              ) : c.current_score !== null ? (
+              ) : c.progress.current !== null ? (
                 <span className="course-score">
-                  <span className="faint">{t('courses.current')}</span>{' '}
-                  <strong className="num">{formatNumber(c.current_score, 1)}%</strong>
-                  <span className="faint"> {t('courses.ofGraded', { pct: formatNumber(c.graded_weight, 1) })}</span>
+                  <strong className="num">{formatNumber(c.progress.current, 1)}%</strong>
+                  <span className="faint"> {c.progress.current_letter}</span>
                 </span>
               ) : (
                 <span className="faint">{t('courses.inProgress')}</span>
               )}
+              {!c.grade && (
+                <span className="course-goal">
+                  <span className="faint">{t('course.targetShort', { grade: c.progress.target_grade })}</span>
+                  <StatusBadge status={c.progress.status} />
+                </span>
+              )}
             </div>
-          </button>
+          </Link>
         ))}
       </div>
     </div>

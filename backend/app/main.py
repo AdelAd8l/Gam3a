@@ -6,7 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from . import seed
+from . import migrate, seed
 from .config import get_settings
 from .database import Base, engine
 from .routers import assessments, auth, busy, courses, grades, plan, terms
@@ -15,6 +15,7 @@ from .routers import assessments, auth, busy, courses, grades, plan, terms
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
+    migrate.upgrade(engine)
     if get_settings().demo:
         seed.run(only_if_missing=True)
     yield

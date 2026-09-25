@@ -86,7 +86,7 @@ def run(only_if_missing: bool = False) -> None:
         ids = {}
         for code, cname, credits, instructor, color, meetings in CURRENT:
             course = Course(user_id=user.id, term_id=term.id, code=code, name=cname, credits=credits,
-                            instructor=instructor, color=color)
+                            instructor=instructor, color=color, target_grade="A+" if code == "HUM201" else None)
             db.add(course)
             db.flush()
             ids[code] = course.id
@@ -99,23 +99,32 @@ def run(only_if_missing: bool = False) -> None:
         def due(days: int) -> date:
             return today + timedelta(days=days)
 
+        # code, title, kind, due, time, weight %, (earned, out of) or None, done
         assessments = [
-            ("CSE221", "Assignment 1: Linked lists", "assignment", due(-16), "23:59", 5, 92, True),
-            ("CSE221", "Quiz 1", "quiz", due(-9), None, 5, 80, True),
-            ("CSE221", "Assignment 2: Stacks & queues", "assignment", due(2), "23:59", 5, None, False),
-            ("CSE221", "Midterm", "midterm", due(18), "10:00", 25, None, False),
-            ("CSE231", "Lab report 1", "assignment", due(-5), None, 5, 88, True),
-            ("CSE231", "Lab report 2", "assignment", due(5), None, 5, None, False),
-            ("CSE231", "Midterm", "midterm", due(19), "08:30", 25, None, False),
-            ("MTH203", "Problem set 2", "assignment", due(1), "18:00", 5, None, False),
-            ("MTH203", "Quiz 1", "quiz", due(-12), None, 10, 70, True),
-            ("PHY202", "Quiz 1", "quiz", due(4), "08:30", 10, None, False),
-            ("HUM201", "Essay outline", "project", due(6), None, 10, None, False),
-            ("HUM201", "Reading response", "assignment", due(-3), None, 5, 95, True),
+            ("CSE221", "Assignment 1: Linked lists", "assignment", due(-16), "23:59", 5, (46, 50)),
+            ("CSE221", "Quiz 1", "quiz", due(-9), None, 5, (8, 10)),
+            ("CSE221", "Assignment 2: Stacks & queues", "assignment", due(2), "23:59", 5, (None, 50)),
+            ("CSE221", "Midterm", "midterm", due(18), "10:00", 25, (None, 40)),
+            ("CSE221", "Project", "project", due(60), None, 20, (None, 30)),
+            ("CSE221", "Final exam", "final", due(80), "09:00", 40, (None, 60)),
+            ("CSE231", "Lab report 1", "assignment", due(-5), None, 5, (22, 25)),
+            ("CSE231", "Lab report 2", "assignment", due(5), None, 5, (None, 25)),
+            ("CSE231", "Midterm", "midterm", due(19), "08:30", 30, (None, 30)),
+            ("CSE231", "Final exam", "final", due(82), "09:00", 60, (None, 60)),
+            ("MTH203", "Quiz 1", "quiz", due(-12), None, 10, (7, 10)),
+            ("MTH203", "Problem set 2", "assignment", due(1), "18:00", 5, (None, 20)),
+            ("MTH203", "Midterm", "midterm", due(20), "10:00", 25, (None, 50)),
+            ("MTH203", "Final exam", "final", due(84), "12:00", 60, (None, 100)),
+            ("PHY202", "Quiz 1", "quiz", due(4), "08:30", 10, (None, 10)),
+            ("HUM201", "Reading response", "assignment", due(-3), None, 5, (19, 20)),
+            ("HUM201", "Essay outline", "project", due(6), None, 10, (None, 10)),
+            ("HUM201", "Final essay", "project", due(75), None, 50, (None, 100)),
         ]
-        for code, title, kind, when, at, weight, score, done in assessments:
+        for code, title, kind, when, at, weight, (earned, out_of) in assessments:
             db.add(Assessment(user_id=user.id, course_id=ids[code], title=title, kind=kind, due_date=when,
-                              due_time=at, weight=weight, score=score, done=done))
+                              due_time=at, weight=weight, points_earned=earned, points_max=out_of,
+                              score=round(earned / out_of * 100, 4) if earned is not None else None,
+                              done=earned is not None))
         db.commit()
     print(f"Demo user ready: {DEMO_EMAIL} / {DEMO_PASSWORD}")
 

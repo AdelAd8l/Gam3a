@@ -107,3 +107,19 @@ export const POINTS: Record<'4' | '5', Record<string, number>> = {
   '4': { 'A+': 4, A: 4, 'A-': 3.7, 'B+': 3.3, B: 3, 'B-': 2.7, 'C+': 2.3, C: 2, 'C-': 1.7, 'D+': 1.3, D: 1, F: 0 },
   '5': { 'A+': 5, A: 4.75, 'B+': 4.5, B: 4, 'C+': 3.5, C: 3, 'D+': 2.5, D: 2, F: 1 },
 }
+
+/** A saved course as the payload the API expects when saving it again. */
+export function courseInput(c: import('./api').Course): import('./api').CourseInput {
+  return {
+    term_id: c.term_id,
+    code: c.code,
+    name: c.name,
+    credits: c.credits,
+    instructor: c.instructor,
+    color: c.color,
+    grade: c.grade,
+    in_gpa: c.in_gpa,
+    target_grade: c.target_grade,
+    meetings: c.meetings.map(({ weekday, start, end, kind, location }) => ({ weekday, start, end, kind, location })),
+  }
+}

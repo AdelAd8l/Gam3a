@@ -36,3 +36,18 @@ def test_required_gpa():
     # 30 credits at 3.0 → need x over 15 credits to reach 3.2: (3.2*45 - 90) / 15 = 3.6
     assert required_gpa(90, 30, 3.2, 15) == 3.6
     assert required_gpa(90, 30, 3.2, 0) is None
+
+
+def test_letters_from_percentages():
+    from app.grading import DEFAULT_CUTOFFS, letter_for
+
+    c = DEFAULT_CUTOFFS["4"]
+    assert [letter_for(p, c) for p in (97, 96.9, 93, 92.99, 90, 60, 59.9)] == ["A+", "A", "A", "A-", "A-", "D", "F"]
+
+
+def test_progress_ignores_unweighted_and_counts_unlisted_weight():
+    from app.grading import Graded, course_progress
+
+    p = course_progress([Graded(20, 100), Graded(None, 50), Graded(30, None)], target=90)
+    assert p.graded_weight == 20 and p.listed_weight == 50 and p.remaining_weight == 80
+    assert p.required == 87.5  # (90 - 20) / 80

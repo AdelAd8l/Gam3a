@@ -20,6 +20,8 @@
 
 ![Weekly schedule with generated study plan](docs/screenshots/schedule.png)
 
+![Course page with the goal calculator](docs/screenshots/course-goal.png)
+
 *Gam3a (جامعة) means "university" in Arabic.*
 
 ## Features
@@ -31,8 +33,15 @@
 - **Clash detection:** overlapping classes or commitments are flagged.
 - **Weekly timetable:** a full grid on desktop and a day-by-day agenda on the phone.
 - **Calendar export:** a `.ics` file with every class repeating weekly until the term ends, plus deadlines. It works with Google Calendar, Apple Calendar and Outlook.
-- **Deadlines:** assignments, quizzes, midterms, finals and projects, with due date and time, weight and score. They're grouped into overdue, next 7 days and later, and ticked off with a checkbox.
-- **Running course score:** the weighted average of what has been graded so far.
+- **Deadlines:** assignments, quizzes, midterms, finals and projects, with due date and time and weight. Marks are entered as they appear on the paper, e.g. **28 / 30**. Deadlines are grouped into overdue, next 7 days and later, and ticked off with a checkbox.
+- **Course page and goal calculator:** each subject has its own page listing its coursework, with:
+  - your current average and letter
+  - the course marks you've **secured**
+  - the **best grade still possible**
+  - **what you need on the remaining work** to reach your target, shown per item: "at least 39.33 / 40 on the midterm, 59 / 60 on the final"
+  - a warning when the weights you've entered don't add up
+  - a one-click "set final grade" once everything is marked
+- **Your grade cut-offs:** A+ ≥ 97, A ≥ 93, A- ≥ 90 … by default. You can edit them to match your university, and set a default goal for every course.
 - **GPA and CGPA:** term and cumulative GPA on a **4.0** or **5.0** scale, with P/W/I grades excluded, and a chart across terms.
 - **"What do I need?":** the term GPA you need to reach a target CGPA.
 - **"Plan this term":** pick expected grades and see your projected GPA and CGPA without saving anything.
@@ -120,6 +129,14 @@ The planner is covered by unit tests: it respects classes, buffers and rest days
 - **GPA formula:** GPA = Σ(points × credits) / Σ(credits), counting graded courses only.
 - **Special grades:** **P** (pass) earns credits but isn't in the GPA. **W** and **I** are neither. **F** counts in the GPA but earns nothing.
 - **CGPA:** accumulated term by term, in date order.
+
+## How the goal calculator works
+
+- **Terms:** every coursework item has a *weight* (its share of the course grade) and a *mark* (e.g. 28 / 30 → 93.3%).
+- **Secured:** Σ weight × mark%, the course points already in the bag, out of 100.
+- **Remaining:** 100 − the weight marked so far. This includes coursework you haven't entered yet.
+- **Required:** (target cut-off − secured) / remaining, the average you need on everything still to come. For each upcoming item it's also shown in that item's own points.
+- **Status:** **Secured** when secured ≥ target. **Out of reach** when secured + remaining < target. Otherwise **on track** or **needs work**, depending on whether your average so far is at least the required one.
 
 ## How it's built
 
