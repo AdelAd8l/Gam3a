@@ -61,7 +61,7 @@ back is safe. For extra peace of mind before a big update, take a backup first:
       │
       ▼
  nginx  (HTTPS certificates from Let's Encrypt; one site per domain)
-      ├── smar-bio.duckdns.org  ─▶ Smart Bio (unchanged)
+      ├── smart-bio.duckdns.org, smartbiolearning.duckdns.org ─▶ Smart Bio (unchanged)
       ├── tally-me.duckdns.org  ─▶ 127.0.0.1:8101 ─▶ apps@tally ─▶ /var/lib/apps/tally/tally.db
       └── gam3a.duckdns.org     ─▶ 127.0.0.1:8102 ─▶ apps@gam3a ─▶ /var/lib/apps/gam3a/gam3a.db
 ```
@@ -140,7 +140,7 @@ back is safe. For extra peace of mind before a big update, take a backup first:
 | --- | --- |
 | `/etc/systemd/system/apps@.service` | The service definition shared by both apps (`apps@tally`, `apps@gam3a`): runs as user `apps`, restarts on failure, 300 MB cap. |
 | `/etc/nginx/sites-available/tally-me.duckdns.org`, `…/gam3a.duckdns.org` (linked in `sites-enabled/`) | nginx sites for the two apps; certbot added the HTTPS lines. Smart Bio's site files are separate and untouched. |
-| `/etc/letsencrypt/live/<domain>/` | HTTPS certificates. They renew automatically (`systemctl list-timers \| grep certbot`). |
+| `/etc/letsencrypt/live/<domain>/` | HTTPS certificates. They renew automatically about 30 days before expiry (`certbot.timer`, twice a day), for Smart Bio's sites too. Check with `sudo certbot renew --dry-run`. |
 | `/swapfile` (in `/etc/fstab`), `/etc/sysctl.d/90-apps-swap.conf` | 2 GB swap, used only when memory is short. |
 | `/etc/cron.d/apps-duckdns` | Only if a DuckDNS token was given (it wasn't): keeps the names pointed at the server. Without it, the IPs are set by hand on duckdns.org. |
 
@@ -149,7 +149,7 @@ back is safe. For extra peace of mind before a big update, take a backup first:
 | Where | What |
 | --- | --- |
 | GitHub `AdelAd8l/Gam3a`, `AdelAd8l/tally` | Code; **Actions** tests and builds; **Releases → latest** holds the packages. |
-| duckdns.org | `tally-me`, `gam3a`, `smar-bio` → `129.151.141.143`. |
+| duckdns.org | `tally-me`, `gam3a`, `smart-bio`, `smartbiolearning` → `129.151.141.143`. |
 | Neon | The old database copies from before the move (no longer updated). Used only if you run `move-db.sh to-neon`. |
 
 ---

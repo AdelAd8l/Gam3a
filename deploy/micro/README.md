@@ -27,7 +27,7 @@ without touching the existing site:
    For Gam3a, open the Neon console → your project → **Databases → New database** →
    name it `gam3a`, then **Connect** → copy the connection string for that database.
 2. **Both names on DuckDNS** (<https://www.duckdns.org>): add `tally-me` and `gam3a`, and set
-   each one's IP to the server's public IP, the same IP your other site (e.g. `smar-bio`)
+   each one's IP to the server's public IP, the same IP your other site (e.g. `smart-bio`)
    already shows there. Your DuckDNS token is optional: with it, the installer sets the IPs
    for you and keeps them updated; without it, it just checks they're right.
 3. **The builds exist.** Open each repo's **Actions** tab: the latest run on `main`
