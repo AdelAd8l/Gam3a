@@ -1,0 +1,375 @@
+/* Gam3a — design tokens and base styles.
+   Direction: a student's paper planner. Warm neutrals, hairline rules, one ink-blue accent,
+   tabular numerals for times and grades. No gradients, no drop shadows on content. */
+
+:root {
+  --paper: #f6f4ee;
+  --panel: #fbfaf6;
+  --field: #ffffff;
+  --ink: #1b1b18;
+  --ink-2: #57564f;
+  --ink-3: #8d8b82;
+  --rule: #e4e1d7;
+  --rule-strong: #cfcbbf;
+  --accent: #22406e;
+  --accent-ink: #f6f4ee;
+  --accent-soft: #e1e7f1;
+  --income: #2c6a4d;
+  --danger: #a3412c;
+  --danger-soft: #f5e4de;
+  --warn: #a6731a;
+  --track: #ebe8df;
+  --focus: #22406e55;
+
+  --sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --radius: 6px;
+  --sidebar: 228px;
+
+  color-scheme: light;
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #151513;
+    --panel: #1b1b19;
+    --field: #1f1f1c;
+    --ink: #ecebe5;
+    --ink-2: #aeaca3;
+    --ink-3: #7c7a72;
+    --rule: #2c2c28;
+    --rule-strong: #3d3c37;
+    --accent: #9ab8e6;
+    --accent-ink: #111a2b;
+    --accent-soft: #1d2533;
+    --income: #7fbf9c;
+    --danger: #e0876f;
+    --danger-soft: #3a221c;
+    --warn: #d9a54a;
+    --track: #2a2a26;
+    --focus: #9ab8e655;
+    color-scheme: dark;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--paper);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+h3 {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.muted {
+  color: var(--ink-2);
+}
+
+.faint {
+  color: var(--ink-3);
+}
+
+.income {
+  color: var(--income);
+}
+
+.danger-text {
+  color: var(--danger);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- controls ------------------------------------------------------------ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--field);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 0.12s, border-color 0.12s;
+}
+
+.btn:hover {
+  border-color: var(--ink-3);
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-primary:hover {
+  border-color: var(--accent);
+  filter: brightness(1.08);
+}
+
+.btn-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--ink-2);
+}
+
+.btn-quiet:hover {
+  color: var(--ink);
+  border-color: transparent;
+  background: var(--track);
+}
+
+.btn-danger {
+  color: var(--danger);
+}
+
+.btn-danger:hover {
+  border-color: var(--danger);
+}
+
+.btn-sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.85rem;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field > span {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.input,
+.select {
+  width: 100%;
+  height: 38px;
+  padding: 0 11px;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--field);
+  transition: border-color 0.12s;
+}
+
+.input:hover,
+.select:hover {
+  border-color: var(--ink-3);
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+.input::placeholder {
+  color: var(--ink-3);
+}
+
+.select {
+  appearance: none;
+  padding-inline-end: 30px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%238d8b82' stroke-width='1.5'%3E%3Cpath d='m1 1 4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+
+.input-amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: calc(var(--radius) + 2px);
+  background: var(--track);
+  gap: 2px;
+}
+
+.segmented button {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 0.87rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--field);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--rule);
+}
+
+.form-error {
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-size: 0.88rem;
+}
+
+/* ---- progress ------------------------------------------------------------ */
+
+.meter {
+  position: relative;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.meter > span {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  border-radius: 3px;
+  background: var(--accent);
+}
+
+.meter.is-warn > span {
+  background: var(--warn);
+}
+
+.meter.is-over > span {
+  background: var(--danger);
+}
+
+.swatch {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+}
+
+/* ---- right-to-left (Arabic) ------------------------------------------------------ */
+
+[dir='rtl'] .select {
+  background-position: left 11px center;
+}
+
+[dir='rtl'] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+/* Arabic letters join; letter-spacing breaks the joins and uppercase has no meaning. */
+[lang='ar'] h1,
+[lang='ar'] h2,
+[lang='ar'] .logo {
+  letter-spacing: 0;
+}
+
+[lang='ar'] h2 {
+  font-size: 0.9rem;
+}
+
+[lang='ar'] body {
+  line-height: 1.6;
+}
+
+/* Figures are laid out left-to-right in both languages ("-17.87 US$", "1,250.00 ج.م.")
+   and isolated so they don't reorder the Arabic text around them. */
+.num {
+  direction: ltr;
+  unicode-bidi: isolate;
+}

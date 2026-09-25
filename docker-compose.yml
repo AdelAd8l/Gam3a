@@ -1,0 +1,16 @@
+services:
+  gam3a:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Generate your own: python -c "import secrets; print(secrets.token_hex(32))"
+      GAM3A_SECRET_KEY: ${GAM3A_SECRET_KEY:?Set GAM3A_SECRET_KEY in .env}
+      GAM3A_DEMO: ${GAM3A_DEMO:-false}
+      GAM3A_COOKIE_SECURE: ${GAM3A_COOKIE_SECURE:-false}
+    volumes:
+      - gam3a-data:/data
+    restart: unless-stopped
+
+volumes:
+  gam3a-data:

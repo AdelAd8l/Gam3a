@@ -1,0 +1,19 @@
+# One-click deploy: https://render.com/deploy?repo=https://github.com/AdelAd8l/gam3a
+services:
+  - type: web
+    name: gam3a
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: GAM3A_SECRET_KEY
+        generateValue: true
+      # Paste a Postgres connection string (e.g. a free Neon database).
+      # Render's free disk is wiped on every deploy, so SQLite would lose your data.
+      - key: GAM3A_DATABASE_URL
+        sync: false
+      - key: GAM3A_COOKIE_SECURE
+        value: "true"
+      # Flip to "false" once you've created your account.
+      - key: GAM3A_ALLOW_SIGNUP
+        value: "true"

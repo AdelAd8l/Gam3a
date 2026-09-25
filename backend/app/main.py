@@ -1,0 +1,52 @@
+import mimetypes
+from contextlib import asynccontextmanager
+from pathlib import Path
+
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from . import seed
+from .config import get_settings
+from .database import Base, engine
+from .routers import assessments, auth, busy, courses, grades, plan, terms
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    Base.metadata.create_all(engine)
+    if get_settings().demo:
+        seed.run(only_if_missing=True)
+    yield
+
+
+app = FastAPI(title="Gam3a", version="1.0.0", lifespan=lifespan)
+
+for module in (auth, terms, courses, busy, assessments, plan, grades):
+    app.include_router(module.router)
+
+
+@app.get("/api/health", tags=["meta"])
+def health():
+    settings = get_settings()
+    body: dict = {"status": "ok", "signup": settings.allow_signup}
+    if settings.demo:
+        body["demo"] = {"email": seed.DEMO_EMAIL, "password": seed.DEMO_PASSWORD}
+    return body
+
+
+mimetypes.add_type("application/manifest+json", ".webmanifest")
+
+# Serve the built React app (frontend/dist) from the same origin, with SPA fallback.
+static_dir = Path(get_settings().static_dir).resolve()
+if (static_dir / "index.html").exists():
+    app.mount("/assets", StaticFiles(directory=static_dir / "assets"), name="assets")
+
+    @app.get("/{path:path}", include_in_schema=False)
+    def spa(path: str):
+        if path.startswith("api/"):
+            raise HTTPException(404)
+        file = (static_dir / path).resolve()
+        if path and file.is_file() and file.is_relative_to(static_dir):
+            return FileResponse(file)
+        return FileResponse(static_dir / "index.html")
