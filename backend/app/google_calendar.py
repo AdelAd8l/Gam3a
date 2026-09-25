@@ -366,7 +366,7 @@ def _apply(db: Session, user_id: int, token: str, wanted: Wanted, check_calendar
     have = {row.course_id: row for row in db.scalars(select(GoogleCalendar).where(GoogleCalendar.user_id == user_id))}
     for course_id, cal in wanted.calendars.items():
         row = have.get(course_id)
-        digest = _hash([cal.body, cal.color])
+        digest = _hash([cal.body, cal.color, "shown"])  # "shown": re-send to calendars made before it
         if row is not None and row.digest == digest and not check_calendars:
             continue
         if row is not None:
@@ -388,7 +388,14 @@ def _apply(db: Session, user_id: int, token: str, wanted: Wanted, check_calendar
             "PATCH",
             f"/users/me/calendarList/{row.calendar_id}",
             params={"colorRgbFormat": "true"},
-            json_body={"backgroundColor": cal.color, "foregroundColor": _text_on(cal.color)},
+            # A calendar made through the API starts out unticked in the person's list, so its
+            # events stay hidden (the phone app shows only ticked calendars): tick it.
+            json_body={
+                "backgroundColor": cal.color,
+                "foregroundColor": _text_on(cal.color),
+                "selected": True,
+                "hidden": False,
+            },
         )
         row.digest = digest
         db.commit()
