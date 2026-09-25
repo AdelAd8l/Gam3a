@@ -2967,3 +2967,22 @@ code {
 .auth-privacy a {
   color: inherit;
 }
+
+/* Settings → Account: who is signed in, and the way out (the sidebar's is hidden on phones). */
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.account-who {
+  display: grid;
+  min-width: 0;
+}
+
+.account-who > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

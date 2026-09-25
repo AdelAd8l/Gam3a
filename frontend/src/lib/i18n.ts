@@ -345,6 +345,8 @@ const en = {
   'settings.deleteBtn': 'Delete my account',
   'settings.confirmDelete': 'Delete your account and all of its data?',
   'settings.languageHint': 'Used on this device.',
+  'settings.account': 'Account',
+  'settings.signedInAs': 'Signed in on this device as',
 
   'auth.signupTitle': 'Your semester, sorted',
   'auth.loginTitle': 'Welcome back',
@@ -770,6 +772,8 @@ const ar: Record<Key, string> = {
   'settings.deleteBtn': 'حذف حسابي',
   'settings.confirmDelete': 'حذف حسابك وكل بياناته؟',
   'settings.languageHint': 'تُستخدم على هذا الجهاز.',
+  'settings.account': 'الحساب',
+  'settings.signedInAs': 'مسجّل الدخول على هذا الجهاز باسم',
 
   'auth.signupTitle': 'فصلك الدراسي، منظّم',
   'auth.loginTitle': 'مرحباً بعودتك',

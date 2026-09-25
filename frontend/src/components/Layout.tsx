@@ -1,13 +1,13 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 
 import { api, type Assessment, type Course, type Term, type User } from '../lib/api'
 import { pickDefaultTerm } from '../lib/format'
 import { DialogContext, TermContext, useTerms } from '../lib/hooks'
 import { t, useLang, type Key } from '../lib/i18n'
-import { clearOutbox } from '../lib/offline'
-import { browserTimeZone, detachPush, pushState, refreshPush } from '../lib/push'
+import { browserTimeZone, pushState, refreshPush } from '../lib/push'
+import { useSignOut } from '../lib/signout'
 import AssessmentDialog from './AssessmentDialog'
 import CourseDialog from './CourseDialog'
 import Icon, { type IconName } from './Icon'
@@ -42,7 +42,7 @@ type Open<T> = { item?: T; key: number } | null
 
 export default function Layout({ user }: { user: User }) {
   const qc = useQueryClient()
-  const navigate = useNavigate()
+  const signOut = useSignOut()
   // Settings and Admin work without a term; every other page needs one.
   const termless = ['/settings', '/admin'].includes(useLocation().pathname)
   const { data: terms = [], isPending } = useTerms()
@@ -109,14 +109,6 @@ export default function Layout({ user }: { user: User }) {
       .catch(() => {})
   }, [user.timezone_auto, user.timezone, qc])
 
-  async function signOut() {
-    await detachPush()
-    await api.logout()
-    clearOutbox()
-    qc.clear()
-    qc.setQueryData(['me'], null)
-    navigate('/login')
-  }
 
   return (
     <TermContext.Provider value={{ term, terms, setTermId }}>

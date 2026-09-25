@@ -5,12 +5,14 @@ import { useNavigate } from 'react-router-dom'
 import GoogleCalendarSettings from '../components/GoogleCalendarSettings'
 import GradingSettings from '../components/GradingSettings'
 import NotificationSettings from '../components/NotificationSettings'
+import Icon from '../components/Icon'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
 import { durationLabel, weekdayName } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
 import { clearOutbox } from '../lib/offline'
+import { useSignOut } from '../lib/signout'
 
 export default function Settings() {
   const user = useUser()
@@ -18,6 +20,7 @@ export default function Settings() {
   const refresh = useRefresh()
   const navigate = useNavigate()
   const lang = useLang()
+  const signOut = useSignOut()
   const [name, setName] = useState(user.name)
   const [university, setUniversity] = useState(user.university)
   const [scale, setScale] = useState<Scale>(user.scale)
@@ -59,6 +62,23 @@ export default function Settings() {
   return (
     <div className="page page-narrow">
       <PageHeader title={t('nav.settings')} />
+
+      <section className="settings-section">
+        <div className="settings-intro">
+          <h3>{t('settings.account')}</h3>
+          <p className="muted">{t('settings.signedInAs')}</p>
+        </div>
+        <div className="panel panel-pad account-row">
+          <div className="account-who">
+            <strong>{user.name}</strong>
+            <span className="faint">{user.email}</span>
+          </div>
+          <button className="btn" onClick={() => void signOut()}>
+            <Icon name="logout" size={16} flip />
+            {t('shell.signOut')}
+          </button>
+        </div>
+      </section>
 
       <section className="settings-section">
         <div className="settings-intro">
