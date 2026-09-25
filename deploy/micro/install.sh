@@ -13,20 +13,55 @@ chmod 700 /etc/apps
 SETTINGS=/etc/apps/install.env
 [[ -f $SETTINGS ]] && source "$SETTINGS"
 
-ask() { # ask VAR "question" [default] [secret]
-  local var=$1 q=$2 def=${3:-} answer
-  [[ -n ${!var:-} ]] && return
-  if [[ -n ${4:-} ]]; then read -rsp "$q: " answer; echo; else read -rp "$q${def:+ [$def]}: " answer; fi
-  printf -v "$var" '%s' "${answer:-$def}"
+# ask VAR "question" [default] [secret] [pattern] [hint]
+# Keeps a saved answer if it still looks valid; otherwise asks until the answer does.
+ask() {
+  local var=$1 q=$2 def=${3:-} secret=${4:-} pattern=${5:-} hint=${6:-} answer
+  while :; do
+    answer=${!var:-}
+    if [[ -z $answer ]]; then
+      if [[ -n $secret ]]; then
+        read -rsp "$q: " answer
+        echo
+        # Neon's "Connect" box can copy it as: psql 'postgresql://...'
+        answer=${answer#psql }
+        answer=${answer#\'}
+        answer=${answer%\'}
+        answer=${answer#\"}
+        answer=${answer%\"}
+        [[ -n $answer ]] && echo "   (received ${#answer} characters)"
+      else
+        read -rp "$q${def:+ [$def]}: " answer
+      fi
+      answer=${answer:-$def}
+    fi
+    if [[ -z $pattern || $answer =~ $pattern ]]; then
+      printf -v "$var" '%s' "$answer"
+      return
+    fi
+    echo "   That doesn't look right. $hint"
+    printf -v "$var" '%s' ""
+  done
 }
 
+DOMAIN_RE='^[a-z0-9-]+(\.[a-z0-9-]+)+$'
+DB_RE='^postgres(ql)?://[^[:space:]]+@[^[:space:]]+$'
+DB_HINT="Paste the whole connection string from Neon (it starts with postgresql:// and has an @ in it)."
+
 log "A few questions (answers are saved in $SETTINGS, readable by root only)"
-ask TALLY_DOMAIN "Domain for Tally" "tally-me.duckdns.org"
-ask GAM3A_DOMAIN "Domain for Gam3a" "gam3a.duckdns.org"
-ask EMAIL "Your email (for the HTTPS certificates)"
-ask DUCKDNS_TOKEN "DuckDNS token (optional: press Enter if you set the IP on duckdns.org yourself)" "" secret
-ask TALLY_DATABASE_URL "Neon connection string for Tally (postgresql://...)" "" secret
-ask GAM3A_DATABASE_URL "Neon connection string for Gam3a (a separate database)" "" secret
+ask TALLY_DOMAIN "Domain for Tally" "tally-me.duckdns.org" "" "$DOMAIN_RE" "Type a domain like tally-me.duckdns.org, or press Enter."
+ask GAM3A_DOMAIN "Domain for Gam3a" "gam3a.duckdns.org" "" "$DOMAIN_RE" "Type a domain like gam3a.duckdns.org, or press Enter."
+ask EMAIL "Your email (for the HTTPS certificates)" "" "" '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$' "Type an email address."
+ask DUCKDNS_TOKEN "DuckDNS token (optional: press Enter to skip if you set the IP on duckdns.org yourself)" "" secret \
+  '^$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' "A DuckDNS token looks like 1a2b3c4d-.... Press Enter to skip it."
+echo "Paste the Neon connection strings below. Nothing shows while you paste (that's normal); then press Enter."
+ask TALLY_DATABASE_URL "Neon connection string for Tally" "" secret "$DB_RE" "$DB_HINT"
+ask GAM3A_DATABASE_URL "Neon connection string for Gam3a (a separate database)" "" secret "$DB_RE" "$DB_HINT"
+if [[ $TALLY_DATABASE_URL == "$GAM3A_DATABASE_URL" ]]; then
+  echo "   Tally and Gam3a need different databases (in Neon: Databases -> New database -> gam3a)."
+  GAM3A_DATABASE_URL=""
+  ask GAM3A_DATABASE_URL "Neon connection string for Gam3a" "" secret "$DB_RE" "$DB_HINT"
+fi
 umask 077
 cat >"$SETTINGS" <<CONF
 TALLY_DOMAIN='$TALLY_DOMAIN'
