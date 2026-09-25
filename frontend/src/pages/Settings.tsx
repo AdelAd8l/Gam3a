@@ -8,6 +8,7 @@ import { api, type Scale } from '../lib/api'
 import { durationLabel, weekdayName } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
+import { clearOutbox } from '../lib/offline'
 
 export default function Settings() {
   const user = useUser()
@@ -44,6 +45,7 @@ export default function Settings() {
   const remove = useMutation({
     mutationFn: api.deleteMe,
     onSuccess: () => {
+      clearOutbox()
       qc.clear()
       qc.setQueryData(['me'], null)
       navigate('/signup')

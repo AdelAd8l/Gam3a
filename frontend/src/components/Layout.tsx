@@ -6,10 +6,12 @@ import { api, type Assessment, type Course, type Term, type User } from '../lib/
 import { pickDefaultTerm } from '../lib/format'
 import { DialogContext, TermContext, useTerms } from '../lib/hooks'
 import { t, type Key } from '../lib/i18n'
+import { clearOutbox } from '../lib/offline'
 import AssessmentDialog from './AssessmentDialog'
 import CourseDialog from './CourseDialog'
 import Icon, { type IconName } from './Icon'
 import Logo from './Logo'
+import SyncStatus from './SyncStatus'
 import TermDialog from './TermDialog'
 
 const NAV: { to: string; label: Key; icon: IconName }[] = [
@@ -80,6 +82,7 @@ export default function Layout({ user }: { user: User }) {
 
   async function signOut() {
     await api.logout()
+    clearOutbox()
     qc.clear()
     qc.setQueryData(['me'], null)
     navigate('/login')
@@ -140,6 +143,8 @@ export default function Layout({ user }: { user: User }) {
           <main className="main">
             {isPending ? null : term ? <Outlet /> : <Welcome onCreate={() => dialogs.editTerm()} />}
           </main>
+
+          <SyncStatus />
 
           {term && (
             <button

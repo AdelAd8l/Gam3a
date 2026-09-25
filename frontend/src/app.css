@@ -2377,3 +2377,50 @@ code {
 .figure-note .class-badge {
   margin-inline-end: 4px;
 }
+
+/* ---- offline / sync pill ------------------------------------------------------- */
+
+.sync-pill {
+  position: fixed;
+  z-index: 7;
+  inset-inline-start: 50%;
+  translate: -50% 0;
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100vw - 110px);
+  padding: 7px 14px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--ink-2);
+  font-size: 13px;
+  box-shadow: 0 8px 20px -10px rgb(0 0 0 / 0.35);
+}
+
+[dir='rtl'] .sync-pill {
+  translate: 50% 0;
+}
+
+.sync-pill .link-quiet {
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.sync-offline .sync-dot {
+  background: var(--warn);
+}
+
+.sync-failed {
+  border-color: var(--danger);
+  color: var(--danger);
+}

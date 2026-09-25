@@ -1,6 +1,7 @@
 // Typed client for the Gam3a API.
 
-import { serverError } from './i18n'
+import { send, withQuery, type Query } from './http'
+import { pendingCount, syncNow, write } from './offline'
 
 export type MeetingKind = 'lecture' | 'lab' | 'section' | 'tutorial'
 export type AssessmentKind = 'assignment' | 'quiz' | 'midterm' | 'final' | 'project' | 'other'
@@ -134,48 +135,18 @@ export interface Grades {
   points: number
 }
 
-export class ApiError extends Error {
-  status: number
-  constructor(status: number, message: string) {
-    super(message)
-    this.status = status
-  }
-}
-
-type Query = Record<string, string | number | undefined | null>
-
-function withQuery(path: string, query?: Query) {
-  if (!query) return path
-  const params = new URLSearchParams()
-  for (const [k, v] of Object.entries(query)) {
-    if (v !== undefined && v !== null && v !== '') params.set(k, String(v))
-  }
-  const qs = params.toString()
-  return qs ? `${path}?${qs}` : path
-}
+export { ApiError } from './http'
 
 async function request<T>(method: string, path: string, body?: unknown, query?: Query): Promise<T> {
-  const init: RequestInit = { method, credentials: 'same-origin', headers: {} }
-  if (body instanceof FormData) {
-    init.body = body
-  } else if (body !== undefined) {
-    init.body = JSON.stringify(body)
-    init.headers = { 'Content-Type': 'application/json' }
+  // Reads go straight to the network (React Query serves the saved copy when offline);
+  // writes go through the outbox so nothing is lost without a signal.
+  if (method === 'GET') {
+    // Send queued changes first so the answer already includes them.
+    if (pendingCount() && navigator.onLine) await syncNow()
+    return send<T>(method, path, body, query)
   }
-  const res = await fetch(withQuery(`/api${path}`, query), init)
-  if (!res.ok) {
-    let message = res.statusText
-    try {
-      const data = await res.json()
-      if (typeof data.detail === 'string') message = data.detail
-      else if (Array.isArray(data.detail)) message = data.detail.map((d: { msg: string }) => d.msg.replace(/^Value error, /, '')).join('. ')
-    } catch {
-      /* not JSON */
-    }
-    throw new ApiError(res.status, serverError(message))
-  }
-  if (res.status === 204) return undefined as T
-  return res.json() as Promise<T>
+  if (path.startsWith('/auth/')) return send<T>(method, path, body, query)
+  return write<T>(method, path, body)
 }
 
 export const api = {
