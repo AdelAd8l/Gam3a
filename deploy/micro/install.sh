@@ -24,7 +24,7 @@ log "A few questions (answers are saved in $SETTINGS, readable by root only)"
 ask TALLY_DOMAIN "Domain for Tally" "tally-me.duckdns.org"
 ask GAM3A_DOMAIN "Domain for Gam3a" "gam3a.duckdns.org"
 ask EMAIL "Your email (for the HTTPS certificates)"
-ask DUCKDNS_TOKEN "DuckDNS token (duckdns.org, top of the page)" "" secret
+ask DUCKDNS_TOKEN "DuckDNS token (optional: press Enter if you set the IP on duckdns.org yourself)" "" secret
 ask TALLY_DATABASE_URL "Neon connection string for Tally (postgresql://...)" "" secret
 ask GAM3A_DATABASE_URL "Neon connection string for Gam3a (a separate database)" "" secret
 umask 077
@@ -63,15 +63,32 @@ mkdir -p "$ROOT"
 uv python install --quiet 3.12
 
 # ---- DNS: point both names at this server ------------------------------------------
-IP=$(curl -fsS https://api.ipify.org)
-SUBS=$(printf '%s\n' "$TALLY_DOMAIN" "$GAM3A_DOMAIN" | sed 's/\.duckdns\.org$//' | paste -sd,)
-log "Pointing $SUBS.duckdns.org at $IP"
-curl -fsS "https://www.duckdns.org/update?domains=$SUBS&token=$DUCKDNS_TOKEN&ip=$IP" | grep -q OK \
-  || { echo "DuckDNS refused the update. Check the token and that both names exist in your DuckDNS account."; exit 1; }
-cat >/etc/cron.d/apps-duckdns <<CRON
+IP=$(curl -fsS -4 https://api.ipify.org)
+if [[ -n $DUCKDNS_TOKEN ]]; then
+  SUBS=$(printf '%s\n' "$TALLY_DOMAIN" "$GAM3A_DOMAIN" | sed 's/\.duckdns\.org$//' | paste -sd,)
+  log "Pointing $SUBS.duckdns.org at $IP"
+  curl -fsS "https://www.duckdns.org/update?domains=$SUBS&token=$DUCKDNS_TOKEN&ip=$IP" | grep -q OK \
+    || { echo "DuckDNS refused the update. Check the token and that both names exist in your DuckDNS account."; exit 1; }
+  cat >/etc/cron.d/apps-duckdns <<CRON
 */10 * * * * root curl -fsS "https://www.duckdns.org/update?domains=$SUBS&token=$DUCKDNS_TOKEN&ip=" >/dev/null 2>&1
 CRON
-chmod 600 /etc/cron.d/apps-duckdns
+  chmod 600 /etc/cron.d/apps-duckdns
+else
+  # No token: the names must already point here (set on duckdns.org). Check before going on,
+  # because the HTTPS certificates can only be issued once they do.
+  log "Checking that both names point at this server ($IP)"
+  wrong=()
+  for domain in "$TALLY_DOMAIN" "$GAM3A_DOMAIN"; do
+    [[ $(getent ahostsv4 "$domain" | awk 'NR==1{print $1}') == "$IP" ]] || wrong+=("$domain")
+  done
+  if [[ ${#wrong[@]} -gt 0 ]]; then
+    echo
+    echo "These names don't point at this server yet: ${wrong[*]}"
+    echo "On duckdns.org, set their 'current ip' to:  $IP"
+    echo "then wait a minute and run  sudo ./install.sh  again (your answers are remembered)."
+    exit 1
+  fi
+fi
 
 # ---- apps ---------------------------------------------------------------------------
 install -m 644 apps@.service /etc/systemd/system/apps@.service

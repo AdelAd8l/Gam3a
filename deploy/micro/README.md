@@ -24,8 +24,10 @@ without touching the existing site:
 1. **Two Neon databases.** Tally already has one: use the same connection string.
    For Gam3a, open the Neon console → your project → **Databases → New database** →
    name it `gam3a`, then **Connect** → copy the connection string for that database.
-2. **Your DuckDNS token** (top of <https://www.duckdns.org>) and both names created there:
-   `tally-me` and `gam3a`.
+2. **Both names on DuckDNS** (<https://www.duckdns.org>): add `tally-me` and `gam3a`, and set
+   each one's IP to the server's public IP, the same IP your other site (e.g. `smar-bio`)
+   already shows there. Your DuckDNS token is optional: with it, the installer sets the IPs
+   for you and keeps them updated; without it, it just checks they're right.
 3. **The builds exist.** Open each repo's **Actions** tab: the latest run on `main`
    should be green, and **Releases → latest** should list `tally.tar.gz` / `gam3a.tar.gz`.
    The repositories need to be public for the server to download them.
@@ -41,7 +43,7 @@ sudo ./install.sh
 ```
 
 It asks for the domains (press Enter to accept the defaults), your email, the DuckDNS
-token and the two connection strings. Paste those straight into the terminal; they're
+token (press Enter to skip) and the two connection strings. Paste those straight into the terminal; they're
 stored in `/etc/apps/`, readable only by root. When it finishes, open
 <https://tally-me.duckdns.org> and <https://gam3a.duckdns.org>.
 
