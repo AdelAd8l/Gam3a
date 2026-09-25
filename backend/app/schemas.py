@@ -72,6 +72,7 @@ class UserOut(BaseModel):
     is_admin: bool
     must_change_password: bool
     timezone: str
+    timezone_auto: bool
     lang: Lang
     notify_classes: bool
     class_lead: int
@@ -91,6 +92,7 @@ class UserUpdate(BaseModel):
     points: dict[str, float] | None = None
     bands: dict[str, float] | None = None
     timezone: str | None = Field(default=None, max_length=64)
+    timezone_auto: bool | None = None
     lang: Lang | None = None
     notify_classes: bool | None = None
     class_lead: int | None = Field(default=None, ge=0, le=24 * 60)

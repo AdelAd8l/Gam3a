@@ -43,6 +43,9 @@ class User(Base):
     bands: Mapped[str] = mapped_column(String(200), default="")
     # Notifications: sent in the user's time zone and language, some minutes before each event.
     timezone: Mapped[str] = mapped_column(String(64), default="Africa/Cairo")
+    # True: follow the phone that receives the notifications (updated when you travel).
+    # False: the zone was picked by hand in Settings and stays put.
+    timezone_auto: Mapped[bool] = mapped_column(Boolean, default=True)
     lang: Mapped[str] = mapped_column(String(2), default="en")
     notify_classes: Mapped[bool] = mapped_column(Boolean, default=True)
     class_lead: Mapped[int] = mapped_column(Integer, default=15)  # minutes before a class

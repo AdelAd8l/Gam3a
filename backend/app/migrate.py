@@ -17,6 +17,7 @@ COLUMNS = [
     ("users", "bands", "VARCHAR(200) NOT NULL DEFAULT ''"),
     ("users", "timezone", "VARCHAR(64) NOT NULL DEFAULT 'Africa/Cairo'"),
     ("users", "lang", "VARCHAR(2) NOT NULL DEFAULT 'en'"),
+    ("users", "timezone_auto", "BOOLEAN NOT NULL DEFAULT TRUE"),
     ("users", "notify_classes", "BOOLEAN NOT NULL DEFAULT TRUE"),
     ("users", "class_lead", "INTEGER NOT NULL DEFAULT 15"),
     ("users", "notify_deadlines", "BOOLEAN NOT NULL DEFAULT TRUE"),

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { api, type User } from '../lib/api'
 import { durationLabel } from '../lib/format'
 import { t } from '../lib/i18n'
-import { disablePush, enablePush, pushState, type PushState } from '../lib/push'
+import { browserTimeZone, disablePush, enablePush, pushState, type PushState } from '../lib/push'
 import TimeZoneField from './TimeZoneField'
 
 const CLASS_LEADS = [5, 10, 15, 30, 60]
@@ -27,7 +27,10 @@ export default function NotificationSettings({ user }: { user: User }) {
     setBusy(true)
     setError('')
     try {
-      setState(await (on ? enablePush() : disablePush()))
+      const next = await (on ? enablePush() : disablePush())
+      setState(next)
+      const zone = browserTimeZone()
+      if (next === 'on' && prefs.timezone_auto && zone !== prefs.timezone) change({ timezone: zone })
     } catch (e) {
       setError((e as Error).message)
     } finally {
@@ -43,6 +46,7 @@ export default function NotificationSettings({ user }: { user: User }) {
     notify_deadlines: u.notify_deadlines,
     deadline_lead: u.deadline_lead,
     timezone: u.timezone,
+    timezone_auto: u.timezone_auto,
   })
   const [prefs, setPrefs] = useState(() => pick(user))
   const latest = useRef(0)
@@ -131,7 +135,7 @@ export default function NotificationSettings({ user }: { user: User }) {
         </label>
         {prefs.notify_deadlines && leadSelect(prefs.deadline_lead, DEADLINE_LEADS, 'deadline_lead', t('notify.deadlines'))}
       </div>
-      <TimeZoneField value={prefs.timezone} onChange={(timezone) => change({ timezone })} />
+      <TimeZoneField value={prefs.timezone} auto={prefs.timezone_auto} onChange={change} />
       <p className="faint help">{t('notify.untimed')}</p>
 
       <div className="form-foot">

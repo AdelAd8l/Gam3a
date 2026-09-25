@@ -7,7 +7,7 @@ import { pickDefaultTerm } from '../lib/format'
 import { DialogContext, TermContext, useTerms } from '../lib/hooks'
 import { t, useLang, type Key } from '../lib/i18n'
 import { clearOutbox } from '../lib/offline'
-import { detachPush, refreshPush } from '../lib/push'
+import { browserTimeZone, detachPush, pushState, refreshPush } from '../lib/push'
 import AssessmentDialog from './AssessmentDialog'
 import CourseDialog from './CourseDialog'
 import Icon, { type IconName } from './Icon'
@@ -97,6 +97,17 @@ export default function Layout({ user }: { user: User }) {
       .catch(() => {})
   }, [user.lang, lang, qc])
   useEffect(() => void refreshPush(), [user.id])
+
+  // Automatic time zone: follow the phone that receives the reminders (so it changes by itself
+  // when you travel). Devices without notifications, like a laptop, never change it.
+  useEffect(() => {
+    const zone = browserTimeZone()
+    if (!user.timezone_auto || zone === user.timezone || !navigator.onLine) return
+    void pushState()
+      .then((state) => (state === 'on' ? api.updateMe({ timezone: zone }) : null))
+      .then((u) => u && qc.setQueryData(['me'], u))
+      .catch(() => {})
+  }, [user.timezone_auto, user.timezone, qc])
 
   async function signOut() {
     await detachPush()

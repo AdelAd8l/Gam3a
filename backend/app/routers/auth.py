@@ -36,6 +36,7 @@ def user_out(user: User) -> UserOut:
         is_admin=user.is_admin,
         must_change_password=user.must_change_password,
         timezone=user.timezone or "Africa/Cairo",
+        timezone_auto=user.timezone_auto,
         lang=user.lang if user.lang in ("en", "ar") else "en",
         notify_classes=user.notify_classes,
         class_lead=user.class_lead,

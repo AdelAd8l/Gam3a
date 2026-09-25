@@ -43,13 +43,16 @@ function zoneLabel(zone: string) {
   return offset ? `${city} (${offset === 'UTC' ? 'UTC+0' : offset})` : city
 }
 
+const AUTO = 'auto'
+
 interface Props {
   value: string
-  onChange: (zone: string) => void
+  auto: boolean
+  onChange: (change: { timezone: string; timezone_auto: boolean }) => void
 }
 
-/** Pick the time zone reminders are sent in, with a nudge when this phone is somewhere else. */
-export default function TimeZoneField({ value, onChange }: Props) {
+/** Automatic (follows the phone that gets the reminders) or a zone picked by hand. */
+export default function TimeZoneField({ value, auto, onChange }: Props) {
   const device = browserTimeZone()
   const common = [...new Set([value, device, ...COMMON])]
   const others = allZones().filter((z) => !common.includes(z))
@@ -58,7 +61,16 @@ export default function TimeZoneField({ value, onChange }: Props) {
     <div className="field">
       <label className="field">
         <span>{t('notify.timezone')}</span>
-        <select className="select" dir="ltr" value={value} onChange={(e) => onChange(e.target.value)}>
+        <select
+          className="select"
+          value={auto ? AUTO : value}
+          onChange={(e) =>
+            e.target.value === AUTO
+              ? onChange({ timezone: device, timezone_auto: true })
+              : onChange({ timezone: e.target.value, timezone_auto: false })
+          }
+        >
+          <option value={AUTO}>{t('notify.zoneAuto', { zone: zoneLabel(auto ? value : device) })}</option>
           {common.map((z) => (
             <option key={z} value={z}>
               {zoneLabel(z)}
@@ -72,12 +84,12 @@ export default function TimeZoneField({ value, onChange }: Props) {
             ))}
           </optgroup>
         </select>
-        <small className="faint">{t('notify.zoneHint')}</small>
+        <small className="faint">{t(auto ? 'notify.zoneAutoHint' : 'notify.zoneHint')}</small>
       </label>
-      {device !== value && (
+      {!auto && device !== value && (
         <p className="zone-differs">
           {t('notify.zoneDiffers', { device: zoneLabel(device), zone: zoneLabel(value) })}{' '}
-          <button type="button" className="link-quiet" onClick={() => onChange(device)}>
+          <button type="button" className="link-quiet" onClick={() => onChange({ timezone: device, timezone_auto: false })}>
             {t('notify.useDevice', { device: zoneLabel(device) })}
           </button>
         </p>

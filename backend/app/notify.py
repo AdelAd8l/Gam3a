@@ -131,6 +131,9 @@ class Notice:
     user_id: int
     key: str
     payload: dict
+    # How long the push service keeps it for a phone that's offline. Past this it's dropped:
+    # a reminder for a class that already started is no use.
+    ttl: int = 3600
 
 
 def _zone(name: str) -> ZoneInfo:
@@ -172,7 +175,9 @@ def due_notices(db: Session, user: User, now: datetime) -> list[Notice]:
                 starts = _at(day, meeting.start, tz)
                 if starts - lead <= local < starts:
                     minutes = round((starts - local).total_seconds() / 60)
-                    out.append(Notice(user.id, f"m{meeting.id}:{day.isoformat()}", class_message(course, meeting, minutes, lang)))
+                    message = class_message(course, meeting, minutes, lang)
+                    until = int((starts - local).total_seconds())
+                    out.append(Notice(user.id, f"m{meeting.id}:{day.isoformat()}", message, ttl=max(60, until)))
 
     if user.notify_deadlines:
         lead = timedelta(minutes=user.deadline_lead)
@@ -194,14 +199,18 @@ def due_notices(db: Session, user: User, now: datetime) -> list[Notice]:
                 minutes = round((due - local).total_seconds() / 60)
                 # The key includes the due date/time, so moving a deadline earns a new reminder.
                 key = f"a{item.id}:{item.due_date.isoformat()}{item.due_time or ''}"
-                out.append(Notice(user.id, key, deadline_message(course, item, minutes, lang)))
+                until = int((due - local).total_seconds())
+                message = deadline_message(course, item, minutes, lang)
+                out.append(Notice(user.id, key, message, ttl=max(60, min(until, 2 * 86400))))
     return out
 
 
 # ---- sending ---------------------------------------------------------------------------
 
 
-def send_to_user(db: Session, user_id: int, payload: dict, vapid: Vapid02 | None = None) -> int:
+def send_to_user(
+    db: Session, user_id: int, payload: dict, vapid: Vapid02 | None = None, ttl: int = 3600
+) -> int:
     """Push one message to every device of a user. Returns how many accepted it."""
     vapid = vapid or _vapid(db)
     subject = get_settings().vapid_subject
@@ -213,7 +222,7 @@ def send_to_user(db: Session, user_id: int, payload: dict, vapid: Vapid02 | None
                 json.dumps(payload),
                 vapid_private_key=vapid,
                 vapid_claims={"sub": subject},
-                ttl=3600,
+                ttl=ttl,
                 timeout=10,
             )
             sent += 1
@@ -245,7 +254,7 @@ def run_once(db: Session, now: datetime | None = None) -> int:
             except IntegrityError:
                 db.rollback()
                 continue
-            send_to_user(db, notice.user_id, notice.payload, vapid)
+            send_to_user(db, notice.user_id, notice.payload, vapid, notice.ttl)
             count += 1
     db.execute(delete(SentNotice).where(SentNotice.sent_at < now - KEEP_SENT))
     db.commit()

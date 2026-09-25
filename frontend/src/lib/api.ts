@@ -22,6 +22,7 @@ export interface User {
   is_admin: boolean
   must_change_password: boolean
   timezone: string
+  timezone_auto: boolean
   lang: 'en' | 'ar'
   notify_classes: boolean
   class_lead: number
