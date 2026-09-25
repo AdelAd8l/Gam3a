@@ -19,6 +19,7 @@ const paths = {
   sliders: 'M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0M14 4v4M8 10v4M16 16v4',
   trash: 'M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3',
   logout: 'M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10',
+  shield: 'M12 3 4.5 6v5.5c0 4.4 3.1 8.2 7.5 9.5 4.4-1.3 7.5-5.1 7.5-9.5V6z',
 } as const
 
 export type IconName = keyof typeof paths

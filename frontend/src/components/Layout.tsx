@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { api, type Assessment, type Course, type Term, type User } from '../lib/api'
 import { pickDefaultTerm } from '../lib/format'
@@ -25,6 +25,8 @@ const NAV: { to: string; label: Key; icon: IconName }[] = [
   { to: '/settings', label: 'nav.settings', icon: 'gear' },
 ]
 
+const ADMIN_NAV = { to: '/admin', label: 'nav.admin', icon: 'shield' } as const
+
 const TERM_KEY = 'gam3a.term'
 
 function readSavedTerm(): number | null {
@@ -41,6 +43,8 @@ type Open<T> = { item?: T; key: number } | null
 export default function Layout({ user }: { user: User }) {
   const qc = useQueryClient()
   const navigate = useNavigate()
+  // Settings and Admin work without a term; every other page needs one.
+  const termless = ['/settings', '/admin'].includes(useLocation().pathname)
   const { data: terms = [], isPending } = useTerms()
   const [chosen, setChosen] = useState<number | null>(readSavedTerm)
 
@@ -128,7 +132,7 @@ export default function Layout({ user }: { user: User }) {
               </button>
             </div>
             <nav className="nav" aria-label={t('nav.main')}>
-              {NAV.map((item) => (
+              {(user.is_admin ? [...NAV, ADMIN_NAV] : NAV).map((item) => (
                 <NavLink key={item.to} to={item.to} end={item.to === '/'} className="nav-link">
                   <Icon name={item.icon} />
                   <span>{t(item.label)}</span>
@@ -155,7 +159,7 @@ export default function Layout({ user }: { user: User }) {
           </aside>
 
           <main className="main">
-            {isPending ? null : term ? <Outlet /> : <Welcome onCreate={() => dialogs.editTerm()} />}
+            {isPending ? null : term || termless ? <Outlet /> : <Welcome onCreate={() => dialogs.editTerm()} />}
           </main>
 
           <SyncStatus />

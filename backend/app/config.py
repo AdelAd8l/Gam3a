@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     demo: bool = False
     # Turn off after creating your own account to keep a personal deployment private.
     allow_signup: bool = True
+    # The admin account, created on first start if it doesn't exist. The password is only a
+    # starting point: the admin must choose a new one at first sign-in.
+    admin_email: str = "adool1832007@gmail.com"
+    admin_password: str = "admin"
     # Send lecture / deadline reminders (Web Push). The VAPID keys are generated and stored
     # in the database on first use; set these only to reuse keys from another install.
     notifications: bool = True

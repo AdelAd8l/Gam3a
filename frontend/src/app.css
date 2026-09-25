@@ -2458,3 +2458,113 @@ code {
   width: auto;
   min-width: 170px;
 }
+
+/* ---- admin ------------------------------------------------------------------------ */
+
+.admin-lede {
+  margin: -8px 0 16px;
+  max-width: 60ch;
+}
+
+.admin-search {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.admin-count {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+}
+
+.admin-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--rule);
+}
+
+.admin-row:first-child {
+  border-top: 0;
+}
+
+.admin-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.admin-email {
+  overflow-wrap: anywhere;
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  text-align: start;
+}
+
+.admin-meta {
+  font-size: 0.82rem;
+}
+
+.admin-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.admin-badges:empty {
+  display: none;
+}
+
+.admin-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-delete-list {
+  margin: 0;
+  padding-inline-start: 20px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.tag {
+  padding: 2px 8px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  color: var(--ink-2);
+  font-size: 0.75rem;
+}
+
+.tag-accent {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- temporary password gate ------------------------------------------------------ */
+
+.gate {
+  display: grid;
+  min-height: 100dvh;
+  padding: 24px 16px;
+  place-items: center;
+  background: var(--paper);
+}
+
+.gate-card {
+  width: min(420px, 100%);
+}
+
+.gate-title {
+  margin: 8px 0 4px;
+  font-size: 1.4rem;
+}

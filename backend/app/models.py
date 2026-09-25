@@ -48,6 +48,12 @@ class User(Base):
     class_lead: Mapped[int] = mapped_column(Integer, default=15)  # minutes before a class
     notify_deadlines: Mapped[bool] = mapped_column(Boolean, default=True)
     deadline_lead: Mapped[int] = mapped_column(Integer, default=1440)  # minutes before a deadline
+    # Admin: can see, edit and delete every account (Settings -> Admin).
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Set for the first admin sign-in and after an admin resets a password.
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Bumped when the password changes, so sessions signed with the old one stop working.
+    session_version: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 

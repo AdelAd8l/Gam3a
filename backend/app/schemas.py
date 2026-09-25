@@ -51,6 +51,8 @@ class UserOut(BaseModel):
     class_minutes: int
     points: dict[str, float]  # grade points per letter
     bands: dict[str, float]  # GPA needed for excellent / very_good / good / pass
+    is_admin: bool
+    must_change_password: bool
     timezone: str
     lang: Lang
     notify_classes: bool

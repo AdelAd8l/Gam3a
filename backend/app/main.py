@@ -10,13 +10,14 @@ from fastapi.staticfiles import StaticFiles
 from . import migrate, notify, seed
 from .config import get_settings
 from .database import Base, engine
-from .routers import assessments, auth, busy, courses, grades, plan, push, terms
+from .routers import admin, assessments, auth, busy, courses, grades, plan, push, terms
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     Base.metadata.create_all(engine)
     migrate.upgrade(engine)
+    admin.ensure_admin()
     if get_settings().demo:
         seed.run(only_if_missing=True)
     reminders = asyncio.create_task(notify.loop()) if get_settings().notifications else None
@@ -27,7 +28,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Gam3a", version="1.0.0", lifespan=lifespan)
 
-for module in (auth, terms, courses, busy, assessments, plan, grades, push):
+for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin):
     app.include_router(module.router)
 
 

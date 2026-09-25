@@ -19,6 +19,8 @@ export interface User {
   class_minutes: number
   points: Record<string, number>
   bands: Record<string, number>
+  is_admin: boolean
+  must_change_password: boolean
   timezone: string
   lang: 'en' | 'ar'
   notify_classes: boolean
@@ -26,6 +28,23 @@ export interface User {
   notify_deadlines: boolean
   deadline_lead: number
 }
+export interface AdminUser {
+  id: number
+  email: string
+  name: string
+  university: string
+  scale: Scale
+  is_admin: boolean
+  must_change_password: boolean
+  created_at: string
+  terms: number
+  courses: number
+  assessments: number
+}
+export type AdminUserUpdate = Partial<Pick<AdminUser, 'name' | 'email' | 'university' | 'scale' | 'is_admin'>> & {
+  new_password?: string
+}
+
 export interface Term {
   id: number
   name: string
@@ -152,7 +171,7 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
     return send<T>(method, path, body, query)
   }
   // Account and notification calls need the server's answer; they never go to the outbox.
-  if (path.startsWith('/auth/') || path.startsWith('/push/')) return send<T>(method, path, body, query)
+  if (['/auth/', '/push/', '/admin/'].some((p) => path.startsWith(p))) return send<T>(method, path, body, query)
   return write<T>(method, path, body)
 }
 
@@ -197,4 +216,8 @@ export const api = {
   pushSubscribe: (sub: PushSubscriptionJSON) => request<void>('POST', '/push/subscribe', sub),
   pushUnsubscribe: (endpoint: string) => request<void>('POST', '/push/unsubscribe', { endpoint }),
   pushTest: () => request<{ sent: number }>('POST', '/push/test'),
+
+  adminUsers: (q: string) => request<AdminUser[]>('GET', '/admin/users', undefined, { q }),
+  adminUpdateUser: (id: number, data: AdminUserUpdate) => request<AdminUser>('PATCH', `/admin/users/${id}`, data),
+  adminDeleteUser: (id: number) => request<void>('DELETE', `/admin/users/${id}`),
 }
