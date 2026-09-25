@@ -45,7 +45,8 @@ ask() {
 }
 
 DOMAIN_RE='^[a-z0-9-]+(\.[a-z0-9-]+)+$'
-DB_RE='^postgres(ql)?://[^[:space:]]+@[^[:space:]]+$'
+# A Neon connection string, or (after move-db.sh) a database file on this server.
+DB_RE='^(postgres(ql)?://[^[:space:]]+@[^[:space:]]+|sqlite:////[^[:space:]]+)$'
 DB_HINT="Paste the whole connection string from Neon (it starts with postgresql:// and has an @ in it)."
 
 log "A few questions (answers are saved in $SETTINGS, readable by root only)"
@@ -57,12 +58,13 @@ ask DUCKDNS_TOKEN "DuckDNS token (optional: press Enter to skip if you set the I
 echo "Paste the Neon connection strings below. Nothing shows while you paste (that's normal); then press Enter."
 ask TALLY_DATABASE_URL "Neon connection string for Tally" "" secret "$DB_RE" "$DB_HINT"
 ask GAM3A_DATABASE_URL "Neon connection string for Gam3a (a separate database)" "" secret "$DB_RE" "$DB_HINT"
-if [[ $TALLY_DATABASE_URL == "$GAM3A_DATABASE_URL" ]]; then
+if [[ $TALLY_DATABASE_URL == "$GAM3A_DATABASE_URL" && $TALLY_DATABASE_URL != sqlite* ]]; then
   echo "   Tally and Gam3a need different databases (in Neon: Databases -> New database -> gam3a)."
   GAM3A_DATABASE_URL=""
   ask GAM3A_DATABASE_URL "Neon connection string for Gam3a" "" secret "$DB_RE" "$DB_HINT"
 fi
 umask 077
+extra=$(grep -sE '^(TALLY_NEON_URL|GAM3A_NEON_URL|BACKUP_DIR|BACKUP_KEEP_DAYS)=' "$SETTINGS" || true)
 cat >"$SETTINGS" <<CONF
 TALLY_DOMAIN='$TALLY_DOMAIN'
 GAM3A_DOMAIN='$GAM3A_DOMAIN'
@@ -70,6 +72,7 @@ EMAIL='$EMAIL'
 DUCKDNS_TOKEN='$DUCKDNS_TOKEN'
 TALLY_DATABASE_URL='$TALLY_DATABASE_URL'
 GAM3A_DATABASE_URL='$GAM3A_DATABASE_URL'
+$extra
 CONF
 umask 022
 

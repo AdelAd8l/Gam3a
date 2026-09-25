@@ -3,14 +3,16 @@ import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy.orm import Session
 
 from . import migrate, notify, seed
 from .config import get_settings
-from .database import Base, engine
+from .database import Base, engine, get_db
 from .routers import admin, assessments, auth, busy, courses, grades, plan, push, terms
+from .site_settings import signup_open
 
 
 @asynccontextmanager
@@ -33,9 +35,9 @@ for module in (auth, terms, courses, busy, assessments, plan, grades, push, admi
 
 
 @app.get("/api/health", tags=["meta"])
-def health():
+def health(db: Session = Depends(get_db)):
     settings = get_settings()
-    body: dict = {"status": "ok", "signup": settings.allow_signup}
+    body: dict = {"status": "ok", "signup": signup_open(db)}
     if settings.demo:
         body["demo"] = {"email": seed.DEMO_EMAIL, "password": seed.DEMO_PASSWORD}
     return body

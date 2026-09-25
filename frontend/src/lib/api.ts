@@ -28,6 +28,9 @@ export interface User {
   notify_deadlines: boolean
   deadline_lead: number
 }
+export interface SiteSettings {
+  allow_signup: boolean
+}
 export interface AdminUser {
   id: number
   email: string
@@ -220,4 +223,6 @@ export const api = {
   adminUsers: (q: string) => request<AdminUser[]>('GET', '/admin/users', undefined, { q }),
   adminUpdateUser: (id: number, data: AdminUserUpdate) => request<AdminUser>('PATCH', `/admin/users/${id}`, data),
   adminDeleteUser: (id: number) => request<void>('DELETE', `/admin/users/${id}`),
+  adminSettings: () => request<SiteSettings>('GET', '/admin/settings'),
+  adminSaveSettings: (data: SiteSettings) => request<SiteSettings>('PUT', '/admin/settings', data),
 }

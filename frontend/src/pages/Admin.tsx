@@ -23,6 +23,8 @@ export default function Admin() {
       <PageHeader title={t('admin.title')} />
       <p className="muted admin-lede">{t('admin.hint')}</p>
 
+      <SignupSwitch />
+
       <label className="search admin-search">
         <span className="visually-hidden">{t('admin.search')}</span>
         <input
@@ -209,5 +211,46 @@ function DeleteUser({ user, onClose }: { user: AdminUser; onClose: () => void })
         </div>
       </form>
     </Modal>
+  )
+}
+
+/** Open or close sign-ups for the whole site. Takes effect at once, no restart needed. */
+function SignupSwitch() {
+  const qc = useQueryClient()
+  const settings = useQuery({ queryKey: ['admin', 'settings'], queryFn: api.adminSettings })
+  // Flip at once; go back to the server's value if saving fails.
+  const [chosen, setChosen] = useState<boolean | null>(null)
+  const save = useMutation({
+    mutationFn: (allow_signup: boolean) => api.adminSaveSettings({ allow_signup }),
+    onSuccess: (data) => {
+      qc.setQueryData(['admin', 'settings'], data)
+      setChosen(null)
+      void qc.invalidateQueries({ queryKey: ['health'] })
+    },
+    onError: () => setChosen(null),
+  })
+  const open = chosen ?? settings.data?.allow_signup
+
+  return (
+    <section className="panel panel-pad admin-signup">
+      <div>
+        <strong>{t('admin.signups')}</strong>
+        <p className="faint help">{t(open ? 'admin.signupsOpen' : 'admin.signupsClosed')}</p>
+        {save.error && <p className="danger-text">{save.error.message}</p>}
+      </div>
+      <label className="switch">
+        <input
+          type="checkbox"
+          role="switch"
+          checked={!!open}
+          disabled={settings.isPending}
+          onChange={(e) => {
+            setChosen(e.target.checked)
+            save.mutate(e.target.checked)
+          }}
+        />
+        <span>{t(open ? 'admin.on' : 'admin.off')}</span>
+      </label>
+    </section>
   )
 }

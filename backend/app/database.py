@@ -34,6 +34,12 @@ def make_engine(url: str) -> Engine:
         @event.listens_for(engine, "connect")
         def _enable_foreign_keys(dbapi_conn, _):
             dbapi_conn.execute("PRAGMA foreign_keys = ON")
+            # A database file on the server: let reads carry on while something writes,
+            # and wait briefly instead of failing when two writes meet.
+            dbapi_conn.execute("PRAGMA busy_timeout = 5000")
+            if url not in ("sqlite://", "sqlite:///:memory:"):
+                dbapi_conn.execute("PRAGMA journal_mode = WAL")
+                dbapi_conn.execute("PRAGMA synchronous = NORMAL")
 
     return engine
 

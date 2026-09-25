@@ -4,7 +4,6 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from ..config import get_settings
 from ..database import get_db
 from ..grading import BANDS, SCALES, bands_for, cutoffs_for, points_for, user_bands, user_cutoffs, user_points
 from ..models import User, delete_user
@@ -16,6 +15,7 @@ from ..security import (
     set_session_cookie,
     verify_password,
 )
+from ..site_settings import signup_open
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -46,7 +46,7 @@ def user_out(user: User) -> UserOut:
 
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register(data: RegisterIn, response: Response, db: Session = Depends(get_db)):
-    if not get_settings().allow_signup:
+    if not signup_open(db):
         raise HTTPException(403, "Sign-ups are closed on this server")
     email = data.email.lower()
     if db.scalar(select(User).where(User.email == email)):

@@ -14,6 +14,7 @@ from ..grading import SCALES
 from ..models import Assessment, Course, Term, User, delete_user
 from ..schemas import Scale
 from ..security import current_admin, hash_password
+from ..site_settings import set_signup_open, signup_open
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -117,6 +118,21 @@ def remove_user(user_id: int, admin: User = Depends(current_admin), db: Session 
     if user.id == admin.id:
         raise HTTPException(422, "You can't delete your own account from here")
     delete_user(db, user)  # removes everything they own
+
+
+class SiteSettings(BaseModel):
+    allow_signup: bool
+
+
+@router.get("/settings", response_model=SiteSettings)
+def get_site_settings(_: User = Depends(current_admin), db: Session = Depends(get_db)):
+    return SiteSettings(allow_signup=signup_open(db))
+
+
+@router.put("/settings", response_model=SiteSettings)
+def put_site_settings(data: SiteSettings, _: User = Depends(current_admin), db: Session = Depends(get_db)):
+    set_signup_open(db, data.allow_signup)
+    return SiteSettings(allow_signup=signup_open(db))
 
 
 def ensure_admin() -> None:

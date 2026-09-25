@@ -64,3 +64,35 @@ wait_healthy() {
   echo "!! $1 did not start. Look at: journalctl -u apps@$1 -n 50" >&2
   return 1
 }
+
+SETTINGS=/etc/apps/install.env
+DATA=/var/lib/apps
+
+# Replace (or add) KEY='value' in install.env.
+set_setting() {
+  local key=$1 value=$2
+  touch "$SETTINGS"
+  sed -i "/^$key=/d" "$SETTINGS"
+  printf "%s='%s'\n" "$key" "$value" >>"$SETTINGS"
+  chmod 600 "$SETTINGS"
+}
+
+# Point one app's service at a database URL (in its env file) and restart it.
+use_database() {
+  local name=$1 url=$2 prefix env
+  prefix=$(app_field "$name" 2)
+  env=/etc/apps/$name.env
+  sed -i "/^${prefix}_DATABASE_URL=/d" "$env"
+  echo "${prefix}_DATABASE_URL=$url" >>"$env"
+  set_setting "${prefix}_DATABASE_URL" "$url"
+  systemctl restart "apps@$name"
+  wait_healthy "$name"
+}
+
+# Run copy_db.py with an app's own Python, as the apps user.
+copy_database() {
+  local name=$1
+  shift
+  install -m 644 "$(dirname "${BASH_SOURCE[0]}")/copy_db.py" "$ROOT/copy_db.py"
+  (cd "$ROOT/$name/current" && sudo -u apps .venv/bin/python "$ROOT/copy_db.py" "$@")
+}

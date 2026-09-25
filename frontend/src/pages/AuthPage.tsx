@@ -54,7 +54,8 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   }
 
   const demo = health.data?.demo
-  const signupOpen = health.data?.signup !== false
+  // Only offer sign-up once the server confirms it's open (no flash of the link when closed).
+  const signupOpen = health.data?.signup === true
 
   return (
     <div className="auth">

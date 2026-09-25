@@ -125,3 +125,35 @@ def test_promote_another_admin(client):
     uid = make_student(client)
     ready_admin(client)
     assert client.patch(f"/api/admin/users/{uid}", json={"is_admin": True}).json()["is_admin"]
+
+
+def test_admin_opens_and_closes_signups(client):
+    assert client.get("/api/admin/settings").status_code == 401
+    ready_admin(client)
+    assert client.get("/api/admin/settings").json() == {"allow_signup": True}
+    assert client.put("/api/admin/settings", json={"allow_signup": False}).json() == {"allow_signup": False}
+    assert client.get("/api/health").json()["signup"] is False  # the sign-in page hides "Create account"
+    client.post("/api/auth/logout")
+    r = client.post("/api/auth/register", json={"email": "late@example.com", "name": "Late", "password": "password123"})
+    assert r.status_code == 403
+    ready_admin_again = client.post("/api/auth/login", json={**ADMIN, "password": NEW})
+    assert ready_admin_again.status_code == 200
+    client.put("/api/admin/settings", json={"allow_signup": True})
+    client.post("/api/auth/logout")
+    r = client.post("/api/auth/register", json={"email": "late@example.com", "name": "Late", "password": "password123"})
+    assert r.status_code == 201
+
+
+def test_regular_users_cannot_change_signups(client, user):
+    assert client.put("/api/admin/settings", json={"allow_signup": False}).status_code == 403
+
+
+def test_signup_setting_survives_a_restart(client):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    ready_admin(client)
+    client.put("/api/admin/settings", json={"allow_signup": False})
+    with TestClient(app) as fresh:  # a new start of the app, same database
+        assert fresh.get("/api/health").json()["signup"] is False
