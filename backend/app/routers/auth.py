@@ -33,6 +33,12 @@ def user_out(user: User) -> UserOut:
         class_minutes=user.class_minutes or 100,
         points=user_points(user),
         bands=user_bands(user),
+        timezone=user.timezone or "Africa/Cairo",
+        lang=user.lang if user.lang in ("en", "ar") else "en",
+        notify_classes=user.notify_classes,
+        class_lead=user.class_lead,
+        notify_deadlines=user.notify_deadlines,
+        deadline_lead=user.deadline_lead,
     )
 
 

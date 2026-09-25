@@ -19,6 +19,12 @@ export interface User {
   class_minutes: number
   points: Record<string, number>
   bands: Record<string, number>
+  timezone: string
+  lang: 'en' | 'ar'
+  notify_classes: boolean
+  class_lead: number
+  notify_deadlines: boolean
+  deadline_lead: number
 }
 export interface Term {
   id: number
@@ -145,7 +151,8 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
     if (pendingCount() && navigator.onLine) await syncNow()
     return send<T>(method, path, body, query)
   }
-  if (path.startsWith('/auth/')) return send<T>(method, path, body, query)
+  // Account and notification calls need the server's answer; they never go to the outbox.
+  if (path.startsWith('/auth/') || path.startsWith('/push/')) return send<T>(method, path, body, query)
   return write<T>(method, path, body)
 }
 
@@ -185,4 +192,9 @@ export const api = {
   deleteAssessment: (id: number) => request<void>('DELETE', `/assessments/${id}`),
 
   grades: () => request<Grades>('GET', '/grades'),
+
+  pushKey: () => request<{ public_key: string }>('GET', '/push/key'),
+  pushSubscribe: (sub: PushSubscriptionJSON) => request<void>('POST', '/push/subscribe', sub),
+  pushUnsubscribe: (endpoint: string) => request<void>('POST', '/push/unsubscribe', { endpoint }),
+  pushTest: () => request<{ sent: number }>('POST', '/push/test'),
 }

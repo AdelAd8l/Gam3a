@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     demo: bool = False
     # Turn off after creating your own account to keep a personal deployment private.
     allow_signup: bool = True
+    # Send lecture / deadline reminders (Web Push). The VAPID keys are generated and stored
+    # in the database on first use; set these only to reuse keys from another install.
+    notifications: bool = True
+    vapid_private_key: str = ""  # PEM
+    vapid_subject: str = "mailto:admin@gam3a.app"
 
 
 @lru_cache

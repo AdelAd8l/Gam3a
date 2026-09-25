@@ -6,7 +6,7 @@ Times of day are stored as "HH:MM" strings and weekdays as 0=Monday … 6=Sunday
 
 from datetime import UTC, date, datetime
 
-from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import Boolean, Date, DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .database import Base
@@ -41,6 +41,13 @@ class User(Base):
     # Grade points per letter and GPA needed per classification, as JSON. Empty = defaults.
     points: Mapped[str] = mapped_column(String(400), default="")
     bands: Mapped[str] = mapped_column(String(200), default="")
+    # Notifications: sent in the user's time zone and language, some minutes before each event.
+    timezone: Mapped[str] = mapped_column(String(64), default="Africa/Cairo")
+    lang: Mapped[str] = mapped_column(String(2), default="en")
+    notify_classes: Mapped[bool] = mapped_column(Boolean, default=True)
+    class_lead: Mapped[int] = mapped_column(Integer, default=15)  # minutes before a class
+    notify_deadlines: Mapped[bool] = mapped_column(Boolean, default=True)
+    deadline_lead: Mapped[int] = mapped_column(Integer, default=1440)  # minutes before a deadline
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
@@ -123,6 +130,40 @@ class Assessment(Base):
     points_earned: Mapped[float | None] = mapped_column(Float, nullable=True)
     points_max: Mapped[float | None] = mapped_column(Float, nullable=True)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class PushSubscription(Base):
+    """One browser/phone that agreed to receive notifications (Web Push)."""
+
+    __tablename__ = "push_subscriptions"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = _user_fk()
+    endpoint: Mapped[str] = mapped_column(String(1000), unique=True)
+    p256dh: Mapped[str] = mapped_column(String(200))
+    auth: Mapped[str] = mapped_column(String(100))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class SentNotice(Base):
+    """Remembers which reminders went out, so each is sent once (even with several workers)."""
+
+    __tablename__ = "sent_notices"
+    __table_args__ = (UniqueConstraint("user_id", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = _user_fk()
+    key: Mapped[str] = mapped_column(String(80))
+    sent_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now, index=True)
+
+
+class AppKey(Base):
+    """Server-wide secrets generated on first use (the VAPID key pair for Web Push)."""
+
+    __tablename__ = "app_keys"
+
+    name: Mapped[str] = mapped_column(String(40), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)
 
 
 def delete_user(db, user: User) -> None:

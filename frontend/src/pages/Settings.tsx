@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import GradingSettings from '../components/GradingSettings'
+import NotificationSettings from '../components/NotificationSettings'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
 import { durationLabel, weekdayName } from '../lib/format'
@@ -64,6 +65,14 @@ export default function Settings() {
         <div className="panel panel-pad">
           <LanguageSwitch value={lang} onChange={setLang} />
         </div>
+      </section>
+
+      <section className="settings-section">
+        <div className="settings-intro">
+          <h3>{t('notify.title')}</h3>
+          <p className="muted">{t('notify.hint')}</p>
+        </div>
+        <NotificationSettings user={user} />
       </section>
 
       <section className="settings-section">

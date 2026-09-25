@@ -5,8 +5,9 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { api, type Assessment, type Course, type Term, type User } from '../lib/api'
 import { pickDefaultTerm } from '../lib/format'
 import { DialogContext, TermContext, useTerms } from '../lib/hooks'
-import { t, type Key } from '../lib/i18n'
+import { t, useLang, type Key } from '../lib/i18n'
 import { clearOutbox } from '../lib/offline'
+import { browserTimeZone, detachPush, refreshPush } from '../lib/push'
 import AssessmentDialog from './AssessmentDialog'
 import CourseDialog from './CourseDialog'
 import Icon, { type IconName } from './Icon'
@@ -80,7 +81,20 @@ export default function Layout({ user }: { user: User }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [dialogs])
 
+  // Reminders are written on the server, so it needs this phone's time zone and language.
+  const lang = useLang()
+  useEffect(() => {
+    const timezone = browserTimeZone()
+    if (!navigator.onLine || (user.timezone === timezone && user.lang === lang)) return
+    api
+      .updateMe({ timezone, lang })
+      .then((u) => qc.setQueryData(['me'], u))
+      .catch(() => {})
+  }, [user.timezone, user.lang, lang, qc])
+  useEffect(() => void refreshPush(), [user.id])
+
   async function signOut() {
+    await detachPush()
     await api.logout()
     clearOutbox()
     qc.clear()

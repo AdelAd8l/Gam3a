@@ -2,6 +2,7 @@
 
 from datetime import date
 from typing import Literal
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
@@ -10,6 +11,7 @@ Weekday = Field(ge=0, le=6, description="0 = Monday … 6 = Sunday")
 MeetingKind = Literal["lecture", "lab", "section", "tutorial"]
 AssessmentKind = Literal["assignment", "quiz", "midterm", "final", "project", "other"]
 Scale = Literal["4", "5"]
+Lang = Literal["en", "ar"]
 
 
 class ORM(BaseModel):
@@ -49,6 +51,12 @@ class UserOut(BaseModel):
     class_minutes: int
     points: dict[str, float]  # grade points per letter
     bands: dict[str, float]  # GPA needed for excellent / very_good / good / pass
+    timezone: str
+    lang: Lang
+    notify_classes: bool
+    class_lead: int
+    notify_deadlines: bool
+    deadline_lead: int
 
 
 class UserUpdate(BaseModel):
@@ -62,6 +70,23 @@ class UserUpdate(BaseModel):
     # Send {} to reset a table to the defaults.
     points: dict[str, float] | None = None
     bands: dict[str, float] | None = None
+    timezone: str | None = Field(default=None, max_length=64)
+    lang: Lang | None = None
+    notify_classes: bool | None = None
+    class_lead: int | None = Field(default=None, ge=0, le=24 * 60)
+    notify_deadlines: bool | None = None
+    deadline_lead: int | None = Field(default=None, ge=0, le=14 * 24 * 60)
+
+    @field_validator("timezone")
+    @classmethod
+    def valid_timezone(cls, v: str | None) -> str | None:
+        if v is None:
+            return v
+        try:
+            ZoneInfo(v)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError("Unknown time zone") from None
+        return v
 
     @field_validator("cutoffs")
     @classmethod

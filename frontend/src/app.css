@@ -2424,3 +2424,37 @@ code {
   border-color: var(--danger);
   color: var(--danger);
 }
+
+/* ---- notifications settings ----------------------------------------------------- */
+
+.notify-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--rule);
+}
+
+.notify-device .help {
+  margin: 2px 0 0;
+  max-width: 44ch;
+}
+
+.notify-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.notify-row .check {
+  align-self: center;
+}
+
+.notify-row .select {
+  width: auto;
+  min-width: 170px;
+}

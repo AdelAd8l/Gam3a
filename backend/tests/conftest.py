@@ -3,6 +3,7 @@ import os
 # Set TEST_DATABASE_URL to run the suite against Postgres instead of in-memory SQLite.
 os.environ["GAM3A_DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", "sqlite://")
 os.environ["GAM3A_STATIC_DIR"] = "/nonexistent"
+os.environ["GAM3A_NOTIFICATIONS"] = "false"
 os.environ["GAM3A_SECRET_KEY"] = "test-secret-key-that-is-long-enough-for-hs256"
 
 import pytest  # noqa: E402

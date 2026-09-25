@@ -1,5 +1,6 @@
 // Builds /sw.js: a small service worker that keeps the app shell on the phone so Gam3a
-// opens with no connection. Data is not handled here (React Query keeps it, see main.tsx).
+// opens with no connection, and shows reminder notifications. Data is not handled here
+// (React Query keeps it, see main.tsx).
 
 import { createHash } from 'node:crypto'
 import { readdirSync } from 'node:fs'
@@ -44,6 +45,38 @@ async function asset(request) {
   if (res.ok) (await caches.open(CACHE)).put(request, res.clone())
   return res
 }
+
+// Reminders sent by the server (see backend/app/notify.py).
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    data = { body: event.data ? event.data.text() : '' }
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Gam3a', {
+      body: data.body || '',
+      tag: data.tag,
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/' },
+    }),
+  )
+})
+
+// Tapping a reminder opens the app (or focuses it) on the right page.
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = new URL(event.notification.data?.url || '/', location.origin).href
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      const open = list.find((c) => c.url.startsWith(location.origin))
+      if (open) return open.focus().then((c) => (c && 'navigate' in c ? c.navigate(url) : c))
+      return self.clients.openWindow(url)
+    }),
+  )
+})
 
 self.addEventListener('fetch', (event) => {
   const { request } = event
