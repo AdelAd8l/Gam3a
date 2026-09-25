@@ -175,6 +175,50 @@ class AppKey(Base):
     value: Mapped[str] = mapped_column(Text)
 
 
+class GoogleLink(Base):
+    """A user's connected Google Calendar (one per user)."""
+
+    __tablename__ = "google_links"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    email: Mapped[str] = mapped_column(String(255), default="")
+    refresh_token: Mapped[str] = mapped_column(Text)  # encrypted with the server's secret key
+    include_study: Mapped[bool] = mapped_column(Boolean, default=True)
+    state_digest: Mapped[str] = mapped_column(String(64), default="")  # what was last sent
+    last_sync: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error: Mapped[str] = mapped_column(String(300), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
+
+
+class GoogleCalendar(Base):
+    """The Google calendar made for one course. course_id is not a foreign key on purpose:
+    when a course is deleted we still need this row to delete its calendar on Google."""
+
+    __tablename__ = "google_calendars"
+    __table_args__ = (UniqueConstraint("user_id", "course_id"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = _user_fk()
+    course_id: Mapped[int] = mapped_column(Integer)
+    calendar_id: Mapped[str] = mapped_column(String(300))
+    digest: Mapped[str] = mapped_column(String(64), default="")  # name + color last sent
+
+
+class GoogleEvent(Base):
+    """One event Gam3a put on Google, by a stable key such as "a7" (assessment 7) or a class key."""
+
+    __tablename__ = "google_events"
+    __table_args__ = (UniqueConstraint("user_id", "key"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = _user_fk()
+    key: Mapped[str] = mapped_column(String(80))
+    course_id: Mapped[int] = mapped_column(Integer)
+    calendar_id: Mapped[str] = mapped_column(String(300))
+    event_id: Mapped[str] = mapped_column(String(300))
+    digest: Mapped[str] = mapped_column(String(64), default="")
+
+
 def delete_user(db, user: User) -> None:
     """Remove a user; every table cascades from users.id at the database level."""
     from sqlalchemy import delete

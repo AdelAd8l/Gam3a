@@ -264,6 +264,10 @@ def run_once(db: Session, now: datetime | None = None) -> int:
 def _tick() -> None:
     with SessionLocal() as db:
         run_once(db)
+    with SessionLocal() as db:  # keep connected Google calendars up to date too
+        from . import google_calendar
+
+        google_calendar.sync_due(db)
 
 
 async def loop() -> None:

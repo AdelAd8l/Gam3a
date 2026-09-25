@@ -29,6 +29,16 @@ export interface User {
   notify_deadlines: boolean
   deadline_lead: number
 }
+export interface GoogleStatus {
+  configured: boolean
+  connected: boolean
+  email: string
+  include_study: boolean
+  last_sync: string | null
+  last_error: string
+  calendars: number
+  events: number
+}
 export interface SiteSettings {
   allow_signup: boolean
 }
@@ -175,7 +185,7 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
     return send<T>(method, path, body, query)
   }
   // Account and notification calls need the server's answer; they never go to the outbox.
-  if (['/auth/', '/push/', '/admin/'].some((p) => path.startsWith(p))) return send<T>(method, path, body, query)
+  if (['/auth/', '/push/', '/admin/', '/google/'].some((p) => path.startsWith(p))) return send<T>(method, path, body, query)
   return write<T>(method, path, body)
 }
 
@@ -224,6 +234,11 @@ export const api = {
   adminUsers: (q: string) => request<AdminUser[]>('GET', '/admin/users', undefined, { q }),
   adminUpdateUser: (id: number, data: AdminUserUpdate) => request<AdminUser>('PATCH', `/admin/users/${id}`, data),
   adminDeleteUser: (id: number) => request<void>('DELETE', `/admin/users/${id}`),
+  googleStatus: () => request<GoogleStatus>('GET', '/google/status'),
+  googleSync: () => request<GoogleStatus>('POST', '/google/sync'),
+  googleSettings: (data: { include_study: boolean }) => request<GoogleStatus>('PUT', '/google/settings', data),
+  googleDisconnect: (removeCalendars: boolean) =>
+    request<GoogleStatus>('POST', `/google/disconnect?remove_calendars=${removeCalendars}`),
   adminSettings: () => request<SiteSettings>('GET', '/admin/settings'),
   adminSaveSettings: (data: SiteSettings) => request<SiteSettings>('PUT', '/admin/settings', data),
 }

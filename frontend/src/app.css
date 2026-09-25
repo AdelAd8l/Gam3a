@@ -207,6 +207,17 @@
   text-decoration: none;
 }
 
+button.link-quiet {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.86rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 .link-quiet:hover {
   color: var(--ink);
   text-decoration: underline;
@@ -2818,4 +2829,48 @@ code {
 .color-hint {
   flex-basis: 100%;
   font-size: 0.82rem;
+}
+
+/* ---- Google Calendar ------------------------------------------------------------------- */
+
+.google-connect {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+
+.google-connect .muted {
+  margin: 0;
+}
+
+.google-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.google-account .help {
+  margin: 2px 0 0;
+}
+
+.google-result {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  font-size: 0.9rem;
+}
+
+.google-disconnect {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+
+.google-tip {
+  margin: 0;
+  font-size: 0.9rem;
 }

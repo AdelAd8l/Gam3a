@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import GoogleCalendarSettings from '../components/GoogleCalendarSettings'
 import GradingSettings from '../components/GradingSettings'
 import NotificationSettings from '../components/NotificationSettings'
 import PageHeader from '../components/PageHeader'
@@ -73,6 +74,14 @@ export default function Settings() {
           <p className="muted">{t('notify.hint')}</p>
         </div>
         <NotificationSettings user={user} />
+      </section>
+
+      <section className="settings-section" id="google">
+        <div className="settings-intro">
+          <h3>{t('google.title')}</h3>
+          <p className="muted">{t('google.hint')}</p>
+        </div>
+        <GoogleCalendarSettings />
       </section>
 
       <section className="settings-section">

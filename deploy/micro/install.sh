@@ -64,7 +64,7 @@ if [[ $TALLY_DATABASE_URL == "$GAM3A_DATABASE_URL" && $TALLY_DATABASE_URL != sql
   ask GAM3A_DATABASE_URL "Neon connection string for Gam3a" "" secret "$DB_RE" "$DB_HINT"
 fi
 umask 077
-extra=$(grep -sE '^(TALLY_NEON_URL|GAM3A_NEON_URL|BACKUP_DIR|BACKUP_KEEP_DAYS)=' "$SETTINGS" || true)
+extra=$(grep -sE '^(TALLY_NEON_URL|GAM3A_NEON_URL|BACKUP_DIR|BACKUP_KEEP_DAYS|GAM3A_GOOGLE_CLIENT_ID|GAM3A_GOOGLE_CLIENT_SECRET)=' "$SETTINGS" || true)
 cat >"$SETTINGS" <<CONF
 TALLY_DOMAIN='$TALLY_DOMAIN'
 GAM3A_DOMAIN='$GAM3A_DOMAIN'
@@ -148,7 +148,13 @@ ${prefix}_COOKIE_SECURE=true
 ${prefix}_STATIC_DIR=$ROOT/$name/current/static
 ${prefix}_ALLOW_SIGNUP=${ALLOW_SIGNUP:-true}
 CONF
-  [[ $name == gam3a ]] && echo "GAM3A_VAPID_SUBJECT=mailto:$EMAIL" >>"$env"
+  if [[ $name == gam3a ]]; then
+    echo "GAM3A_VAPID_SUBJECT=mailto:$EMAIL" >>"$env"
+    echo "GAM3A_PUBLIC_URL=https://$GAM3A_DOMAIN" >>"$env"
+    # Google Calendar sync, if set up with google.sh
+    [[ -n ${GAM3A_GOOGLE_CLIENT_ID:-} ]] && echo "GAM3A_GOOGLE_CLIENT_ID=$GAM3A_GOOGLE_CLIENT_ID" >>"$env"
+    [[ -n ${GAM3A_GOOGLE_CLIENT_SECRET:-} ]] && echo "GAM3A_GOOGLE_CLIENT_SECRET=$GAM3A_GOOGLE_CLIENT_SECRET" >>"$env"
+  fi
   umask 022
   chown root:apps "$env"
   chmod 640 "$env"

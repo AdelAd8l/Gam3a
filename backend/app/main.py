@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 from . import migrate, notify, seed
 from .config import get_settings
 from .database import Base, engine, get_db
-from .routers import admin, assessments, auth, busy, courses, grades, plan, push, terms
+from .routers import admin, assessments, auth, busy, courses, google, grades, plan, push, terms
 from .site_settings import signup_open
 
 
@@ -30,7 +30,7 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="Gam3a", version="1.0.0", lifespan=lifespan)
 
-for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin):
+for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin, google):
     app.include_router(module.router)
 
 

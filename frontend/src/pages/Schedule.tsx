@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import Agenda from '../components/Agenda'
 import Icon from '../components/Icon'
@@ -149,6 +150,12 @@ function ExportDialog({ open, termId, onClose }: { open: boolean; termId: number
     <Modal title={t('schedule.export')} open={open} onClose={onClose} width={420}>
       <div className="stack">
         <p className="muted">{t('schedule.exportHelp')}</p>
+        <p className="google-tip">
+          {t('schedule.googleTip')}{' '}
+          <Link to="/settings#google" onClick={onClose}>
+            {t('schedule.googleTipLink')}
+          </Link>
+        </p>
         <label className="check">
           <input type="checkbox" checked={study} onChange={(e) => setStudy(e.target.checked)} />
           <span>{t('schedule.includeStudy')}</span>
