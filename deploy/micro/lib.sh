@@ -29,7 +29,8 @@ deploy_app() {
   curl -fsSL "https://github.com/$repo/releases/download/latest/$name.tar.gz" -o "$tmp/pkg.tar.gz"
   tar -xzf "$tmp/pkg.tar.gz" -C "$tmp" ./VERSION
   version=$(cut -c1-12 "$tmp/VERSION")
-  current=$(readlink "$dir/current" 2>/dev/null | xargs -r basename)
+  current=""
+  [[ -L $dir/current ]] && current=$(basename "$(readlink "$dir/current")")
   if [[ $version == "$current" && ${FORCE:-0} != 1 ]]; then
     echo "$name is already up to date ($version)"
     rm -rf "$tmp"

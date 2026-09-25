@@ -6,7 +6,7 @@ source ./lib.sh
 name=${1:?usage: sudo ./rollback.sh <tally|gam3a>}
 dir=$ROOT/$name
 current=$(readlink -f "$dir/current")
-previous=$(ls -1dt "$dir"/releases/*/ | sed 's#/$##' | grep -vx "$current" | head -1)
+previous=$(ls -1dt "$dir"/releases/*/ | sed 's#/$##' | { grep -vx "$current" || true; } | head -1)
 [[ -n $previous ]] || { echo "No earlier version of $name is kept."; exit 1; }
 ln -sfn "$previous" "$dir/current"
 systemctl restart "apps@$name"
