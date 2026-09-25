@@ -1,5 +1,7 @@
 # Tally and Gam3a on a 1 GB server (next to another site)
 
+> Already installed? See [SERVER.md](SERVER.md): how to update, and where everything lives.
+
 This setup is for a small server that **already runs nginx**, like an Oracle
 `VM.Standard.E2.1.Micro` (1 CPU, 1 GB RAM) that hosts Smart Bio. It adds the two apps
 without touching the existing site:
@@ -73,7 +75,7 @@ turns on **nightly backups** (03:17, kept 30 days in `/var/backups/apps`).
 - Keep backups on the 150 GB disk: add `BACKUP_DIR='/mnt/data/backups'` (its mount point) to
   `/etc/apps/install.env`.
 - For a copy off the server: `sudo cp /var/backups/apps/*.db.gz ~ && sudo chown ubuntu ~/*.db.gz`,
-  then download them to your computer with `scp ubuntu@129.151.141.143:'~/*.db.gz' .`
+  then download them to your computer with `scp 'ubuntu@129.151.141.143:*.db.gz' .`
 
 ## Everyday commands
 
