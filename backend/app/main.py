@@ -41,6 +41,7 @@ def health(db: Session = Depends(get_db)):
         "status": "ok",
         "signup": signup_open(db),
         "google": bool(settings.google_client_id and settings.google_client_secret),
+        "contact": settings.contact_email or settings.admin_email,
     }
     if settings.demo:
         body["demo"] = {"email": seed.DEMO_EMAIL, "password": seed.DEMO_PASSWORD}

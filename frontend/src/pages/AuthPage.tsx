@@ -153,6 +153,9 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
               </>
             ) : null}
           </p>
+          <p className="auth-privacy faint">
+            <Link to="/privacy">{t('privacy.link')}</Link>
+          </p>
         </div>
       </div>
 

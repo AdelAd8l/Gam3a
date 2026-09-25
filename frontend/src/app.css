@@ -2908,3 +2908,62 @@ code {
   background: var(--rule);
   content: '';
 }
+
+/* ---- privacy policy (public page) ------------------------------------------------ */
+
+.privacy {
+  min-height: 100dvh;
+  padding: 20px 16px 48px;
+  background: var(--paper);
+}
+
+.privacy-top,
+.privacy-body {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.privacy-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.privacy-body h1 {
+  margin: 0 0 4px;
+  font-size: 1.8rem;
+}
+
+.privacy-body h2 {
+  margin: 26px 0 8px;
+  font-size: 1.05rem;
+}
+
+.privacy-body ul {
+  margin: 0;
+  padding-inline-start: 20px;
+  line-height: 1.6;
+}
+
+.privacy-body li + li {
+  margin-top: 6px;
+}
+
+.privacy-intro {
+  margin-top: 16px;
+  line-height: 1.6;
+}
+
+.privacy-contact {
+  margin-top: 28px;
+}
+
+.auth-privacy {
+  margin-top: 18px;
+  font-size: 0.82rem;
+}
+
+.auth-privacy a {
+  color: inherit;
+}

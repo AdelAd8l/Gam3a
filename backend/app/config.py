@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     # The admin account, created on first start if it doesn't exist. The password is only a
     # starting point: the admin must choose a new one at first sign-in.
     admin_email: str = "adool1832007@gmail.com"
+    # Shown on the public privacy page (/privacy). Empty = the admin email.
+    contact_email: str = ""
     admin_password: str = "admin"
     # Google (optional): "Continue with Google" and Calendar sync. From Google Cloud: an OAuth client
     # of type "Web application" with the redirect URIs <public_url>/api/auth/google/callback and

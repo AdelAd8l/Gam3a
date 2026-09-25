@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import Layout from './components/Layout'
 import PasswordGate from './components/PasswordGate'
@@ -6,6 +6,7 @@ import { useMe } from './lib/hooks'
 import { useLang } from './lib/i18n'
 import Admin from './pages/Admin'
 import AuthPage from './pages/AuthPage'
+import Privacy from './pages/Privacy'
 import CourseDetail from './pages/CourseDetail'
 import Courses from './pages/Courses'
 import Deadlines from './pages/Deadlines'
@@ -19,6 +20,9 @@ export default function App() {
   const { data: user, isPending } = useMe()
   // Re-mount everything when the language changes so every string and date re-renders.
   const lang = useLang()
+
+  // The privacy policy is public: shown before (and regardless of) signing in.
+  if (useLocation().pathname === '/privacy') return <Privacy key={lang} />
 
   if (isPending) return <div className="boot" aria-busy="true" />
 
