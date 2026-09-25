@@ -20,3 +20,21 @@ export function relativeDue(iso: string, today = todayISO()) {
   if (diff < -1 && diff > -7) return t('deadlines.daysAgo', { n: formatNumber(-diff) })
   return formatDate(iso, { weekday: 'short', month: 'short', day: 'numeric' })
 }
+
+// ---- GPA classification -----------------------------------------------------------
+
+export const BANDS = ['excellent', 'very_good', 'good', 'pass', 'fail'] as const
+export type Band = (typeof BANDS)[number]
+
+/** Letters whose grade points fall in a band, e.g. Excellent → A+, A, A-. */
+export function bandLetters(
+  band: Band,
+  index: number,
+  limits: Record<string, number>,
+  points: Record<string, number>,
+  letters: string[],
+): string[] {
+  const low = band === 'fail' ? -Infinity : limits[band]
+  const high = index === 0 ? Infinity : limits[BANDS[index - 1]]
+  return letters.filter((g) => points[g] >= low - 1e-9 && points[g] < high - 1e-9)
+}

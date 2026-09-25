@@ -16,6 +16,8 @@ export interface User {
   cutoffs: Record<string, number>
   default_target: string
   class_minutes: number
+  points: Record<string, number>
+  bands: Record<string, number>
 }
 export interface Term {
   id: number
@@ -119,11 +121,14 @@ export interface TermGrades {
   cumulative_credits: number
   cumulative_points: number
   in_progress: number
+  gpa_class: string | null
+  cgpa_class: string | null
 }
 export interface Grades {
   scale: Scale
   terms: TermGrades[]
   cgpa: number | null
+  cgpa_class: string | null
   total_credits: number
   earned_credits: number
   points: number

@@ -2,9 +2,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
+import GradingSettings from '../components/GradingSettings'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
-import { durationLabel, formatNumber, GRADES, weekdayName } from '../lib/format'
+import { durationLabel, weekdayName } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
 
@@ -19,10 +20,6 @@ export default function Settings() {
   const [scale, setScale] = useState<Scale>(user.scale)
   const [weekStart, setWeekStart] = useState(user.week_start)
   const [classMinutes, setClassMinutes] = useState(user.class_minutes)
-  const [cutoffs, setCutoffs] = useState<Record<string, string>>(() =>
-    Object.fromEntries(Object.entries(user.cutoffs).map(([k, v]) => [k, String(v)])),
-  )
-  const [defaultTarget, setDefaultTarget] = useState(user.default_target)
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
 
@@ -32,21 +29,6 @@ export default function Settings() {
   })
   const academic = useMutation({
     mutationFn: () => api.updateMe({ scale, week_start: weekStart, class_minutes: classMinutes }),
-    onSuccess: async (u) => {
-      qc.setQueryData(['me'], u)
-      await refresh()
-    },
-  })
-  const grading = useMutation({
-    mutationFn: () =>
-      api.updateMe({
-        default_target: defaultTarget,
-        cutoffs: Object.fromEntries(
-          Object.entries(cutoffs)
-            .filter(([k]) => k !== 'F')
-            .map(([k, v]) => [k, Number(v)]),
-        ),
-      }),
     onSuccess: async (u) => {
       qc.setQueryData(['me'], u)
       await refresh()
@@ -170,54 +152,10 @@ export default function Settings() {
 
       <section className="settings-section">
         <div className="settings-intro">
-          <h3>{t('settings.cutoffs')}</h3>
-          <p className="muted">{t('settings.cutoffsHint')}</p>
+          <h3>{t('grading.title')}</h3>
+          <p className="muted">{t('grading.hint')}</p>
         </div>
-        <form
-          className="stack panel panel-pad"
-          onSubmit={(e) => {
-            e.preventDefault()
-            grading.mutate()
-          }}
-        >
-          <div className="cutoff-grid">
-            {GRADES[user.scale]
-              .filter((g) => g !== 'F')
-              .map((g) => (
-                <label key={g}>
-                  <span>{g} ≥</span>
-                  <input
-                    className="input"
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    max={100}
-                    step="any"
-                    value={cutoffs[g] ?? ''}
-                    onChange={(e) => setCutoffs((c) => ({ ...c, [g]: e.target.value }))}
-                    required
-                  />
-                </label>
-              ))}
-          </div>
-          <label className="field">
-            <span>{t('settings.defaultTarget')}</span>
-            <select className="select" value={defaultTarget} onChange={(e) => setDefaultTarget(e.target.value)}>
-              {GRADES[user.scale].map((g) => (
-                <option key={g} value={g}>
-                  {g} ({formatNumber(Number(cutoffs[g] ?? 0), 1)}%+)
-                </option>
-              ))}
-            </select>
-          </label>
-          <div className="form-foot">
-            {grading.isSuccess && <span className="faint">{t('settings.saved')}</span>}
-            {grading.error && <span className="danger-text">{grading.error.message}</span>}
-            <button className="btn btn-primary" disabled={grading.isPending}>
-              {t('settings.saveProfile')}
-            </button>
-          </div>
-        </form>
+        <GradingSettings key={user.scale} user={user} />
       </section>
 
       <section className="settings-section">

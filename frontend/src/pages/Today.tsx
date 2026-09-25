@@ -2,6 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import Agenda from '../components/Agenda'
+import ClassBadge from '../components/ClassBadge'
 import { DeadlineRow } from '../components/DeadlineRow'
 import { api, type Block } from '../lib/api'
 import {
@@ -160,7 +161,9 @@ export default function Today() {
               </div>
               <div>
                 <dt>{t('today.cgpa')}</dt>
-                <dd className="num">{formatGpa(grades.data?.cgpa)}</dd>
+                <dd className="num">
+                  {formatGpa(grades.data?.cgpa)} <ClassBadge band={grades.data?.cgpa_class} />
+                </dd>
               </div>
             </dl>
           </section>

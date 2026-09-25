@@ -61,8 +61,9 @@ def is_valid_grade(grade: str, scale: str) -> bool:
     return grade in SCALES[scale] or grade in NON_GPA_GRADES
 
 
-def term_result(courses: Iterable[GradedCourse], scale: str) -> TermResult:
-    table = SCALES[scale]
+def term_result(courses: Iterable[GradedCourse], scale: str | dict[str, float]) -> TermResult:
+    """`scale` is a scale name ("4"/"5") for the default points, or a user's own points table."""
+    table = SCALES[scale] if isinstance(scale, str) else scale
     points = credits = earned = 0.0
     for c in courses:
         if not c.grade:
@@ -85,14 +86,14 @@ def required_gpa(current_points: float, current_credits: float, target: float, n
 
 # ---- course percentages → letters -------------------------------------------------
 
-# Minimum course percentage for each letter. The 4.0 defaults follow the common
-# A+ ≥ 97, A ≥ 93, A- ≥ 90 … ladder; every user can override them in Settings.
+# Minimum course percentage for each letter (A+ ≥ 97, A ≥ 93, A- ≥ 89 …).
+# Every user can override them in Settings.
 DEFAULT_CUTOFFS: dict[str, dict[str, float]] = {
     "4": {
-        "A+": 97, "A": 93, "A-": 90,
-        "B+": 87, "B": 83, "B-": 80,
-        "C+": 77, "C": 73, "C-": 70,
-        "D+": 67, "D": 60, "F": 0,
+        "A+": 97, "A": 93, "A-": 89,
+        "B+": 84, "B": 80, "B-": 76,
+        "C+": 73, "C": 70, "C-": 67,
+        "D+": 64, "D": 60, "F": 0,
     },
     "5": {
         "A+": 95, "A": 90, "B+": 85, "B": 80,
@@ -183,3 +184,47 @@ def parse_cutoffs(raw: str) -> dict[str, float]:
 
 def user_cutoffs(user) -> dict[str, float]:
     return cutoffs_for(user.scale, parse_cutoffs(user.cutoffs))
+
+
+
+# ---- per-user grade points and GPA classification ---------------------------------
+
+# GPA needed for each classification band; below "pass" is Fail.
+BANDS = ("excellent", "very_good", "good", "pass")
+DEFAULT_BANDS: dict[str, dict[str, float]] = {
+    "4": {"excellent": 3.7, "very_good": 2.7, "good": 2.0, "pass": 1.0},
+    "5": {"excellent": 4.5, "very_good": 3.75, "good": 2.75, "pass": 2.0},
+}
+
+
+def points_for(scale: str, custom: dict[str, float] | None) -> dict[str, float]:
+    base = dict(SCALES[scale])
+    for letter, value in (custom or {}).items():
+        if letter in base:
+            base[letter] = float(value)
+    return base
+
+
+def bands_for(scale: str, custom: dict[str, float] | None) -> dict[str, float]:
+    base = dict(DEFAULT_BANDS[scale])
+    for band, value in (custom or {}).items():
+        if band in base:
+            base[band] = float(value)
+    return base
+
+
+def user_points(user) -> dict[str, float]:
+    return points_for(user.scale, parse_cutoffs(user.points))
+
+
+def user_bands(user) -> dict[str, float]:
+    return bands_for(user.scale, parse_cutoffs(user.bands))
+
+
+def classify(gpa: float | None, bands: dict[str, float]) -> str | None:
+    if gpa is None:
+        return None
+    for band in BANDS:
+        if gpa >= bands[band] - 1e-9:
+            return band
+    return "fail"

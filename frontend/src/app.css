@@ -2260,3 +2260,120 @@ code {
     color: #8fd0ad;
   }
 }
+
+/* ---- grading settings & GPA classification ------------------------------------------ */
+
+.grading-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.grading-table th {
+  padding: 0 8px 6px;
+  color: var(--ink-3);
+  font-size: 0.76rem;
+  font-weight: 500;
+  text-align: start;
+}
+
+.grading-table td {
+  padding: 5px 8px;
+  border-top: 1px solid var(--rule);
+  vertical-align: middle;
+}
+
+.grading-table th:first-child,
+.grading-table td:first-child {
+  padding-inline-start: 0;
+}
+
+.grade-cell {
+  width: 3.5em;
+  font-family: var(--mono);
+  font-weight: 500;
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.pct-input {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pct-input .input,
+.points-input {
+  width: 84px;
+  height: 32px;
+  padding-inline: 8px;
+  font-family: var(--mono);
+}
+
+.bands-table td:first-child {
+  width: 8.5em;
+}
+
+.band-letters {
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: end;
+}
+
+.sub-title {
+  font-size: 0.95rem;
+}
+
+.class-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-family: var(--sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.class-excellent {
+  background: color-mix(in srgb, #3f7d5c 18%, transparent);
+  color: #2c6a4d;
+}
+
+.class-very_good {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.class-good {
+  background: color-mix(in srgb, var(--warn) 16%, transparent);
+  color: var(--warn);
+}
+
+.class-pass {
+  background: var(--track);
+  color: var(--ink-2);
+}
+
+.class-fail {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+@media (prefers-color-scheme: dark) {
+  .class-excellent {
+    color: #8fd0ad;
+  }
+}
+
+.cgpa-trail > span:not(.cgpa-arrow) .class-badge {
+  justify-self: start;
+  margin-top: 2px;
+}
+
+.figure-note .class-badge {
+  margin-inline-end: 4px;
+}

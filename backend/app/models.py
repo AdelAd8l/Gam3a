@@ -38,6 +38,9 @@ class User(Base):
     default_target: Mapped[str] = mapped_column(String(3), default="A")
     # Usual length of one class, used to fill in end times (1 h 40 min by default).
     class_minutes: Mapped[int] = mapped_column(Integer, default=100)
+    # Grade points per letter and GPA needed per classification, as JSON. Empty = defaults.
+    points: Mapped[str] = mapped_column(String(400), default="")
+    bands: Mapped[str] = mapped_column(String(200), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 

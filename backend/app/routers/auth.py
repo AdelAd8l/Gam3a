@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..database import get_db
-from ..grading import SCALES, cutoffs_for, user_cutoffs
+from ..grading import BANDS, SCALES, bands_for, cutoffs_for, points_for, user_bands, user_cutoffs, user_points
 from ..models import User, delete_user
 from ..schemas import LoginIn, PasswordChange, RegisterIn, UserOut, UserUpdate
 from ..security import (
@@ -31,6 +31,8 @@ def user_out(user: User) -> UserOut:
         cutoffs=user_cutoffs(user),
         default_target=user.default_target if user.default_target in SCALES[user.scale] else "A",
         class_minutes=user.class_minutes or 100,
+        points=user_points(user),
+        bands=user_bands(user),
     )
 
 
@@ -77,6 +79,8 @@ def me(user: User = Depends(current_user)):
 def update_me(data: UserUpdate, user: User = Depends(current_user), db: Session = Depends(get_db)):
     values = data.model_dump(exclude_none=True)
     cutoffs = values.pop("cutoffs", None)
+    points = values.pop("points", None)
+    bands = values.pop("bands", None)
     for field, value in values.items():
         setattr(user, field, value.strip() if isinstance(value, str) else value)
     if user.default_target not in SCALES[user.scale]:
@@ -87,6 +91,23 @@ def update_me(data: UserUpdate, user: User = Depends(current_user), db: Session 
         if any(a <= b for a, b in zip(ordered, ordered[1:], strict=False)):
             raise HTTPException(422, "Each grade needs a higher cut-off than the one below it")
         user.cutoffs = json.dumps({k: v for k, v in merged.items() if k != "F"})
+    top = float(user.scale)
+    if points is not None:
+        merged = points_for(user.scale, points)
+        ordered = [merged[g] for g in SCALES[user.scale]]
+        if any(v < 0 or v > top for v in ordered):
+            raise HTTPException(422, f"Grade points must be between 0 and {top:g}")
+        if any(a < b for a, b in zip(ordered, ordered[1:], strict=False)):
+            raise HTTPException(422, "A higher letter can't have fewer points than the one below it")
+        user.points = json.dumps(merged)
+    if bands is not None:
+        merged = bands_for(user.scale, bands)
+        ordered = [merged[b] for b in BANDS]
+        if any(v < 0 or v > top for v in ordered):
+            raise HTTPException(422, f"Classification limits must be between 0 and {top:g}")
+        if any(a <= b for a, b in zip(ordered, ordered[1:], strict=False)):
+            raise HTTPException(422, "Each classification needs a higher GPA than the one below it")
+        user.bands = json.dumps(merged)
     db.commit()
     return user_out(user)
 

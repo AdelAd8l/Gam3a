@@ -1,5 +1,6 @@
 import type { TermGrades } from '../lib/api'
 import { formatGpa, truncateGpa } from '../lib/format'
+import ClassBadge from './ClassBadge'
 import { locale, t } from '../lib/i18n'
 
 /** CGPA going into a term → the term's GPA → CGPA coming out of it, with the change. */
@@ -25,6 +26,7 @@ export default function CgpaTrail({ row }: { row: TermGrades }) {
       <span>
         <small>{t('grades.termGpa')}</small>
         <b className="num">{formatGpa(row.gpa)}</b>
+        <ClassBadge band={row.gpa_class} />
       </span>
       <span className="cgpa-arrow" aria-hidden="true">
         →
@@ -47,6 +49,7 @@ export default function CgpaTrail({ row }: { row: TermGrades }) {
         ) : (
           <small className="faint">{t('cgpa.pending')}</small>
         )}
+        {graded && <ClassBadge band={row.cgpa_class} />}
       </span>
     </div>
   )

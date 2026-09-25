@@ -2,9 +2,10 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useLayoutEffect, useRef, useState } from 'react'
 
 import CgpaTrail from '../components/CgpaTrail'
+import ClassBadge from '../components/ClassBadge'
 import PageHeader from '../components/PageHeader'
 import { api, type Course, type Grades as GradesData } from '../lib/api'
-import { formatGpa, formatGpaAtLeast, formatNumber, GRADES, POINTS, SPECIAL_GRADES } from '../lib/format'
+import { formatGpa, formatGpaAtLeast, formatNumber, GRADES, SPECIAL_GRADES } from '../lib/format'
 import { useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 
@@ -32,7 +33,9 @@ export default function Grades() {
         <div className="figure">
           <span className="figure-label">{t('grades.cgpa')}</span>
           <span className="figure-value num">{formatGpa(g.cgpa)}</span>
-          <span className="figure-note">{t('grades.scale', { n: g.scale })}</span>
+          <span className="figure-note">
+            <ClassBadge band={g.cgpa_class} /> {t('grades.scale', { n: g.scale })}
+          </span>
         </div>
         <div className="figure">
           <span className="figure-label">{t('grades.credits')}</span>
@@ -42,7 +45,9 @@ export default function Grades() {
         <div className="figure">
           <span className="figure-label">{t('grades.termGpa')}</span>
           <span className="figure-value num">{formatGpa(selected?.gpa)}</span>
-          <span className="figure-note">{term!.name}</span>
+          <span className="figure-note">
+            <ClassBadge band={selected?.gpa_class} /> {term!.name}
+          </span>
         </div>
       </section>
 
@@ -97,8 +102,8 @@ export default function Grades() {
                             </select>
                           </td>
                           <td className="num-col num faint">
-                            {c.grade && c.in_gpa && POINTS[g.scale][c.grade] !== undefined
-                              ? formatNumber(POINTS[g.scale][c.grade] * c.credits, 2)
+                            {c.grade && c.in_gpa && user.points[c.grade] !== undefined
+                              ? formatNumber(user.points[c.grade] * c.credits, 2)
                               : '—'}
                           </td>
                         </tr>
@@ -119,6 +124,7 @@ export default function Grades() {
             data={g}
             courses={courses.data.filter((c) => c.term_id === term!.id && !c.grade && c.in_gpa)}
             scale={user.scale}
+            points={user.points}
           />
         </aside>
       </div>
@@ -160,10 +166,17 @@ function WhatIf({ data, max, defaultCredits }: { data: GradesData; max: number; 
   )
 }
 
-function Projection({ data, courses, scale }: { data: GradesData; courses: Course[]; scale: '4' | '5' }) {
+interface ProjectionProps {
+  data: GradesData
+  courses: Course[]
+  scale: '4' | '5'
+  points: Record<string, number>
+}
+
+function Projection({ data, courses, scale, points }: ProjectionProps) {
   const [expected, setExpected] = useState<Record<number, string>>({})
   if (!courses.length) return null
-  const table = POINTS[scale]
+  const table = points
   const picked = courses.filter((c) => expected[c.id])
   const addPoints = picked.reduce((s, c) => s + table[expected[c.id]] * c.credits, 0)
   const addCredits = picked.reduce((s, c) => s + c.credits, 0)

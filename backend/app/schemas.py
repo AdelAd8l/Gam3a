@@ -47,6 +47,8 @@ class UserOut(BaseModel):
     cutoffs: dict[str, float]  # effective cut-offs for the user's scale
     default_target: str
     class_minutes: int
+    points: dict[str, float]  # grade points per letter
+    bands: dict[str, float]  # GPA needed for excellent / very_good / good / pass
 
 
 class UserUpdate(BaseModel):
@@ -57,6 +59,9 @@ class UserUpdate(BaseModel):
     cutoffs: dict[str, float] | None = None
     default_target: str | None = Field(default=None, max_length=3)
     class_minutes: int | None = Field(default=None, ge=15, le=360)
+    # Send {} to reset a table to the defaults.
+    points: dict[str, float] | None = None
+    bands: dict[str, float] | None = None
 
     @field_validator("cutoffs")
     @classmethod
@@ -292,12 +297,15 @@ class TermGrades(BaseModel):
     cumulative_credits: float
     cumulative_points: float
     in_progress: int  # courses without a final grade yet
+    gpa_class: str | None  # excellent / very_good / good / pass / fail
+    cgpa_class: str | None
 
 
 class GradesOut(BaseModel):
     scale: Scale
     terms: list[TermGrades]
     cgpa: float | None
+    cgpa_class: str | None
     total_credits: float
     earned_credits: float
     points: float

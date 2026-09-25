@@ -43,6 +43,27 @@ def test_gpa_and_cgpa_across_terms(client, user):
     assert g["cgpa"] == 2.9 and g["total_credits"] == 10
 
 
+def test_custom_points_bands_and_reset(client, term):
+    me = client.get("/api/auth/me").json()
+    assert me["points"]["A-"] == 3.7 and me["bands"] == {"excellent": 3.7, "very_good": 2.7, "good": 2.0, "pass": 1.0}
+    add_course(client, term["id"], "X", 3, grade="A-")
+    g = client.get("/api/grades").json()
+    assert g["terms"][0]["gpa"] == 3.7 and g["terms"][0]["gpa_class"] == "excellent" and g["cgpa_class"] == "excellent"
+    # Your university gives A- 3.67: the GPA and its class follow
+    assert client.patch("/api/auth/me", json={"points": {"A-": 3.67}}).json()["points"]["A-"] == 3.67
+    g = client.get("/api/grades").json()
+    assert g["terms"][0]["gpa"] == 3.67 and g["terms"][0]["gpa_class"] == "very_good"
+    client.patch("/api/auth/me", json={"bands": {"excellent": 3.6}})
+    assert client.get("/api/grades").json()["cgpa_class"] == "excellent"
+    # nonsense is rejected
+    assert client.patch("/api/auth/me", json={"points": {"B+": 3.9}}).status_code == 422  # more than A-
+    assert client.patch("/api/auth/me", json={"points": {"A": 4.5}}).status_code == 422  # above 4.0
+    assert client.patch("/api/auth/me", json={"bands": {"good": 3.0}}).status_code == 422  # above very good
+    # {} resets to the defaults
+    me = client.patch("/api/auth/me", json={"points": {}, "bands": {}, "cutoffs": {}}).json()
+    assert me["points"]["A-"] == 3.7 and me["bands"]["excellent"] == 3.7 and me["cutoffs"]["A-"] == 89
+
+
 def test_cgpa_is_cut_to_three_decimals(client, term):
     # (4 + 3 + 3) credits: A, B+, B+ → (12 + 9.9 + 9.9) / 9 = 3.5333…  → 3.533
     add_course(client, term["id"], "X", 3, grade="A")
@@ -137,7 +158,7 @@ def test_required_to_reach_target(client, term):
     p = client.get(f"/api/courses/{c['id']}").json()["progress"]
     # earned = 28 + 6 = 34 of the 40% marked so far
     assert p["earned"] == 34.0 and p["graded_weight"] == 40 and p["remaining_weight"] == 60
-    assert p["current"] == 85.0 and p["current_letter"] == "B"  # B+ starts at 87
+    assert p["current"] == 85.0 and p["current_letter"] == "B+"  # B+ starts at 84
     # need (93 - 34) / 60 = 98.33% on the rest
     assert p["required"] == pytest.approx(98.33, abs=0.01)
     assert p["target_percent"] == 93 and p["status"] == "needs"
@@ -158,9 +179,9 @@ def test_default_target_and_custom_cutoffs(client, term):
     c = add_course(client, term["id"])
     assert c["progress"]["target_grade"] == "A" and c["progress"]["target_percent"] == 93
     me = client.patch("/api/auth/me", json={"cutoffs": {"A": 91, "A+": 95}, "default_target": "A+"}).json()
-    assert me["cutoffs"]["A"] == 91 and me["cutoffs"]["A-"] == 90  # untouched letters keep defaults
+    assert me["cutoffs"]["A"] == 91 and me["cutoffs"]["A-"] == 89  # untouched letters keep defaults
     assert me["default_target"] == "A+"
     assert client.get(f"/api/courses/{c['id']}").json()["progress"]["target_percent"] == 95
     # A cut-off that isn't above the grade below it is rejected
-    assert client.patch("/api/auth/me", json={"cutoffs": {"A": 90}}).status_code == 422
+    assert client.patch("/api/auth/me", json={"cutoffs": {"A": 89}}).status_code == 422
     assert client.put(f"/api/courses/{c['id']}", json={**c, "target_grade": "P"}).status_code == 422

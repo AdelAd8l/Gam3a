@@ -41,7 +41,7 @@
   - **what you need on the remaining work** to reach your target, shown per item: "at least 39.33 / 40 on the midterm, 59 / 60 on the final"
   - a warning when the weights you've entered don't add up
   - a one-click "set final grade" once everything is marked
-- **Your grade cut-offs:** A+ ≥ 97, A ≥ 93, A- ≥ 90 … by default. You can edit them to match your university, and set a default goal for every course.
+- **Your university's grading:** edit each letter's minimum % and grade points, the GPA classification (Excellent / Very good / Good / Pass / Fail) and the default goal for every course. Every term GPA and CGPA shows its classification.
 - **GPA and CGPA:** term and cumulative GPA on a **4.0** or **5.0** scale, with P/W/I grades excluded, and a chart across terms.
 - **CGPA before and after each term:** every term shows the CGPA going in, the term GPA and the CGPA coming out, with the change (e.g. 3.48 → 3.57 → 3.53, +0.05).
 - **"What do I need?":** the term GPA you need to reach a target CGPA.
@@ -122,15 +122,36 @@ The planner is covered by unit tests: it respects classes, buffers and rest days
 
 ## GPA rules
 
-| Scale | A+ | A | A- | B+ | B | B- | C+ | C | C- | D+ | D | F |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| 4.0 | 4.0 | 4.0 | 3.7 | 3.3 | 3.0 | 2.7 | 2.3 | 2.0 | 1.7 | 1.3 | 1.0 | 0 |
-| 5.0 | 5.0 | 4.75 | – | 4.5 | 4.0 | – | 3.5 | 3.0 | – | 2.5 | 2.0 | 1.0 |
+Every rule below is editable in **Settings → Grading**, so it can match any university. The defaults are:
+
+| Letter | From | To | Points |
+|---|---|---|---|
+| A+ | 97% | 100% | 4.0 |
+| A | 93% | 96.99% | 4.0 |
+| A- | 89% | 92.99% | 3.7 |
+| B+ | 84% | 88.99% | 3.3 |
+| B | 80% | 83.99% | 3.0 |
+| B- | 76% | 79.99% | 2.7 |
+| C+ | 73% | 75.99% | 2.3 |
+| C | 70% | 72.99% | 2.0 |
+| C- | 67% | 69.99% | 1.7 |
+| D+ | 64% | 66.99% | 1.3 |
+| D | 60% | 63.99% | 1.0 |
+| F | below 60% | | 0.0 |
+
+| Classification | GPA | Letters |
+|---|---|---|
+| Excellent | 3.7 and above | A+, A, A- |
+| Very good | 2.7 to under 3.7 | B+, B, B- |
+| Good | 2.0 to under 2.7 | C+, C |
+| Pass | 1.0 to under 2.0 | C-, D+, D |
+| Fail | under 1.0 | F |
 
 - **GPA formula:** GPA = Σ(points × credits) / Σ(credits), counting graded courses only.
-- **Special grades:** **P** (pass) earns credits but isn't in the GPA. **W** and **I** are neither. **F** counts in the GPA but earns nothing.
-- **CGPA:** accumulated term by term, in date order.
-- **Precision:** GPAs are **cut, never rounded, to 3 decimals**. 3.4996 shows as 3.499, not 3.50, because many universities treat those differently. The "GPA you need" answer is the one exception: it's rounded **up**.
+- **Special grades:** **P** (pass) earns credits but isn't in the GPA. **W** and **I** are neither.
+- **CGPA:** accumulated term by term, in date order, and shown before and after every term.
+- **Precision:** GPAs are **cut, never rounded, to 3 decimals**. 3.4996 shows as 3.499, not 3.50. The "GPA you need" answer is the one exception: it's rounded **up**.
+- **Other scale:** a 5.0 scale (A+ = 5.0) is also available, with its own defaults.
 
 ## How the goal calculator works
 

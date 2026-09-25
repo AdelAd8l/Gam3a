@@ -54,7 +54,18 @@ def test_letters_from_percentages():
     from app.grading import DEFAULT_CUTOFFS, letter_for
 
     c = DEFAULT_CUTOFFS["4"]
-    assert [letter_for(p, c) for p in (97, 96.9, 93, 92.99, 90, 60, 59.9)] == ["A+", "A", "A", "A-", "A-", "D", "F"]
+    # A+ 97, A 93, A- 89, B+ 84, B 80, B- 76, C+ 73, C 70, C- 67, D+ 64, D 60
+    samples = (97, 96.99, 93, 92.99, 89, 88.99, 84, 80, 76, 73, 70, 67, 64, 60, 59.99)
+    expected = ["A+", "A", "A", "A-", "A-", "B+", "B+", "B", "B-", "C+", "C", "C-", "D+", "D", "F"]
+    assert [letter_for(p, c) for p in samples] == expected
+
+
+def test_classification_bands():
+    from app.grading import DEFAULT_BANDS, classify
+
+    b = DEFAULT_BANDS["4"]
+    got = [classify(g, b) for g in (4.0, 3.7, 3.699, 2.7, 2.699, 2.0, 1.999, 1.0, 0.999, None)]
+    assert got == ["excellent", "excellent", "very_good", "very_good", "good", "good", "pass", "pass", "fail", None]
 
 
 def test_progress_ignores_unweighted_and_counts_unlisted_weight():
