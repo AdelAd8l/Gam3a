@@ -32,6 +32,18 @@ def test_no_graded_courses_means_no_gpa():
     assert term_result([GradedCourse(3, None)], "4").gpa is None
 
 
+def test_gpa_is_cut_not_rounded():
+    from app.grading import truncate_gpa
+
+    # 3.4996… must stay below 3.5
+    r = term_result([GradedCourse(3, "B+"), GradedCourse(3, "A-"), GradedCourse(3, "B+"), GradedCourse(1, "A")], "4")
+    assert r.gpa == 3.49  # (9.9 + 11.1 + 9.9 + 4) / 10 = 3.49 exactly, float noise must not drop it to 3.489
+    assert truncate_gpa(3.49966) == 3.499
+    assert truncate_gpa(3.4999999) == 3.499
+    assert truncate_gpa(3.49) == 3.49
+    assert truncate_gpa(2 / 3) == 0.666
+
+
 def test_required_gpa():
     # 30 credits at 3.0 → need x over 15 credits to reach 3.2: (3.2*45 - 90) / 15 = 3.6
     assert required_gpa(90, 30, 3.2, 15) == 3.6

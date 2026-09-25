@@ -1,12 +1,16 @@
 import type { TermGrades } from '../lib/api'
-import { formatGpa } from '../lib/format'
+import { formatGpa, truncateGpa } from '../lib/format'
 import { locale, t } from '../lib/i18n'
 
 /** CGPA going into a term → the term's GPA → CGPA coming out of it, with the change. */
 export default function CgpaTrail({ row }: { row: TermGrades }) {
   const graded = row.gpa !== null
-  const delta = graded && row.cgpa !== null && row.cgpa_before !== null ? row.cgpa - row.cgpa_before : null
-  const sign = delta === null || Math.abs(delta) < 0.005 ? 'same' : delta > 0 ? 'up' : 'down'
+  // Difference of the two numbers as shown (both cut to 3 decimals), counted in thousandths.
+  const delta =
+    graded && row.cgpa !== null && row.cgpa_before !== null
+      ? Math.round((truncateGpa(row.cgpa) - truncateGpa(row.cgpa_before)) * 1000) / 1000
+      : null
+  const sign = delta === null || delta === 0 ? 'same' : delta > 0 ? 'up' : 'down'
 
   return (
     <div className="cgpa-trail">
@@ -33,10 +37,10 @@ export default function CgpaTrail({ row }: { row: TermGrades }) {
             {delta !== null && (
               <em className={`cgpa-delta cgpa-${sign}`}>
                 {new Intl.NumberFormat(locale(), {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
+                  minimumFractionDigits: 3,
+                  maximumFractionDigits: 3,
                   signDisplay: 'exceptZero',
-                }).format(Math.round(delta * 100) / 100)}
+                }).format(delta)}
               </em>
             )}
           </b>

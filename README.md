@@ -130,6 +130,7 @@ The planner is covered by unit tests: it respects classes, buffers and rest days
 - **GPA formula:** GPA = Σ(points × credits) / Σ(credits), counting graded courses only.
 - **Special grades:** **P** (pass) earns credits but isn't in the GPA. **W** and **I** are neither. **F** counts in the GPA but earns nothing.
 - **CGPA:** accumulated term by term, in date order.
+- **Precision:** GPAs are **cut, never rounded, to 3 decimals**. 3.4996 shows as 3.499, not 3.50, because many universities treat those differently. The "GPA you need" answer is the one exception: it's rounded **up**.
 
 ## How the goal calculator works
 

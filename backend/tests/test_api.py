@@ -43,6 +43,20 @@ def test_gpa_and_cgpa_across_terms(client, user):
     assert g["cgpa"] == 2.9 and g["total_credits"] == 10
 
 
+def test_cgpa_is_cut_to_three_decimals(client, term):
+    # (4 + 3 + 3) credits: A, B+, B+ → (12 + 9.9 + 9.9) / 9 = 3.5333…  → 3.533
+    add_course(client, term["id"], "X", 3, grade="A")
+    add_course(client, term["id"], "Y", 3, grade="B+")
+    add_course(client, term["id"], "Z", 3, grade="B+")
+    g = client.get("/api/grades").json()
+    assert g["cgpa"] == 3.533 and g["terms"][0]["gpa"] == 3.533
+    # 2 credits of A- + 1 credit of A: (7.4 + 4) / 3 = 3.8 exactly
+    t2 = client.post("/api/terms", json={"name": "T", "start_date": "2027-02-01", "end_date": "2027-05-01"}).json()
+    add_course(client, t2["id"], "P", 2, grade="A-")
+    add_course(client, t2["id"], "Q", 1, grade="A")
+    assert client.get("/api/grades").json()["terms"][1]["gpa"] == 3.8
+
+
 def test_assessments_and_course_score(client, term):
     c = add_course(client, term["id"])
     base = {"course_id": c["id"], "kind": "quiz"}

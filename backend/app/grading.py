@@ -1,5 +1,10 @@
-"""Grade points and GPA maths."""
+"""Grade points and GPA maths.
 
+GPAs are cut (never rounded) to 3 decimals: many universities treat 3.499 as below 3.5,
+so showing it as 3.50 would be wrong.
+"""
+
+import math
 from collections.abc import Iterable
 from dataclasses import dataclass
 
@@ -23,6 +28,18 @@ SCALES: dict[str, dict[str, float]] = {
 # Recorded on the transcript but never part of the GPA.
 NON_GPA_GRADES = {"P", "W", "I"}
 FAILING = {"F"}
+
+
+def truncate_gpa(value: float, places: int = 3) -> float:
+    """3.49966 → 3.499. The tiny epsilon absorbs float noise (3.49 is stored as 3.48999…)."""
+    factor = 10**places
+    return math.floor(value * factor + 1e-9) / factor
+
+
+def ceil_gpa(value: float, places: int = 3) -> float:
+    """For "you need at least X": round up so the target is never missed by a hair."""
+    factor = 10**places
+    return math.ceil(value * factor - 1e-9) / factor
 
 
 @dataclass
@@ -55,7 +72,7 @@ def term_result(courses: Iterable[GradedCourse], scale: str) -> TermResult:
         if c.in_gpa and c.grade in table:
             points += table[c.grade] * c.credits
             credits += c.credits
-    gpa = round(points / credits, 3) if credits else None
+    gpa = truncate_gpa(points / credits) if credits else None
     return TermResult(gpa=gpa, gpa_credits=credits, earned_credits=earned, points=points)
 
 
@@ -63,7 +80,7 @@ def required_gpa(current_points: float, current_credits: float, target: float, n
     """GPA needed over `next_credits` to bring the cumulative GPA to `target`."""
     if next_credits <= 0:
         return None
-    return round((target * (current_credits + next_credits) - current_points) / next_credits, 3)
+    return ceil_gpa((target * (current_credits + next_credits) - current_points) / next_credits)
 
 
 # ---- course percentages → letters -------------------------------------------------

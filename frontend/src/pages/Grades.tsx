@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import CgpaTrail from '../components/CgpaTrail'
 import PageHeader from '../components/PageHeader'
 import { api, type Course, type Grades as GradesData } from '../lib/api'
-import { formatGpa, formatNumber, GRADES, POINTS, SPECIAL_GRADES } from '../lib/format'
+import { formatGpa, formatGpaAtLeast, formatNumber, GRADES, POINTS, SPECIAL_GRADES } from '../lib/format'
 import { useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 
@@ -153,7 +153,7 @@ function WhatIf({ data, max, defaultCredits }: { data: GradesData; max: number; 
             ? t('grades.reached')
             : needed > max + 1e-9
               ? t('grades.impossible', { gpa: formatGpa(best) })
-              : t('grades.need', { gpa: formatGpa(Math.min(needed, max)) })}
+              : t('grades.need', { gpa: formatGpaAtLeast(Math.min(needed, max)) })}
         </p>
       )}
     </section>
@@ -167,9 +167,10 @@ function Projection({ data, courses, scale }: { data: GradesData; courses: Cours
   const picked = courses.filter((c) => expected[c.id])
   const addPoints = picked.reduce((s, c) => s + table[expected[c.id]] * c.credits, 0)
   const addCredits = picked.reduce((s, c) => s + c.credits, 0)
-  const term = data.terms.find((x) => x.term_id === courses[0].term_id)
-  // Points/credits already graded in this term.
-  const termPoints = (term?.gpa ?? 0) * (term?.gpa_credits ?? 0)
+  const index = data.terms.findIndex((x) => x.term_id === courses[0].term_id)
+  const term = data.terms[index]
+  // Exact points already graded in this term (not re-derived from the cut-off GPA).
+  const termPoints = term ? term.cumulative_points - (index > 0 ? data.terms[index - 1].cumulative_points : 0) : 0
   const termCredits = term?.gpa_credits ?? 0
   const termGpa = termCredits + addCredits ? (termPoints + addPoints) / (termCredits + addCredits) : null
   const cgpa = data.total_credits + addCredits ? (data.points + addPoints) / (data.total_credits + addCredits) : null

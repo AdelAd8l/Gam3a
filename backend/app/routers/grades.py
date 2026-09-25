@@ -3,7 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..grading import GradedCourse, term_result
+from ..grading import GradedCourse, term_result, truncate_gpa
 from ..models import Course, Term, User
 from ..schemas import GradesOut, TermGrades
 from ..security import current_user
@@ -21,7 +21,7 @@ def grades(user: User = Depends(current_user), db: Session = Depends(get_db)):
     for term in terms:
         mine = [c for c in courses if c.term_id == term.id]
         r = term_result((GradedCourse(c.credits, c.grade, c.in_gpa) for c in mine), user.scale)
-        cgpa_before = round(points / credits, 3) if credits else None
+        cgpa_before = truncate_gpa(points / credits) if credits else None
         points += r.points
         credits += r.gpa_credits
         earned += r.earned_credits
@@ -34,17 +34,17 @@ def grades(user: User = Depends(current_user), db: Session = Depends(get_db)):
                 gpa_credits=r.gpa_credits,
                 cgpa_before=cgpa_before,
                 earned_credits=r.earned_credits,
-                cgpa=round(points / credits, 3) if credits else None,
+                cgpa=truncate_gpa(points / credits) if credits else None,
                 cumulative_credits=credits,
-                cumulative_points=round(points, 3),
+                cumulative_points=round(points, 6),
                 in_progress=sum(1 for c in mine if not c.grade),
             )
         )
     return GradesOut(
         scale=user.scale,
         terms=rows,
-        cgpa=round(points / credits, 3) if credits else None,
+        cgpa=truncate_gpa(points / credits) if credits else None,
         total_credits=credits,
         earned_credits=earned,
-        points=round(points, 3),
+        points=round(points, 6),
     )

@@ -59,9 +59,20 @@ export function longDate(iso: string) {
   return formatDate(iso, { weekday: 'long', month: 'long', day: 'numeric' })
 }
 
+// GPAs are cut, never rounded, to 3 decimals: 3.4996 is 3.499, not 3.50.
+// The tiny epsilon absorbs float noise (3.49 is stored as 3.48999…).
+export const truncateGpa = (gpa: number) => Math.floor(gpa * 1000 + 1e-9) / 1000
+
+const gpaFormat = () => new Intl.NumberFormat(locale(), { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+
 export function formatGpa(gpa: number | null | undefined) {
   if (gpa === null || gpa === undefined) return '—'
-  return new Intl.NumberFormat(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(gpa)
+  return gpaFormat().format(truncateGpa(gpa))
+}
+
+/** For "you need at least X": round up so the target is never missed by a hair. */
+export function formatGpaAtLeast(gpa: number) {
+  return gpaFormat().format(Math.ceil(gpa * 1000 - 1e-9) / 1000)
 }
 
 export function formatNumber(value: number, digits = 0) {
