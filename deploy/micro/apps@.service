@@ -1,0 +1,23 @@
+# One small service per app: systemctl status apps@tally / apps@gam3a
+[Unit]
+Description=%i web app
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=apps
+Group=apps
+WorkingDirectory=/opt/apps/%i/current
+EnvironmentFile=/etc/apps/%i.env
+ExecStart=/bin/sh -c 'exec /opt/apps/%i/current/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port "$PORT" --workers 1 --proxy-headers --no-access-log'
+Restart=always
+RestartSec=3
+# The server has 1 GB of RAM shared with Smart Bio: keep each app small.
+MemoryHigh=220M
+MemoryMax=300M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

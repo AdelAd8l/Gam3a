@@ -1,5 +1,8 @@
 # Running Tally and Gam3a on your own server
 
+> **Small server that already runs nginx (1 GB RAM, e.g. next to Smart Bio)?** Use
+> [`micro/`](micro/README.md) instead: no Docker, no local database, ~120 MB per app.
+
 One small Linux server runs both apps **24/7** (no sleeping), with:
 
 - HTTPS for `tally-me.duckdns.org` and `gam3a.duckdns.org` (Let's Encrypt, automatic)

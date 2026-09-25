@@ -44,3 +44,33 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker build -t gam3a .
+
+  # A ready-to-run package for small servers (deploy/micro): API code + built web app.
+  bundle:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: frontend
+      - name: Pack
+        run: |
+          mkdir -p pkg
+          cp -r backend/app backend/requirements.txt pkg/
+          cp -r frontend/dist pkg/static
+          echo "${{ github.sha }}" > pkg/VERSION
+          tar -czf gam3a.tar.gz -C pkg .
+      - name: Publish to the "latest" release
+        run: |
+          gh release view latest >/dev/null 2>&1 || gh release create latest --title "Latest build" --notes "Built automatically from main. Used by deploy/micro." --prerelease
+          gh release upload latest gam3a.tar.gz --clobber
