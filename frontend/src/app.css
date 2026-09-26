@@ -3578,3 +3578,19 @@ code {
   border-color: var(--danger);
   filter: brightness(1.08);
 }
+
+/* ---- clashes: items whose times overlap (the red warnings above the schedule) ------------ */
+
+.slot.is-clash {
+  box-shadow: inset 0 0 0 1.5px var(--danger);
+}
+
+.agenda-item.is-clash {
+  box-shadow: inset 0 0 0 1.5px var(--danger);
+}
+
+.clash-note {
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 500;
+}

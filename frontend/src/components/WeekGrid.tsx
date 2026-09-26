@@ -2,6 +2,7 @@ import type { Block, Course } from '../lib/api'
 import { formatTime, fromMinutes, toMinutes, weekdayName } from '../lib/format'
 import { t } from '../lib/i18n'
 import { blockDetail } from '../lib/labels'
+import { lanes } from '../lib/lanes'
 
 interface Props {
   blocks: Block[]
@@ -46,18 +47,18 @@ export default function WeekGrid({ blocks, days, restDays, courses, today, onBlo
             {restDays.includes(d) && !blocks.some((b) => b.weekday === d) && (
               <span className="week-rest">{t('schedule.rest')}</span>
             )}
-            {blocks
-              .filter((b) => b.weekday === d)
-              .map((b, i) => {
+            {lanes(blocks.filter((b) => b.weekday === d)).map(({ block: b, lane, of }, i) => {
                 const course = b.course_id ? courses.get(b.course_id) : undefined
                 const top = px(toMinutes(b.start))
                 const height = Math.max(18, px(toMinutes(b.end)) - top - 2)
+                // Overlapping blocks (a clash) share the column side by side instead of hiding each other.
+                const place: React.CSSProperties = of > 1 ? { insetInlineStart: `calc(${(lane / of) * 100}% + 3px)`, width: `calc(${100 / of}% - 6px)` } : {}
                 return (
                   <button
                     key={`${b.kind}-${b.ref_id ?? i}-${b.start}`}
                     type="button"
-                    className={`slot slot-${b.kind}`}
-                    style={{ top, height, '--c': course?.color ?? 'var(--ink-3)' } as React.CSSProperties}
+                    className={`slot slot-${b.kind}${of > 1 ? ' is-clash' : ''}`}
+                    style={{ top, height, ...place, '--c': course?.color ?? 'var(--ink-3)' } as React.CSSProperties}
                     onClick={() => onBlock?.(b)}
                     title={`${b.title} · ${formatTime(b.start)} – ${formatTime(b.end)}`}
                   >
@@ -82,3 +83,4 @@ export default function WeekGrid({ blocks, days, restDays, courses, today, onBlo
     </div>
   )
 }
+
