@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { api, type Term } from '../lib/api'
+import { ask } from '../lib/confirm'
 import { addDays, todayISO } from '../lib/format'
 import { useRefresh } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -86,7 +87,10 @@ export default function TermDialog({ open, term, onClose, onCreated }: Props) {
             <button
               type="button"
               className="btn btn-danger"
-              onClick={() => confirm(t('terms.confirmDelete', { name: term.name })) && remove.mutate()}
+              onClick={async () =>
+                (await ask({ title: t('terms.confirmDelete', { name: term.name }), confirm: t('common.delete') })) &&
+                remove.mutate()
+              }
             >
               {t('common.delete')}
             </button>

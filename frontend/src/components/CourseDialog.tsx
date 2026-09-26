@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { api, type Course, type Meeting, type MeetingKind } from '../lib/api'
+import { ask } from '../lib/confirm'
 import { addMinutes, formatNumber, GRADES, SPECIAL_GRADES, weekOrder, weekdayName } from '../lib/format'
 import { useCourses, useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -252,7 +253,10 @@ export default function CourseDialog({ open, course, onClose }: Props) {
             <button
               type="button"
               className="btn btn-danger"
-              onClick={() => confirm(t('courses.confirmDelete', { name: course.name })) && remove.mutate()}
+              onClick={async () =>
+                (await ask({ title: t('courses.confirmDelete', { name: course.name }), confirm: t('common.delete') })) &&
+                remove.mutate()
+              }
             >
               {t('common.delete')}
             </button>

@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { api, type Assessment, type AssessmentKind } from '../lib/api'
+import { ask } from '../lib/confirm'
 import { addDays, todayISO } from '../lib/format'
 import { useCourses, useRefresh, useTerm } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -184,7 +185,7 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
               <button
                 type="button"
                 className="btn btn-danger"
-                onClick={() => confirm(t('deadlines.confirmDelete')) && remove.mutate()}
+                onClick={async () => (await ask({ title: t('deadlines.confirmDelete'), confirm: t('common.delete') })) && remove.mutate()}
               >
                 {t('common.delete')}
               </button>

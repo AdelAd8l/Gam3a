@@ -17,6 +17,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
+import ConfirmHost from './components/ConfirmHost'
 import { ApiError } from './lib/api'
 import { NetworkError } from './lib/http'
 import { startOfflineSync } from './lib/offline'
@@ -85,6 +86,7 @@ createRoot(document.getElementById('root')!).render(
       }}>
       <BrowserRouter>
         <App />
+        <ConfirmHost />
       </BrowserRouter>
     </PersistQueryClientProvider>
   </StrictMode>,

@@ -9,6 +9,7 @@ import DurationField from '../components/DurationField'
 import Icon from '../components/Icon'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
+import { ask } from '../lib/confirm'
 import { weekdayName, weekOrder } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
@@ -231,7 +232,9 @@ export default function Settings() {
           <p className="muted">{t('settings.deleteHint')}</p>
         </div>
         <div className="panel panel-pad form-foot">
-          <button className="btn btn-danger" onClick={() => confirm(t('settings.confirmDelete')) && remove.mutate()}>
+          <button className="btn btn-danger" onClick={async () =>
+              (await ask({ title: t('settings.confirmDelete'), confirm: t('settings.deleteBtn') })) && remove.mutate()
+            }>
             {t('settings.deleteBtn')}
           </button>
         </div>

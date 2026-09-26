@@ -3464,3 +3464,35 @@ code {
   align-items: center;
   gap: 10px;
 }
+
+/* ---- the app's own "are you sure?" dialog (ConfirmHost) ---------------------------------- */
+
+.confirm {
+  width: min(400px, calc(100vw - 24px));
+}
+
+.confirm-title {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.confirm-body {
+  margin: 0 0 4px;
+  font-size: 0.92rem;
+}
+
+.confirm .modal-actions {
+  margin-top: 18px;
+}
+
+.btn-danger-solid {
+  border-color: var(--danger);
+  background: var(--danger);
+  color: var(--paper);
+}
+
+.btn-danger-solid:hover {
+  border-color: var(--danger);
+  filter: brightness(1.08);
+}
