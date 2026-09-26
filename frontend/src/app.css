@@ -3079,17 +3079,20 @@ code {
   min-width: 0;
 }
 
-/* ---- a length picked as hours + minutes (DurationField) -------------------------------- */
+/* ---- a length picked with the time box, up to 12:00 (DurationField) ------------------- */
 
 .duration-field {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 4px;
   min-width: 0;
 }
 
-.duration-field .select {
+.duration-field .input {
   min-width: 0;
+}
+
+.duration-field small {
+  font-size: 0.8rem;
 }
 
 /* Time fields have a built-in width; let the two share the row instead (width 0 + flex). */

@@ -185,3 +185,14 @@ def test_default_target_and_custom_cutoffs(client, term):
     # A cut-off that isn't above the grade below it is rejected
     assert client.patch("/api/auth/me", json={"cutoffs": {"A": 89}}).status_code == 422
     assert client.put(f"/api/courses/{c['id']}", json={**c, "target_grade": "P"}).status_code == 422
+
+
+def test_lengths_go_up_to_twelve_hours(client, term):
+    body = {k: v for k, v in term.items() if k != "id"}
+    ok = client.put(f"/api/terms/{term['id']}", json={**body, "hours_per_credit": 12, "session_minutes": 720})
+    assert ok.status_code == 200, ok.text
+    assert (ok.json()["hours_per_credit"], ok.json()["session_minutes"]) == (12, 720)
+    assert client.put(f"/api/terms/{term['id']}", json={**body, "session_minutes": 721}).status_code == 422
+    assert client.put(f"/api/terms/{term['id']}", json={**body, "session_minutes": 29}).status_code == 422
+    assert client.patch("/api/auth/me", json={"class_minutes": 720}).json()["class_minutes"] == 720
+    assert client.patch("/api/auth/me", json={"class_minutes": 721}).status_code == 422

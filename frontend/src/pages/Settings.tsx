@@ -172,7 +172,7 @@ export default function Settings() {
           </label>
           <div className="field">
             <span>{t('settings.classLength')}</span>
-            <DurationField minutes={classMinutes} onChange={setClassMinutes} min={15} max={360} label={t('settings.classLength')} />
+            <DurationField minutes={classMinutes} onChange={setClassMinutes} min={15} label={t('settings.classLength')} />
             <small className="faint">{t('settings.classLengthHint')}</small>
           </div>
           <div className="form-foot">

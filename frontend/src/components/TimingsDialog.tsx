@@ -111,13 +111,12 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
             minutes={perCredit * 60}
             onChange={(m) => setPerCredit(m / 60)}
             min={0}
-            max={6 * 60}
             label={t('timings.hoursPerCredit')}
           />
         </div>
         <div className="field">
           <span>{t('timings.session')}</span>
-          <DurationField minutes={session} onChange={setSession} min={30} max={240} label={t('timings.session')} />
+          <DurationField minutes={session} onChange={setSession} min={30} label={t('timings.session')} />
         </div>
       </div>
       <fieldset className="field day-chips">

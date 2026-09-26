@@ -88,7 +88,7 @@ class UserUpdate(BaseModel):
     week_start: int | None = Field(default=None, ge=0, le=6)
     cutoffs: dict[str, float] | None = None
     default_target: str | None = Field(default=None, max_length=3)
-    class_minutes: int | None = Field(default=None, ge=15, le=360)
+    class_minutes: int | None = Field(default=None, ge=15, le=720)  # up to 12 h
     # Send {} to reset a table to the defaults.
     points: dict[str, float] | None = None
     bands: dict[str, float] | None = None
@@ -134,8 +134,8 @@ class TermIn(BaseModel):
     end_date: date
     study_start: str = Field(default="09:00", pattern=HHMM)
     study_end: str = Field(default="22:00", pattern=HHMM)
-    hours_per_credit: float = Field(default=2.0, ge=0, le=6)
-    session_minutes: int = Field(default=90, ge=30, le=240)
+    hours_per_credit: float = Field(default=2.0, ge=0, le=12)
+    session_minutes: int = Field(default=90, ge=30, le=720)  # up to 12 h
     rest_days: list[int] = Field(default_factory=lambda: [4])
 
     @field_validator("rest_days")
