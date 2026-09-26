@@ -2999,7 +2999,7 @@ code {
   white-space: nowrap;
 }
 
-/* ---- a select showing the chosen course/account/category's color (SwatchSelect) ---------- */
+/* ---- a dropdown whose list shows each course/account/category's color (SwatchSelect) ------ */
 
 .swatch-select {
   position: relative;
@@ -3011,25 +3011,67 @@ code {
   display: inline-grid;
 }
 
-.swatch-select.has-swatch::before {
-  position: absolute;
-  top: 50%;
-  inset-inline-start: 12px;
+/* Inside a form field it is a direct child of the <label>, like the label's own text: don't
+   take that text's small, bold style. */
+.field > .swatch-select {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.swatch-button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  color: var(--ink);
+  font-family: inherit; /* the size comes from .select, 16px on phones like every field */
+  text-align: start;
+  cursor: pointer;
+}
+
+.swatch-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatch-list {
+  position: fixed;
+  z-index: 50;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.4);
+  list-style: none;
+}
+
+.swatch-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.swatch-list li.is-active {
+  background: var(--track);
+}
+
+.swatch-list li[aria-selected='true'] {
+  font-weight: 600;
+}
+
+.swatch-list .swatch,
+.swatch-button .swatch {
   width: 10px;
   height: 10px;
-  margin-top: -5px;
   border-radius: 3px;
-  background: var(--c);
-  content: '';
-  pointer-events: none;
-}
-
-.swatch-select > .select {
-  min-width: 0; /* a select is otherwise as wide as its longest option */
-}
-
-.swatch-select.has-swatch .select {
-  padding-inline-start: 30px;
 }
 
 /* Date and time fields have a built-in minimum width that would push past a narrow column. */

@@ -95,9 +95,9 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
             <label className="field">
               <span>{t('common.course')}</span>
               <SwatchSelect
-                color={courses.find((c) => String(c.id) === (course || String(courses[0]?.id ?? '')))?.color}
+                colorOf={(v) => courses.find((c) => String(c.id) === v)?.color}
                 value={course || String(courses[0]?.id ?? '')}
-                onChange={(e) => setCourse(e.target.value)}
+                onChange={setCourse}
               >
                 {courses.map((c) => (
                   <option key={c.id} value={c.id}>

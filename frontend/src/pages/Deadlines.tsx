@@ -63,9 +63,9 @@ export default function Deadlines() {
         </div>
         <SwatchSelect
           className="select select-auto"
-          color={courseId ? byId.get(Number(courseId))?.color : undefined}
+          colorOf={(v) => (v ? byId.get(Number(v))?.color : undefined)}
           value={courseId}
-          onChange={(e) => setCourseId(e.target.value)}
+          onChange={setCourseId}
         >
           <option value="">{t('deadlines.allCourses')}</option>
           {courses.map((c) => (
