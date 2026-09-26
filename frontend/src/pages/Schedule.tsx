@@ -27,7 +27,8 @@ export default function Schedule() {
   const today = weekdayOf(todayISO())
   const [day, setDay] = useState(today)
 
-  const blocks = (plan.data?.blocks ?? []).filter((b) => withStudy || b.kind !== 'study')
+  // "Classes" shows only the classes; "With study plan" adds study sessions and commitments.
+  const blocks = (plan.data?.blocks ?? []).filter((b) => withStudy || b.kind === 'class')
   const openBlock = (b: Block) => {
     const course = b.course_id ? courses.get(b.course_id) : undefined
     if (course) editCourse(course)
@@ -118,7 +119,7 @@ export default function Schedule() {
               <p className="faint panel-empty">{term!.rest_days.includes(day) ? t('today.restDay') : t('today.free')}</p>
             )}
           </div>
-          <Legend />
+          <Legend withStudy={withStudy} />
         </>
       )}
 
@@ -128,18 +129,22 @@ export default function Schedule() {
   )
 }
 
-function Legend() {
+function Legend({ withStudy }: { withStudy: boolean }) {
   return (
     <div className="legend">
       <span>
         <i className="legend-class" /> {t('schedule.classesOnly')}
       </span>
-      <span>
-        <i className="legend-study" /> {t('block.study')}
-      </span>
-      <span>
-        <i className="legend-busy" /> {t('block.busy')}
-      </span>
+      {withStudy && (
+        <>
+          <span>
+            <i className="legend-study" /> {t('block.study')}
+          </span>
+          <span>
+            <i className="legend-busy" /> {t('block.busy')}
+          </span>
+        </>
+      )}
     </div>
   )
 }
