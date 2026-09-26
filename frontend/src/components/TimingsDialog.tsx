@@ -7,6 +7,7 @@ import { useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Icon from './Icon'
 import Modal from './Modal'
+import NumberField from './NumberField'
 
 type Row = Omit<Busy, 'id' | 'term_id'> & { id?: number }
 
@@ -81,51 +82,37 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
       }}
     >
       <h2>{t('timings.prefs')}</h2>
-      <div className="grid-2">
-        <div className="field">
-          <span>{t('timings.window')}</span>
-          <div className="time-pair">
-            <input
-              className="input"
-              type="time"
-              aria-label={t('common.from')}
-              value={studyStart}
-              onChange={(e) => setStudyStart(e.target.value)}
-              required
-            />
-            <span className="faint">–</span>
-            <input
-              className="input"
-              type="time"
-              aria-label={t('common.to')}
-              value={studyEnd}
-              onChange={(e) => setStudyEnd(e.target.value)}
-              required
-            />
-          </div>
+      <div className="field">
+        <span>{t('timings.window')}</span>
+        <div className="time-pair">
+          <input
+            className="input"
+            type="time"
+            aria-label={t('common.from')}
+            value={studyStart}
+            onChange={(e) => setStudyStart(e.target.value)}
+            required
+          />
+          <span className="faint">–</span>
+          <input
+            className="input"
+            type="time"
+            aria-label={t('common.to')}
+            value={studyEnd}
+            onChange={(e) => setStudyEnd(e.target.value)}
+            required
+          />
         </div>
-        <div className="grid-2">
-          <label className="field">
-            <span>{t('timings.hoursPerCredit')}</span>
-            <select className="select" value={perCredit} onChange={(e) => setPerCredit(Number(e.target.value))}>
-              {[0, 0.5, 1, 1.5, 2, 2.5, 3].map((n) => (
-                <option key={n} value={n}>
-                  {n}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            <span>{t('timings.session')}</span>
-            <select className="select" value={session} onChange={(e) => setSession(Number(e.target.value))}>
-              {[45, 60, 90, 120].map((n) => (
-                <option key={n} value={n}>
-                  {t('timings.minutes', { n })}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+      </div>
+      <div className="grid-2 fields-bottom">
+        <label className="field">
+          <span>{t('timings.hoursPerCredit')}</span>
+          <NumberField value={perCredit} onChange={setPerCredit} min={0} max={6} step="any" unit={t('unit.hours')} />
+        </label>
+        <label className="field">
+          <span>{t('timings.session')}</span>
+          <NumberField value={session} onChange={setSession} min={30} max={240} unit={t('unit.min')} />
+        </label>
       </div>
       <fieldset className="field day-chips">
         <legend>{t('timings.restDays')}</legend>

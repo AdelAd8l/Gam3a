@@ -5,10 +5,11 @@ import { useNavigate } from 'react-router-dom'
 import GoogleCalendarSettings from '../components/GoogleCalendarSettings'
 import GradingSettings from '../components/GradingSettings'
 import NotificationSettings from '../components/NotificationSettings'
+import NumberField from '../components/NumberField'
 import Icon from '../components/Icon'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
-import { durationLabel, weekdayName } from '../lib/format'
+import { weekdayName, weekOrder } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
 import { clearOutbox } from '../lib/offline'
@@ -162,7 +163,7 @@ export default function Settings() {
           <label className="field">
             <span>{t('settings.weekStart')}</span>
             <select className="select" value={weekStart} onChange={(e) => setWeekStart(Number(e.target.value))}>
-              {[5, 6, 0].map((d) => (
+              {weekOrder(5).map((d) => (
                 <option key={d} value={d}>
                   {weekdayName(d)}
                 </option>
@@ -171,15 +172,7 @@ export default function Settings() {
           </label>
           <label className="field">
             <span>{t('settings.classLength')}</span>
-            <select className="select" value={classMinutes} onChange={(e) => setClassMinutes(Number(e.target.value))}>
-              {[...new Set([50, 60, 75, 80, 90, 100, 110, 120, 150, 180, user.class_minutes])]
-                .sort((a, b) => a - b)
-                .map((m) => (
-                  <option key={m} value={m}>
-                    {durationLabel(m)}
-                  </option>
-                ))}
-            </select>
+            <NumberField value={classMinutes} onChange={setClassMinutes} min={15} max={360} unit={t('unit.min')} />
             <small className="faint">{t('settings.classLengthHint')}</small>
           </label>
           <div className="form-foot">

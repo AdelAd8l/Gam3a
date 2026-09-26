@@ -3037,3 +3037,46 @@ code {
 .field > .select {
   min-width: 0;
 }
+
+/* ---- a number with its unit inside the field (NumberField) ------------------------------- */
+
+.input-unit {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+
+.input-unit .input {
+  min-width: 0;
+  padding-right: 64px; /* the number is always typed left to right, so the unit sits on the right */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.input-unit .input::-webkit-inner-spin-button,
+.input-unit .input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+.input-unit > span {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  font-size: 0.86rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* Two fields whose labels may wrap differently: line their boxes up at the bottom. */
+.fields-bottom {
+  align-items: end;
+}
+
+/* Time fields have a built-in width; let the two share the row instead (width 0 + flex). */
+.time-pair .input {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  padding-inline: 8px;
+}
