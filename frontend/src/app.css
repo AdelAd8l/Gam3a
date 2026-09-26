@@ -3079,20 +3079,102 @@ code {
   min-width: 0;
 }
 
-/* ---- a length picked with the time box, up to 12:00 (DurationField) ------------------- */
+/* ---- a length picked as hours + minutes, like a time picker without AM/PM (DurationField) */
 
 .duration-field {
   display: grid;
-  gap: 4px;
   min-width: 0;
 }
 
-.duration-field .input {
+.duration-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+  color: var(--ink);
+  font-family: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.duration-button svg {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.duration-panel {
+  position: fixed;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 8px;
+  padding: 10px;
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  background: var(--panel);
+  box-shadow: 0 14px 34px -12px rgb(0 0 0 / 0.4);
+}
+
+.duration-col {
+  display: grid;
+  gap: 6px;
   min-width: 0;
 }
 
-.duration-field small {
-  font-size: 0.8rem;
+.duration-head {
+  padding: 0 6px;
+  color: var(--ink-3);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.duration-list {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  height: 180px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.duration-list button {
+  min-height: 36px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.95rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.duration-list button:hover:not(:disabled) {
+  background: var(--track);
+}
+
+.duration-list button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.duration-list button:disabled {
+  color: var(--ink-3);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.duration-foot {
+  display: flex;
+  grid-column: 1 / -1;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
 }
 
 /* Time fields have a built-in width; let the two share the row instead (width 0 + flex). */
