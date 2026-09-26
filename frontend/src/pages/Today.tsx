@@ -103,7 +103,9 @@ export default function Today() {
           )}
           {nextClass && status === 'current' && (
             <p className="tomorrow faint">
-              {t('today.tomorrow')}: <strong>{courses.get(nextClass.course_id!)?.name}</strong> ·{' '}
+              {t('today.tomorrow')}:{' '}
+              <span className="swatch" style={{ background: courses.get(nextClass.course_id!)?.color }} />{' '}
+              <strong>{courses.get(nextClass.course_id!)?.name}</strong> ·{' '}
               <span className="num">{formatTime(nextClass.start)}</span>
             </p>
           )}

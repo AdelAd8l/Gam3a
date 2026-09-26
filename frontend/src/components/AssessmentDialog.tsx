@@ -6,6 +6,7 @@ import { addDays, todayISO } from '../lib/format'
 import { useCourses, useRefresh, useTerm } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Modal from './Modal'
+import SwatchSelect from './SwatchSelect'
 
 const KINDS: AssessmentKind[] = ['assignment', 'quiz', 'midterm', 'final', 'project', 'other']
 
@@ -93,8 +94,8 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
           <div className="grid-2">
             <label className="field">
               <span>{t('common.course')}</span>
-              <select
-                className="select"
+              <SwatchSelect
+                color={courses.find((c) => String(c.id) === (course || String(courses[0]?.id ?? '')))?.color}
                 value={course || String(courses[0]?.id ?? '')}
                 onChange={(e) => setCourse(e.target.value)}
               >
@@ -103,7 +104,7 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
                     {c.code ? `${c.code} · ${c.name}` : c.name}
                   </option>
                 ))}
-              </select>
+              </SwatchSelect>
             </label>
             <label className="field">
               <span>{t('deadlines.type')}</span>

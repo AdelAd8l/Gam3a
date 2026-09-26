@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { DeadlineRow } from '../components/DeadlineRow'
 import PageHeader from '../components/PageHeader'
+import SwatchSelect from '../components/SwatchSelect'
 import { api, type Assessment } from '../lib/api'
 import { addDays, todayISO } from '../lib/format'
 import { useCourses, useDialogs, useRefresh, useTerm } from '../lib/hooks'
@@ -60,14 +61,19 @@ export default function Deadlines() {
             </button>
           ))}
         </div>
-        <select className="select select-auto" value={courseId} onChange={(e) => setCourseId(e.target.value)}>
+        <SwatchSelect
+          className="select select-auto"
+          color={courseId ? byId.get(Number(courseId))?.color : undefined}
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+        >
           <option value="">{t('deadlines.allCourses')}</option>
           {courses.map((c) => (
             <option key={c.id} value={c.id}>
               {c.code || c.name}
             </option>
           ))}
-        </select>
+        </SwatchSelect>
       </div>
 
       {items.data && visible.length === 0 && (
