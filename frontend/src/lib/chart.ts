@@ -13,8 +13,9 @@ export function mirror(W: number) {
     /** the left edge of something `w` wide that starts at `x` */
     box: (x: number, w: number) => (rtl ? W - x - w : x),
     anchor: (a: 'start' | 'end' | 'middle') => (rtl && a !== 'middle' ? (a === 'start' ? 'end' : 'start') : a),
-    /** keep "3 آلاف" in reading order inside the left-to-right SVG */
-    text: (s: string) => (rtl ? `\u2067${s}\u2069` : s),
+    /** Keep text in reading order inside the left-to-right SVG: words ("3 آلاف") read right to
+     * left, while a plain amount ("392 US$") stays one left-to-right unit, as in the page. */
+    text: (s: string) => (rtl ? (hasWords(s) ? `\u2067${s}\u2069` : `\u2066${s}\u2069`) : s),
   }
 }
 
