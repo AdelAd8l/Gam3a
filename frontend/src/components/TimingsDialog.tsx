@@ -9,7 +9,37 @@ import Icon from './Icon'
 import Modal from './Modal'
 import DurationField from './DurationField'
 
-type Row = Omit<Busy, 'id' | 'term_id'> & { id?: number }
+/** One day of a commitment: its own hours, and the saved row's id if it has one. */
+interface DayTime {
+  id?: number
+  weekday: number
+  start: string
+  end: string
+}
+
+/** A commitment (e.g. "Commute") on one or more days, each day with its own hours. Saved as one
+ * row per day, so the planner, calendar and reminders see plain weekly blocks. */
+interface Commitment {
+  key: string
+  title: string
+  days: DayTime[]
+}
+
+/** Rows with the same name are one commitment. */
+function group(rows: Busy[], order: number[]): Commitment[] {
+  const out: Commitment[] = []
+  for (const r of rows) {
+    const name = r.title.trim().toLowerCase()
+    let c = out.find((x) => x.title.trim().toLowerCase() === name)
+    if (!c) {
+      c = { key: `c${r.id}`, title: r.title, days: [] }
+      out.push(c)
+    }
+    c.days.push({ id: r.id, weekday: r.weekday, start: r.start, end: r.end })
+  }
+  for (const c of out) c.days.sort((a, b) => order.indexOf(a.weekday) - order.indexOf(b.weekday))
+  return out
+}
 
 interface Props {
   open: boolean
@@ -37,9 +67,21 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
   const [perCredit, setPerCredit] = useState(term.hours_per_credit)
   const [session, setSession] = useState(term.session_minutes)
   const [rest, setRest] = useState<number[]>(term.rest_days)
-  const [rows, setRows] = useState<Row[]>(initial)
+  const [items, setItems] = useState<Commitment[]>(() => group(initial, days))
+  const [missingDays, setMissingDays] = useState<string | null>(null)
 
-  const update = (i: number, patch: Partial<Row>) => setRows((list) => list.map((r, j) => (j === i ? { ...r, ...patch } : r)))
+  const edit = (key: string, change: (c: Commitment) => Commitment) =>
+    setItems((list) => list.map((c) => (c.key === key ? change(c) : c)))
+  const toggleDay = (key: string, weekday: number) =>
+    edit(key, (c) => {
+      if (c.days.some((d) => d.weekday === weekday)) return { ...c, days: c.days.filter((d) => d.weekday !== weekday) }
+      // A new day starts with the hours of the days already chosen; change them if they differ.
+      const like = c.days[c.days.length - 1] ?? { start: '17:00', end: '19:00' }
+      const next = [...c.days, { weekday, start: like.start, end: like.end }]
+      return { ...c, days: next.sort((a, b) => days.indexOf(a.weekday) - days.indexOf(b.weekday)) }
+    })
+  const setTime = (key: string, weekday: number, patch: Partial<DayTime>) =>
+    edit(key, (c) => ({ ...c, days: c.days.map((d) => (d.weekday === weekday ? { ...d, ...patch } : d)) }))
 
   const save = useMutation({
     mutationFn: async () => {
@@ -55,14 +97,12 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
         },
         id,
       )
+      const rows = items.flatMap((c) => c.days.map((d) => ({ ...d, title: c.title.trim() })))
       const kept = new Set(rows.filter((r) => r.id).map((r) => r.id))
       await Promise.all([
         ...initial.filter((b) => !kept.has(b.id)).map((b) => api.deleteBusy(b.id)),
         ...rows.map((r) =>
-          api.saveBusy(
-            { term_id: term.id, title: r.title.trim(), weekday: r.weekday, start: r.start, end: r.end },
-            r.id,
-          ),
+          api.saveBusy({ term_id: term.id, title: r.title, weekday: r.weekday, start: r.start, end: r.end }, r.id),
         ),
       ])
     },
@@ -78,7 +118,9 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
       className="stack"
       onSubmit={(e) => {
         e.preventDefault()
-        save.mutate()
+        const empty = items.find((c) => c.days.length === 0)
+        setMissingDays(empty ? empty.title.trim() || t('timings.commitment') : null)
+        if (!empty) save.mutate()
       }}
     >
       <h2>{t('timings.prefs')}</h2>
@@ -140,65 +182,81 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
         <h2>{t('timings.commitments')}</h2>
         <p className="faint help">{t('timings.commitmentsHelp')}</p>
       </div>
-      <div className="meetings">
-        {rows.map((r, i) => (
-          <div className="busy-row" key={r.id ?? `new-${i}`}>
-            <input
-              className="input"
-              aria-label={t('common.name')}
-              placeholder={t('timings.titlePlaceholder')}
-              value={r.title}
-              maxLength={60}
-              onChange={(e) => update(i, { title: e.target.value })}
-              required
-            />
-            <select
-              className="select"
-              aria-label={t('common.day')}
-              value={r.weekday}
-              onChange={(e) => update(i, { weekday: Number(e.target.value) })}
-            >
+      <div className="commitments">
+        {items.map((c) => (
+          <fieldset className="commitment" key={c.key}>
+            <legend className="visually-hidden">{c.title || t('timings.commitment')}</legend>
+            <div className="commitment-head">
+              <input
+                className="input"
+                aria-label={t('common.name')}
+                placeholder={t('timings.titlePlaceholder')}
+                value={c.title}
+                maxLength={60}
+                onChange={(e) => edit(c.key, (x) => ({ ...x, title: e.target.value }))}
+                required
+              />
+              <button
+                type="button"
+                className="btn btn-quiet icon-btn"
+                aria-label={t('common.delete')}
+                onClick={() => setItems((list) => list.filter((x) => x.key !== c.key))}
+              >
+                <Icon name="x" size={16} />
+              </button>
+            </div>
+            <div className="commitment-chips" role="group" aria-label={t('timings.onDays')}>
               {days.map((d) => (
-                <option key={d} value={d}>
-                  {weekdayName(d)}
-                </option>
+                <button
+                  key={d}
+                  type="button"
+                  className="chip chip-sm"
+                  aria-pressed={c.days.some((x) => x.weekday === d)}
+                  onClick={() => toggleDay(c.key, d)}
+                >
+                  {weekdayName(d, 'short')}
+                </button>
               ))}
-            </select>
-            <input
-              className="input"
-              type="time"
-              aria-label={t('common.from')}
-              value={r.start}
-              onChange={(e) => update(i, { start: e.target.value })}
-              required
-            />
-            <input
-              className="input"
-              type="time"
-              aria-label={t('common.to')}
-              value={r.end}
-              onChange={(e) => update(i, { end: e.target.value })}
-              required
-            />
-            <button
-              type="button"
-              className="btn btn-quiet icon-btn"
-              aria-label={t('common.delete')}
-              onClick={() => setRows((list) => list.filter((_, j) => j !== i))}
-            >
-              <Icon name="x" size={16} />
-            </button>
-          </div>
+            </div>
+            {c.days.length === 0 ? (
+              <p className="faint help">{t('timings.pickDays')}</p>
+            ) : (
+              <div className="commitment-days">
+                {c.days.map((d) => (
+                  <div className="commitment-day" key={d.weekday}>
+                    <span>{weekdayName(d.weekday, 'short')}</span>
+                    <input
+                      className="input"
+                      type="time"
+                      aria-label={`${weekdayName(d.weekday)} · ${t('common.from')}`}
+                      value={d.start}
+                      onChange={(e) => setTime(c.key, d.weekday, { start: e.target.value })}
+                      required
+                    />
+                    <input
+                      className="input"
+                      type="time"
+                      aria-label={`${weekdayName(d.weekday)} · ${t('common.to')}`}
+                      value={d.end}
+                      onChange={(e) => setTime(c.key, d.weekday, { end: e.target.value })}
+                      required
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </fieldset>
         ))}
         <button
           type="button"
           className="btn btn-sm add-row"
-          onClick={() => setRows((list) => [...list, { title: '', weekday: days[0], start: '17:00', end: '19:00' }])}
+          onClick={() => setItems((list) => [...list, { key: `n${Date.now()}`, title: '', days: [] }])}
         >
           <Icon name="plus" size={14} /> {t('timings.addCommitment')}
         </button>
       </div>
 
+      {missingDays && <p className="form-error">{t('timings.needDays', { name: missingDays })}</p>}
       {save.error && <p className="form-error">{save.error.message}</p>}
       <footer className="modal-actions">
         <span className="spacer" />

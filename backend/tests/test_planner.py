@@ -64,3 +64,34 @@ def test_conflicts():
 def test_last_session_takes_the_remainder():
     r = plan_week([CourseNeed(1, 2)], [], WINDOW, set(), 2, 90)  # 240 min → 90 + 90 + 60
     assert sorted(s.end - s.start for s in r.sessions) == [60, 90, 90]
+
+
+def test_prefers_empty_days_over_gaps_between_classes():
+    # Monday is full of classes with a 50-minute hole; Tuesday is empty.
+    classes = [
+        Slot(0, to_minutes("09:00"), to_minutes("12:20")),
+        Slot(0, to_minutes("13:10"), to_minutes("17:00")),
+    ]
+    r = plan_week([CourseNeed(1, 1)], classes, WINDOW, set(), 1, 30, week_order=[0, 1, 2, 3, 4, 5, 6])
+    assert r.sessions and all(s.weekday != 0 for s in r.sessions)  # not squeezed between Monday's classes
+
+
+def test_keeps_a_break_before_and_after_classes():
+    classes = [Slot(d, to_minutes("09:00"), to_minutes("20:00")) for d in range(7)]
+    # the only room is 20:15-21:00 (window ends at 21:00): a session may start 15 min after
+    r = plan_week([CourseNeed(1, 1)], classes, WINDOW, set(), 0.5, 30)
+    for s in r.sessions:
+        assert s.start >= to_minutes("20:15")
+    # and nothing may run up to a class: with a class at 10:00, a 9:00 session must end by 9:45
+    classes = [Slot(d, to_minutes("10:00"), to_minutes("21:00")) for d in range(7)]
+    r = plan_week([CourseNeed(1, 1)], classes, WINDOW, set(), 0.5, 30)
+    assert all(s.end <= to_minutes("09:45") for s in r.sessions)
+
+
+def test_uses_a_squeeze_only_when_nothing_roomier_is_left():
+    # every day has just a 45-minute hole: a 30-minute session still gets placed
+    classes = []
+    for d in range(7):
+        classes += [Slot(d, to_minutes("09:00"), to_minutes("12:00")), Slot(d, to_minutes("13:15"), to_minutes("21:00"))]
+    r = plan_week([CourseNeed(1, 1)], classes, WINDOW, set(), 0.5, 30)
+    assert len(r.sessions) == 1 and not r.unplaced_minutes

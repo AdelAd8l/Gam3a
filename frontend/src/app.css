@@ -1289,30 +1289,19 @@ code {
   align-items: center;
 }
 
-.busy-row {
-  display: grid;
-  grid-template-columns: 1.6fr 1.2fr 1fr 1fr 32px;
-  gap: 6px;
-  align-items: center;
-}
-
 .meeting-row .input,
-.meeting-row .select,
-.busy-row .input,
-.busy-row .select {
+.meeting-row .select {
   height: 34px;
   padding-inline: 8px;
   font-size: 0.88rem;
 }
 
-.meeting-row .select,
-.busy-row .select {
+.meeting-row .select {
   padding-inline-end: 24px;
   background-position: right 7px center;
 }
 
-[dir='rtl'] .meeting-row .select,
-[dir='rtl'] .busy-row .select {
+[dir='rtl'] .meeting-row .select {
   background-position: left 7px center;
 }
 
@@ -1852,12 +1841,6 @@ code {
 
   .meeting-row {
     grid-template-columns: 1fr 1fr 1fr;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--rule);
-  }
-
-  .busy-row {
-    grid-template-columns: 1fr 1fr;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--rule);
   }
@@ -3593,4 +3576,74 @@ code {
   color: var(--danger);
   font-size: 0.8rem;
   font-weight: 500;
+}
+
+/* ---- fixed commitments: one card per commitment, days chosen with chips ----------------- */
+
+.commitments {
+  display: grid;
+  gap: 10px;
+}
+
+.commitment {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+}
+
+.commitment-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  gap: 6px;
+  align-items: center;
+}
+
+.commitment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip-sm {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 0.84rem;
+}
+
+.commitment-days {
+  display: grid;
+  gap: 6px;
+}
+
+.commitment-day {
+  display: grid;
+  grid-template-columns: 3.2em minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  align-items: center;
+  font-size: 0.88rem;
+}
+
+.commitment-day .input {
+  min-width: 0;
+  height: 34px;
+  padding-inline: 6px;
+  font-size: 0.88rem;
+}
+
+/* Narrow phones: the day's name above its two times, so each time box gets half the card. */
+@media (max-width: 420px) {
+  .commitment-day {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    row-gap: 4px;
+  }
+
+  .commitment-day span {
+    grid-column: 1 / -1;
+    color: var(--ink-2);
+    font-size: 0.82rem;
+  }
 }

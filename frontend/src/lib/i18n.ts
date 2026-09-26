@@ -144,6 +144,10 @@ const en = {
   'timings.commitments': 'Fixed commitments',
   'timings.commitmentsHelp': 'Work, training, commute, anything the study plan must avoid.',
   'timings.addCommitment': 'Add commitment',
+  'timings.commitment': 'This commitment',
+  'timings.onDays': 'On these days',
+  'timings.pickDays': 'Pick the days it happens on; each day can have its own hours.',
+  'timings.needDays': '{name}: pick at least one day.',
   'timings.titlePlaceholder': 'e.g. Part-time job',
 
   'courses.title': 'Courses',
@@ -608,6 +612,10 @@ const ar: Record<Key, string> = {
   'timings.commitments': 'التزامات ثابتة',
   'timings.commitmentsHelp': 'الشغل، التمرين، المواصلات، أي شيء يجب أن تتجنبه خطة المذاكرة.',
   'timings.addCommitment': 'إضافة التزام',
+  'timings.commitment': 'هذا الالتزام',
+  'timings.onDays': 'في هذه الأيام',
+  'timings.pickDays': 'اختر الأيام التي يكون فيها، ولكل يوم مواعيده الخاصة.',
+  'timings.needDays': '{name}: اختر يوماً واحداً على الأقل.',
   'timings.titlePlaceholder': 'مثلاً: شغل بدوام جزئي',
 
   'courses.title': 'المواد',

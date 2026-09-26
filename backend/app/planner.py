@@ -6,13 +6,16 @@ study sessions for every course into the free time of the week.
 The approach is deliberately simple and deterministic, so the same inputs always give
 the same timetable:
 
-1. Each day's free time = the study window minus classes and commitments
-   (plus a short buffer after each one so sessions don't start the minute a class ends).
+1. Each day's free time = the study window minus classes and commitments, with a short
+   breather before and after each one, so a session never starts the minute a class ends or
+   runs up to the next one.
 2. Each course needs ``credits × hours_per_credit`` hours a week, split into sessions
    (the last one shorter if needed).
-3. Sessions are dealt out round-robin (biggest courses first) so no course is starved,
-   and each goes to the least-loaded day that doesn't already have that course,
-   in the earliest gap long enough to hold it.
+3. Sessions are dealt out round-robin (biggest courses first) so no course is starved. Each
+   goes, in this order of preference: to a day that doesn't already have that course; to a
+   roomy gap rather than one it would only just squeeze into between two things; to the
+   lightest day, counting its classes and commitments as well as study already placed; then
+   to the earliest such gap.
 """
 
 from __future__ import annotations
@@ -20,9 +23,10 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-BUFFER = 15  # minutes kept free after a class or commitment
+BUFFER = 15  # minutes kept free before and after a class or commitment
 GAP = 15  # minutes between two study sessions
 MIN_SESSION = 30
+ROOMY = 30  # a gap with less than this to spare around a session counts as a squeeze
 
 
 def to_minutes(hhmm: str) -> int:
@@ -87,7 +91,7 @@ def free_time(
         intervals = [window]
         for slot in taken:
             if slot.weekday == day:
-                intervals = subtract(intervals, (slot.start, slot.end + BUFFER))
+                intervals = subtract(intervals, (slot.start - BUFFER, slot.end + BUFFER))
         free[day] = intervals
     return free
 
@@ -125,29 +129,34 @@ def plan_week(
             if lengths[n.course_id]:
                 queue.append((n.course_id, lengths[n.course_id].pop(0)))
 
-    load = {d: 0 for d in range(7)}
+    # A day's load counts everything in it, so a day full of classes isn't picked as "empty".
+    load = {d: sum(s.end - s.start for s in taken if s.weekday == d) for d in range(7)}
     days_with: dict[int, set[int]] = {n.course_id: set() for n in needs}
 
     for course_id, length in queue:
-        candidates = sorted(
-            (d for d in order if free[d]),
-            key=lambda d: (d in days_with[course_id], load[d], order.index(d)),
-        )
-        placed = False
-        for day in candidates:
+        best = None
+        for day in order:
             for fs, fe in free[day]:
-                if fe - fs >= length:
-                    start, end = fs, fs + length
-                    result.sessions.append(Placed(course_id, day, start, end))
-                    free[day] = subtract(free[day], (start, end + GAP))
-                    load[day] += length
-                    days_with[course_id].add(day)
-                    placed = True
-                    break
-            if placed:
-                break
-        if not placed:
+                if fe - fs < length:
+                    continue
+                key = (
+                    day in days_with[course_id],  # spread a course over different days
+                    fe - fs - length < ROOMY,  # avoid squeezing into a tight gap
+                    load[day],  # lighter days first
+                    order.index(day),
+                    fs,
+                )
+                if best is None or key < best[0]:
+                    best = (key, day, fs)
+        if best is None:
             result.unplaced_minutes[course_id] = result.unplaced_minutes.get(course_id, 0) + length
+            continue
+        _, day, start = best
+        end = start + length
+        result.sessions.append(Placed(course_id, day, start, end))
+        free[day] = subtract(free[day], (start, end + GAP))
+        load[day] += length
+        days_with[course_id].add(day)
 
     result.sessions.sort(key=lambda p: (order.index(p.weekday), p.start))
     return result
