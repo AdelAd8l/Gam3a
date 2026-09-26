@@ -7,7 +7,7 @@ import { useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Icon from './Icon'
 import Modal from './Modal'
-import NumberField from './NumberField'
+import DurationField from './DurationField'
 
 type Row = Omit<Busy, 'id' | 'term_id'> & { id?: number }
 
@@ -104,15 +104,21 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
           />
         </div>
       </div>
-      <div className="grid-2 fields-bottom">
-        <label className="field">
+      <div className="stack">
+        <div className="field">
           <span>{t('timings.hoursPerCredit')}</span>
-          <NumberField value={perCredit} onChange={setPerCredit} min={0} max={6} step="any" unit={t('unit.hours')} />
-        </label>
-        <label className="field">
+          <DurationField
+            minutes={perCredit * 60}
+            onChange={(m) => setPerCredit(m / 60)}
+            min={0}
+            max={6 * 60}
+            label={t('timings.hoursPerCredit')}
+          />
+        </div>
+        <div className="field">
           <span>{t('timings.session')}</span>
-          <NumberField value={session} onChange={setSession} min={30} max={240} unit={t('unit.min')} />
-        </label>
+          <DurationField minutes={session} onChange={setSession} min={30} max={240} label={t('timings.session')} />
+        </div>
       </div>
       <fieldset className="field day-chips">
         <legend>{t('timings.restDays')}</legend>

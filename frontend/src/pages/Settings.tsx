@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import GoogleCalendarSettings from '../components/GoogleCalendarSettings'
 import GradingSettings from '../components/GradingSettings'
 import NotificationSettings from '../components/NotificationSettings'
-import NumberField from '../components/NumberField'
+import DurationField from '../components/DurationField'
 import Icon from '../components/Icon'
 import PageHeader from '../components/PageHeader'
 import { api, type Scale } from '../lib/api'
@@ -170,11 +170,11 @@ export default function Settings() {
               ))}
             </select>
           </label>
-          <label className="field">
+          <div className="field">
             <span>{t('settings.classLength')}</span>
-            <NumberField value={classMinutes} onChange={setClassMinutes} min={15} max={360} unit={t('unit.min')} />
+            <DurationField minutes={classMinutes} onChange={setClassMinutes} min={15} max={360} label={t('settings.classLength')} />
             <small className="faint">{t('settings.classLengthHint')}</small>
-          </label>
+          </div>
           <div className="form-foot">
             {academic.isSuccess && <span className="faint">{t('settings.saved')}</span>}
             {academic.error && <span className="danger-text">{academic.error.message}</span>}
