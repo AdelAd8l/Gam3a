@@ -8,10 +8,12 @@ const inPalette = (color: string) => PALETTE.some((c) => c.toLowerCase() === col
 interface Props {
   value: string
   onChange: (color: string) => void
+  /** Defaults to "Color" as on courses. */
+  label?: string
 }
 
-/** A course color: one of the suggested colors, or any color from the wheel or a hex code. */
-export default function ColorField({ value, onChange }: Props) {
+/** A course's or commitment's color: one of the suggested colors, or any color from the wheel or a hex code. */
+export default function ColorField({ value, onChange, label = t('courses.color') }: Props) {
   const [mode, setMode] = useState<'preset' | 'custom'>(inPalette(value) ? 'preset' : 'custom')
   const [text, setText] = useState(value.toUpperCase())
   const valid = normalizeHex(text) !== null
@@ -23,8 +25,8 @@ export default function ColorField({ value, onChange }: Props) {
 
   return (
     <fieldset className="field palette">
-      <legend>{t('courses.color')}</legend>
-      <div className="segmented color-mode" role="group" aria-label={t('courses.color')}>
+      <legend>{label}</legend>
+      <div className="segmented color-mode" role="group" aria-label={label}>
         <button type="button" aria-pressed={mode === 'preset'} onClick={() => setMode('preset')}>
           {t('courses.colorPreset')}
         </button>

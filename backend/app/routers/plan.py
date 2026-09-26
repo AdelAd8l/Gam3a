@@ -36,7 +36,9 @@ def build_plan(db: Session, term: Term, user: User) -> PlanOut:
         )
         tagged.append(("class", len(blocks) - 1, Slot(m.weekday, to_minutes(m.start), to_minutes(m.end))))
     for b in busy:
-        blocks.append(Block(kind="busy", weekday=b.weekday, start=b.start, end=b.end, ref_id=b.id, title=b.title))
+        blocks.append(
+            Block(kind="busy", weekday=b.weekday, start=b.start, end=b.end, ref_id=b.id, title=b.title, color=b.color)
+        )
         tagged.append(("busy", len(blocks) - 1, Slot(b.weekday, to_minutes(b.start), to_minutes(b.end))))
 
     result = plan_week(

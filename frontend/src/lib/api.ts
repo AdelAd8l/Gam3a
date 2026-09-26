@@ -118,6 +118,7 @@ export interface Busy {
   weekday: number
   start: string
   end: string
+  color: string
 }
 export type BusyInput = Omit<Busy, 'id'>
 export interface Assessment {
@@ -143,6 +144,8 @@ export interface Block {
   ref_id: number | null
   title: string
   detail: string
+  /** A commitment's own color; classes and study use their course's. */
+  color?: string | null
 }
 export interface Plan {
   term_id: number

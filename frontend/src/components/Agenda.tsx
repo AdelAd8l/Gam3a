@@ -28,7 +28,7 @@ export default function Agenda({ blocks, courses, now, onBlock }: Props) {
             <button
               type="button"
               className={`agenda-item agenda-${b.kind}${live ? ' is-live' : ''}${past ? ' is-past' : ''}${clashing.has(b) ? ' is-clash' : ''}`}
-              style={{ '--c': course?.color ?? 'var(--ink-3)' } as React.CSSProperties}
+              style={{ '--c': course?.color ?? b.color ?? 'var(--ink-3)' } as React.CSSProperties}
               onClick={() => onBlock?.(b)}
             >
               <span className="agenda-body">

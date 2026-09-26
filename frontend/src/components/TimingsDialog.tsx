@@ -5,6 +5,7 @@ import { api, type Busy, type Term } from '../lib/api'
 import { weekOrder, weekdayName } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
+import ColorField from './ColorField'
 import Icon from './Icon'
 import Modal from './Modal'
 import DurationField from './DurationField'
@@ -22,8 +23,11 @@ interface DayTime {
 interface Commitment {
   key: string
   title: string
+  color: string
   days: DayTime[]
 }
+
+const GREY = '#8A8F98' // a commitment's color until one is chosen
 
 /** Rows with the same name are one commitment. */
 function group(rows: Busy[], order: number[]): Commitment[] {
@@ -32,7 +36,7 @@ function group(rows: Busy[], order: number[]): Commitment[] {
     const name = r.title.trim().toLowerCase()
     let c = out.find((x) => x.title.trim().toLowerCase() === name)
     if (!c) {
-      c = { key: `c${r.id}`, title: r.title, days: [] }
+      c = { key: `c${r.id}`, title: r.title, color: r.color ?? GREY, days: [] }
       out.push(c)
     }
     c.days.push({ id: r.id, weekday: r.weekday, start: r.start, end: r.end })
@@ -69,6 +73,7 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
   const [rest, setRest] = useState<number[]>(term.rest_days)
   const [items, setItems] = useState<Commitment[]>(() => group(initial, days))
   const [missingDays, setMissingDays] = useState<string | null>(null)
+  const [coloring, setColoring] = useState<string | null>(null) // the card whose color picker is open
 
   const edit = (key: string, change: (c: Commitment) => Commitment) =>
     setItems((list) => list.map((c) => (c.key === key ? change(c) : c)))
@@ -97,12 +102,15 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
         },
         id,
       )
-      const rows = items.flatMap((c) => c.days.map((d) => ({ ...d, title: c.title.trim() })))
+      const rows = items.flatMap((c) => c.days.map((d) => ({ ...d, title: c.title.trim(), color: c.color })))
       const kept = new Set(rows.filter((r) => r.id).map((r) => r.id))
       await Promise.all([
         ...initial.filter((b) => !kept.has(b.id)).map((b) => api.deleteBusy(b.id)),
         ...rows.map((r) =>
-          api.saveBusy({ term_id: term.id, title: r.title, weekday: r.weekday, start: r.start, end: r.end }, r.id),
+          api.saveBusy(
+            { term_id: term.id, title: r.title, weekday: r.weekday, start: r.start, end: r.end, color: r.color },
+            r.id,
+          ),
         ),
       ])
     },
@@ -187,6 +195,14 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
           <fieldset className="commitment" key={c.key}>
             <legend className="visually-hidden">{c.title || t('timings.commitment')}</legend>
             <div className="commitment-head">
+              <button
+                type="button"
+                className="commitment-color"
+                style={{ background: c.color }}
+                aria-label={t('timings.color')}
+                aria-expanded={coloring === c.key}
+                onClick={() => setColoring((k) => (k === c.key ? null : c.key))}
+              />
               <input
                 className="input"
                 aria-label={t('common.name')}
@@ -205,6 +221,13 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
                 <Icon name="x" size={16} />
               </button>
             </div>
+            {coloring === c.key && (
+              <ColorField
+                label={t('timings.color')}
+                value={c.color}
+                onChange={(color) => edit(c.key, (x) => ({ ...x, color }))}
+              />
+            )}
             <div className="commitment-chips" role="group" aria-label={t('timings.onDays')}>
               {days.map((d) => (
                 <button
@@ -250,7 +273,7 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
         <button
           type="button"
           className="btn btn-sm add-row"
-          onClick={() => setItems((list) => [...list, { key: `n${Date.now()}`, title: '', days: [] }])}
+          onClick={() => setItems((list) => [...list, { key: `n${Date.now()}`, title: '', color: GREY, days: [] }])}
         >
           <Icon name="plus" size={14} /> {t('timings.addCommitment')}
         </button>

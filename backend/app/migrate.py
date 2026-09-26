@@ -10,6 +10,7 @@ from sqlalchemy.engine import Engine
 
 # table, column, SQL type + default
 COLUMNS = [
+    ("busy", "color", "VARCHAR(7) NOT NULL DEFAULT '#8A8F98'"),
     ("users", "cutoffs", "VARCHAR(400) NOT NULL DEFAULT ''"),
     ("users", "default_target", "VARCHAR(3) NOT NULL DEFAULT 'A'"),
     ("users", "class_minutes", "INTEGER NOT NULL DEFAULT 100"),

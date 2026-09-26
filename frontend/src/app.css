@@ -971,12 +971,12 @@ code {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 30%, transparent);
 }
 
+/* commitments: striped, in their own color */
 .agenda-busy {
-  --c: var(--ink-3) !important;
   background: repeating-linear-gradient(
     -45deg,
     transparent 0 6px,
-    color-mix(in srgb, var(--ink-3) 12%, transparent) 6px 7px
+    color-mix(in srgb, var(--c) 16%, transparent) 6px 7px
   );
 }
 
@@ -1176,11 +1176,10 @@ code {
 }
 
 .slot-busy {
-  --c: var(--ink-3) !important;
   background: repeating-linear-gradient(
     -45deg,
     var(--panel) 0 6px,
-    color-mix(in srgb, var(--ink-3) 14%, var(--panel)) 6px 7px
+    color-mix(in srgb, var(--c) 18%, var(--panel)) 6px 7px
   );
 }
 
@@ -3597,7 +3596,7 @@ code {
 
 .commitment-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 32px;
+  grid-template-columns: 28px minmax(0, 1fr) 32px;
   gap: 6px;
   align-items: center;
 }
@@ -3646,4 +3645,19 @@ code {
     color: var(--ink-2);
     font-size: 0.82rem;
   }
+}
+
+/* the commitment's color: a dot that opens the color picker */
+.commitment-color {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 2px solid var(--panel);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--rule-strong);
+  cursor: pointer;
+}
+
+.commitment-color[aria-expanded='true'] {
+  box-shadow: 0 0 0 2px var(--ink);
 }

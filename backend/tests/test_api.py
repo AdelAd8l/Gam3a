@@ -196,3 +196,15 @@ def test_lengths_go_up_to_twelve_hours(client, term):
     assert client.put(f"/api/terms/{term['id']}", json={**body, "session_minutes": 29}).status_code == 422
     assert client.patch("/api/auth/me", json={"class_minutes": 720}).json()["class_minutes"] == 720
     assert client.patch("/api/auth/me", json={"class_minutes": 721}).status_code == 422
+
+
+def test_commitments_have_a_color(client, term):
+    base = {"term_id": term["id"], "title": "Commute", "weekday": 0, "start": "16:00", "end": "19:00"}
+    plain = client.post("/api/busy", json=base).json()
+    assert plain["color"] == "#8A8F98"  # grey unless one is chosen
+    colored = client.post("/api/busy", json={**base, "weekday": 2, "color": "#E91E63"}).json()
+    assert colored["color"] == "#E91E63"
+    assert client.put(f"/api/busy/{plain['id']}", json={**base, "color": "#00AA55"}).json()["color"] == "#00AA55"
+    assert client.post("/api/busy", json={**base, "color": "pink"}).status_code == 422
+    blocks = client.get(f"/api/terms/{term['id']}/plan").json()["blocks"]
+    assert sorted(b["color"] for b in blocks if b["kind"] == "busy") == ["#00AA55", "#E91E63"]

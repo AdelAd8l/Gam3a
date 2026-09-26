@@ -125,6 +125,7 @@ class Busy(Base):
     weekday: Mapped[int] = mapped_column(Integer)
     start: Mapped[str] = mapped_column(String(5))
     end: Mapped[str] = mapped_column(String(5))
+    color: Mapped[str] = mapped_column(String(7), default="#8A8F98")
 
 
 class Assessment(Base):

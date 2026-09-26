@@ -58,7 +58,7 @@ export default function WeekGrid({ blocks, days, restDays, courses, today, onBlo
                     key={`${b.kind}-${b.ref_id ?? i}-${b.start}`}
                     type="button"
                     className={`slot slot-${b.kind}${of > 1 ? ' is-clash' : ''}`}
-                    style={{ top, height, ...place, '--c': course?.color ?? 'var(--ink-3)' } as React.CSSProperties}
+                    style={{ top, height, ...place, '--c': course?.color ?? b.color ?? 'var(--ink-3)' } as React.CSSProperties}
                     onClick={() => onBlock?.(b)}
                     title={`${b.title} · ${formatTime(b.start)} – ${formatTime(b.end)}`}
                   >

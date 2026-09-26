@@ -246,6 +246,7 @@ class BusyIn(BaseModel):
     weekday: int = Weekday
     start: str = Field(pattern=HHMM)
     end: str = Field(pattern=HHMM)
+    color: str = Field(default="#8A8F98", pattern=r"^#[0-9A-Fa-f]{6}$")
 
     @model_validator(mode="after")
     def check(self):
@@ -260,6 +261,7 @@ class BusyOut(ORM):
     weekday: int
     start: str
     end: str
+    color: str
 
 
 # ---- assessments ---------------------------------------------------------------
@@ -316,6 +318,7 @@ class Block(BaseModel):
     ref_id: int | None = None  # meeting / busy id
     title: str = ""
     detail: str = ""  # meeting kind or location
+    color: str | None = None  # a commitment's own color (classes and study use their course's)
 
 
 class Conflict(BaseModel):
