@@ -21,6 +21,7 @@ const NAV: { to: string; label: Key; icon: IconName }[] = [
   { to: '/courses', label: 'nav.courses', icon: 'book' },
   { to: '/deadlines', label: 'nav.deadlines', icon: 'flag' },
   { to: '/grades', label: 'nav.grades', icon: 'chart' },
+  { to: '/insights', label: 'nav.insights', icon: 'pulse' },
   { to: '/terms', label: 'nav.terms', icon: 'layers' },
   { to: '/settings', label: 'nav.settings', icon: 'gear' },
 ]

@@ -5,6 +5,7 @@ import CgpaTrail from '../components/CgpaTrail'
 import ClassBadge from '../components/ClassBadge'
 import PageHeader from '../components/PageHeader'
 import { api, type Course, type Grades as GradesData } from '../lib/api'
+import { mirror } from '../lib/chart'
 import { formatGpa, formatGpaAtLeast, formatNumber, GRADES, SPECIAL_GRADES } from '../lib/format'
 import { useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -241,8 +242,10 @@ function GpaChart({ data, max }: { data: GradesData; max: number }) {
   const slot = innerW / Math.max(1, rows.length)
   const y = (v: number) => pad.top + innerH - (v / max) * innerH
   const ticks = Array.from({ length: max + 1 }, (_, i) => i)
+  const m = mirror(W) // Arabic: terms run right to left, the scale sits on the right
+  const cx = (i: number) => m.x(pad.left + slot * i + slot / 2)
   const line = rows
-    .map((r, i) => (r.cgpa === null ? null : `${pad.left + slot * i + slot / 2},${y(r.cgpa)}`))
+    .map((r, i) => (r.cgpa === null ? null : `${cx(i)},${y(r.cgpa)}`))
     .filter(Boolean)
     .join(' ')
 
@@ -259,27 +262,27 @@ function GpaChart({ data, max }: { data: GradesData; max: number }) {
       <svg width="100%" height={H} viewBox={`0 0 ${W} ${H}`} className="trend-svg" role="img" aria-label={t('grades.chart')}>
         {ticks.map((tick) => (
           <g key={tick}>
-            <line x1={pad.left} x2={W - pad.right} y1={y(tick)} y2={y(tick)} className={tick === 0 ? 'axis' : 'grid'} />
-            <text x={pad.left - 10} y={y(tick)} dy="0.32em" textAnchor="end" className="tick">
+            <line x1={m.x(pad.left)} x2={m.x(W - pad.right)} y1={y(tick)} y2={y(tick)} className={tick === 0 ? 'axis' : 'grid'} />
+            <text x={m.x(pad.left - 10)} y={y(tick)} dy="0.32em" textAnchor={m.anchor('end')} className="tick">
               {tick}
             </text>
           </g>
         ))}
         {rows.map((r, i) => {
-          const cx = pad.left + slot * i + slot / 2
+          const x = cx(i)
           const bw = Math.min(34, slot * 0.45)
           return (
             <g key={r.term_id}>
               {r.gpa !== null && (
                 <>
-                  <rect x={cx - bw / 2} y={y(r.gpa)} width={bw} height={innerH + pad.top - y(r.gpa)} rx="2" className="bar-term" />
-                  <text x={cx} y={y(r.gpa) - 6} textAnchor="middle" className="tick tick-value">
-                    {formatGpa(r.gpa)}
+                  <rect x={x - bw / 2} y={y(r.gpa)} width={bw} height={innerH + pad.top - y(r.gpa)} rx="2" className="bar-term" />
+                  <text x={x} y={y(r.gpa) - 6} textAnchor="middle" className="tick tick-value">
+                    {m.text(formatGpa(r.gpa))}
                   </text>
                 </>
               )}
-              <text x={cx} y={H - 8} textAnchor="middle" className="tick tick-x">
-                {r.name}
+              <text x={x} y={H - 8} textAnchor="middle" className="tick tick-x">
+                {m.text(r.name)}
               </text>
             </g>
           )
@@ -287,7 +290,7 @@ function GpaChart({ data, max }: { data: GradesData; max: number }) {
         {line && <polyline points={line} className="cum-line" />}
         {rows.map((r, i) =>
           r.cgpa === null ? null : (
-            <circle key={r.term_id} cx={pad.left + slot * i + slot / 2} cy={y(r.cgpa)} r="3.5" className="cum-dot" />
+            <circle key={r.term_id} cx={cx(i)} cy={y(r.cgpa)} r="3.5" className="cum-dot" />
           ),
         )}
       </svg>
