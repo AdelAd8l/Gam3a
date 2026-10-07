@@ -3661,3 +3661,82 @@ code {
 .commitment-color[aria-expanded='true'] {
   box-shadow: 0 0 0 2px var(--ink);
 }
+
+/* ---- Today: live countdown to the next class, or to the end of this one ------------------ */
+
+.countdown {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 16px;
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-inline-start: 4px solid var(--c);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c) 8%, var(--panel));
+  color: var(--ink);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.countdown-label {
+  color: var(--ink-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.countdown.is-on .countdown-label {
+  color: var(--c);
+}
+
+.countdown-main {
+  grid-column: 1;
+  overflow: hidden;
+  font-size: 1.05rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.countdown-time {
+  display: grid;
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-content: center;
+  justify-items: end;
+  font-size: 0.82rem;
+}
+
+.countdown-time b {
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-when {
+  grid-column: 1;
+  overflow: hidden;
+  font-size: 0.85rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.countdown-bar {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+}
+
+.countdown-bar span {
+  display: block;
+  height: 100%;
+  background: var(--c);
+}

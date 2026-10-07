@@ -65,6 +65,30 @@ self.addEventListener('push', (event) => {
   )
 })
 
+// The browser sometimes renews a phone's push subscription on its own. Tell the server the new
+// one right away (this runs even when the app is closed), or reminders would stop arriving
+// until the app is next opened.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil(
+    (async () => {
+      let key = event.oldSubscription && event.oldSubscription.options.applicationServerKey
+      if (!key) {
+        const res = await fetch('/api/push/key', { credentials: 'same-origin' })
+        if (!res.ok) return
+        const b64 = (await res.json()).public_key.replace(/-/g, '+').replace(/_/g, '/')
+        key = Uint8Array.from(atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4)), (c) => c.charCodeAt(0))
+      }
+      const sub = event.newSubscription || (await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key }))
+      const post = (path, body) =>
+        fetch(path, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      await post('/api/push/subscribe', sub.toJSON())
+      if (event.oldSubscription && event.oldSubscription.endpoint !== sub.endpoint) {
+        await post('/api/push/unsubscribe', { endpoint: event.oldSubscription.endpoint })
+      }
+    })().catch(() => {}), // signed out or offline: the app re-registers next time it opens
+  )
+})
+
 // Tapping a reminder opens the app (or focuses it) on the right page.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()

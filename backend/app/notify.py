@@ -114,6 +114,16 @@ def class_message(course: Course, meeting: Meeting, minutes: int, lang: str) -> 
     return {"title": title, "body": body, "url": "/", "tag": f"class-{meeting.id}"}
 
 
+def class_now_message(course: Course, meeting: Meeting, lang: str) -> dict:
+    """Sent when a class starts. Its own tag, so the earlier reminder stays on the phone too."""
+    kind = KINDS[lang].get(meeting.kind, meeting.kind)
+    name = course.code or course.name
+    title = f"{name} · {kind} now" if lang == "en" else f"{kind} {name} الآن"
+    until = f"until {meeting.end}" if lang == "en" else f"حتى {meeting.end}"
+    body = " · ".join(x for x in (until, meeting.location, course.name if course.code else "") if x)
+    return {"title": title, "body": body, "url": "/", "tag": f"class-now-{meeting.id}"}
+
+
 def deadline_message(course: Course | None, item: Assessment, minutes: int, lang: str) -> dict:
     kind = KINDS[lang].get(item.kind, item.kind)
     when = _in(minutes, lang)
@@ -178,6 +188,11 @@ def due_notices(db: Session, user: User, now: datetime) -> list[Notice]:
                     message = class_message(course, meeting, minutes, lang)
                     until = int((starts - local).total_seconds())
                     out.append(Notice(user.id, f"m{meeting.id}:{day.isoformat()}", message, ttl=max(60, until)))
+                ends = _at(day, meeting.end, tz)
+                if starts <= local < ends:  # the class is on: say so, and until when
+                    message = class_now_message(course, meeting, lang)
+                    left = int((ends - local).total_seconds())
+                    out.append(Notice(user.id, f"n{meeting.id}:{day.isoformat()}", message, ttl=max(60, left)))
 
     if user.notify_deadlines:
         lead = timedelta(minutes=user.deadline_lead)
@@ -223,6 +238,9 @@ def send_to_user(
                 vapid_private_key=vapid,
                 vapid_claims={"sub": subject},
                 ttl=ttl,
+                # High urgency: without it Android holds pushes back while the phone is idle
+                # (Doze), and a reminder that arrives after its TTL is dropped.
+                headers={"Urgency": "high"},
                 timeout=10,
             )
             sent += 1

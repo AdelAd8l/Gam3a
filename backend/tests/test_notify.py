@@ -20,7 +20,11 @@ MONDAY = {"weekday": 0, "start": "10:00", "end": "11:40", "kind": "lecture", "lo
 @pytest.fixture
 def pushed(monkeypatch):
     sent = []
-    monkeypatch.setattr(notify, "webpush", lambda info, data, **kw: sent.append(json.loads(data)))
+    def fake(info, data, **kw):
+        assert kw["headers"] == {"Urgency": "high"}  # so a sleeping phone still gets it on time
+        sent.append(json.loads(data))
+
+    monkeypatch.setattr(notify, "webpush", fake)
     return sent
 
 
@@ -47,7 +51,12 @@ def test_class_reminder_is_sent_once_before_class(client, term, pushed):
     assert pushed[0]["title"] == "CSE221 · Lecture in 14 min"
     assert "Hall 3" in pushed[0]["body"]
     assert run(cairo(28, 9, 50)) == 0  # already sent
-    assert run(cairo(28, 10, 1)) == 0  # class started
+    # when the class starts: "on now, until …", as a second notification (the reminder stays), once
+    assert run(cairo(28, 10, 1)) == 1
+    assert pushed[1]["title"] == "CSE221 · Lecture now"
+    assert pushed[1]["body"].startswith("until 11:40") and pushed[1]["tag"] != pushed[0]["tag"]
+    assert run(cairo(28, 10, 30)) == 0
+    assert run(cairo(28, 11, 40)) == 0  # over
     assert run(cairo(29, 9, 50)) == 0  # Tuesday: no class
 
 

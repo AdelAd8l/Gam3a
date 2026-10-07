@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 
 import Agenda from '../components/Agenda'
 import ClassBadge from '../components/ClassBadge'
+import ClassCountdown from '../components/ClassCountdown'
 import { DeadlineRow } from '../components/DeadlineRow'
 import { api, type Block } from '../lib/api'
 import {
@@ -85,6 +86,10 @@ export default function Today() {
           </div>
         </div>
       </header>
+
+      {status === 'current' && plan.data && (
+        <ClassCountdown blocks={plan.data.blocks} courses={courses} termEnd={term!.end_date} onOpen={openBlock} />
+      )}
 
       <div className="today-grid">
         <section className="panel today-schedule">
