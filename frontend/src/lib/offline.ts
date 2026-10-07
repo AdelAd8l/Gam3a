@@ -181,14 +181,16 @@ function belongs(resource: string, key: QueryKey, item: Item): boolean {
     }
     case 'assessments': {
       const a = item as unknown as Assessment
+      // a task with no course belongs to every term
+      const inTerm = (termId: unknown) => a.course_id === null || courseTerm(a.course_id) === termId
       if (key[1] === 'course') return a.course_id === key[2]
-      if (key[1] === 'term') return courseTerm(a.course_id) === key[2]
+      if (key[1] === 'term') return inTerm(key[2])
       if (key[1] === 'due') {
         const [, , termId, today] = key as [string, string, number, string]
         const soon = new Date(`${today}T00:00:00`)
         soon.setDate(soon.getDate() + 7)
         const limit = soon.toISOString().slice(0, 10)
-        return !a.done && !!a.due_date && a.due_date <= limit && courseTerm(a.course_id) === termId
+        return !a.done && !!a.due_date && a.due_date <= limit && inTerm(termId)
       }
       return false
     }

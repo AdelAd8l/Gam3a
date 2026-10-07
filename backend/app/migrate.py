@@ -47,4 +47,38 @@ def upgrade(engine: Engine) -> list[str]:
             if column not in existing:
                 conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {ddl}"))
                 added.append(f"{table}.{column}")
+    if _optional_course(engine):
+        added.append("assessments.course_id (optional)")
     return added
+
+
+def _optional_course(engine: Engine) -> bool:
+    """Let a deadline have no course (an everyday task). Postgres can simply drop NOT NULL;
+    SQLite can't change a column, so the table is rebuilt with every row copied across, in one
+    transaction (nothing else references this table). Returns True if it changed anything."""
+    inspector = inspect(engine)
+    if "assessments" not in inspector.get_table_names():
+        return False
+    columns = inspector.get_columns("assessments")
+    course = next((c for c in columns if c["name"] == "course_id"), None)
+    if course is None or course["nullable"]:
+        return False
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE assessments ALTER COLUMN course_id DROP NOT NULL"))
+        return True
+
+    from .models import Assessment  # the current definition, with course_id optional
+
+    table = Assessment.__table__
+    old_names = {c["name"] for c in columns}
+    shared = ", ".join(f'"{c.name}"' for c in table.columns if c.name in old_names)
+    indexes = [i["name"] for i in inspector.get_indexes("assessments")]  # before the table is renamed
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE assessments RENAME TO assessments_old"))
+        for name in indexes:  # they moved with the table; free their names for the new one
+            conn.execute(text(f'DROP INDEX IF EXISTS "{name}"'))
+        table.create(conn)
+        conn.execute(text(f"INSERT INTO assessments ({shared}) SELECT {shared} FROM assessments_old"))
+        conn.execute(text("DROP TABLE assessments_old"))
+    return True

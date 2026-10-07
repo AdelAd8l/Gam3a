@@ -135,7 +135,11 @@ class Assessment(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = _user_fk()
-    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), index=True)
+    # None for a task with no course (everyday or non-university): it belongs to no term and
+    # shows whichever term is open; it has no weight or mark.
+    course_id: Mapped[int | None] = mapped_column(
+        ForeignKey("courses.id", ondelete="CASCADE"), index=True, nullable=True
+    )
     title: Mapped[str] = mapped_column(String(100))
     kind: Mapped[str] = mapped_column(String(12), default="assignment")
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True, index=True)

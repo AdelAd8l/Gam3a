@@ -268,7 +268,7 @@ class BusyOut(ORM):
 
 
 class AssessmentIn(BaseModel):
-    course_id: int
+    course_id: int | None = None  # None: a task with no course
     title: str = Field(min_length=1, max_length=100)
     kind: AssessmentKind = "assignment"
     due_date: date | None = None
@@ -289,12 +289,14 @@ class AssessmentIn(BaseModel):
             # Raw marks win: store the percentage they work out to.
             self.score = round(self.points_earned / self.points_max * 100, 4)
             self.done = True
+        if self.course_id is None:  # no course, so nothing to grade
+            self.weight = self.score = self.points_earned = self.points_max = None
         return self
 
 
 class AssessmentOut(ORM):
     id: int
-    course_id: int
+    course_id: int | None
     title: str
     kind: AssessmentKind
     due_date: date | None

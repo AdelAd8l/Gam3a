@@ -26,7 +26,11 @@ export default function Insights() {
   })
   const grades = useQuery({ queryKey: ['grades'], queryFn: api.grades })
 
-  const withDate = (items.data ?? []).filter((a) => a.due_date)
+  // This term's deadlines: its courses' items, plus tasks with no course that fall within it.
+  const termItems = (items.data ?? []).filter(
+    (a) => a.course_id !== null || (a.due_date && a.due_date >= term!.start_date && a.due_date <= term!.end_date),
+  )
+  const withDate = termItems.filter((a) => a.due_date)
   const done = withDate.filter((a) => a.done).length
   const credits = courses.reduce((s, c) => s + c.credits, 0)
   const weekly = plan.data ? plan.data.class_minutes + plan.data.study_minutes : null
@@ -71,7 +75,7 @@ export default function Insights() {
       ) : (
         <div className="insights-grid">
           <Standing courses={courses} />
-          <DeadlineWeeks courses={courses} items={items.data ?? []} start={term!.start_date} end={term!.end_date} />
+          <DeadlineWeeks courses={courses} items={termItems} start={term!.start_date} end={term!.end_date} />
           {plan.data && <WeekHours plan={plan.data} />}
           {plan.data && <CourseHours plan={plan.data} courses={courses} />}
         </div>
@@ -149,10 +153,14 @@ function DeadlineWeeks({ courses, items, start, end }: { courses: Course[]; item
   const weeks = Math.max(1, Math.ceil((Date.parse(end) - first + DAY) / (7 * DAY)))
   const week = (iso: string) => Math.min(weeks - 1, Math.max(0, Math.floor((Date.parse(iso) - first) / (7 * DAY))))
   const shown = courses.filter((c) => items.some((a) => a.course_id === c.id && a.due_date))
-  const stacks: Stack[] = shown.map((c) => ({ label: courseName(c), color: c.color }))
+  const tasks = items.some((a) => a.course_id === null && a.due_date) // tasks with no course: one grey stack
+  const stacks: Stack[] = [
+    ...shown.map((c) => ({ label: courseName(c), color: c.color })),
+    ...(tasks ? [{ label: t('deadlines.noCourse'), color: '#8A8F98' }] : []),
+  ]
   const values = Array.from({ length: weeks }, () => new Array(stacks.length).fill(0))
   for (const a of items) {
-    const k = shown.findIndex((c) => c.id === a.course_id)
+    const k = a.course_id === null ? (tasks ? stacks.length - 1 : -1) : shown.findIndex((c) => c.id === a.course_id)
     if (a.due_date && k >= 0) values[week(a.due_date)][k] += 1
   }
   const now = week(todayISO())

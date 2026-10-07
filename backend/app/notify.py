@@ -114,12 +114,12 @@ def class_message(course: Course, meeting: Meeting, minutes: int, lang: str) -> 
     return {"title": title, "body": body, "url": "/", "tag": f"class-{meeting.id}"}
 
 
-def deadline_message(course: Course, item: Assessment, minutes: int, lang: str) -> dict:
+def deadline_message(course: Course | None, item: Assessment, minutes: int, lang: str) -> dict:
     kind = KINDS[lang].get(item.kind, item.kind)
     when = _in(minutes, lang)
     title = f"{item.title} is due {when}" if lang == "en" else f"موعد {item.title} {when}"
     at = item.due_time or ""
-    body = " · ".join(x for x in (course.code or course.name, kind, at) if x)
+    body = " · ".join(x for x in ((course.code or course.name) if course else "", kind, at) if x)
     return {"title": title, "body": body, "url": "/deadlines", "tag": f"due-{item.id}"}
 
 
@@ -184,7 +184,7 @@ def due_notices(db: Session, user: User, now: datetime) -> list[Notice]:
         horizon = today + timedelta(days=user.deadline_lead // 1440 + 2)
         rows = db.execute(
             select(Assessment, Course)
-            .join(Course, Assessment.course_id == Course.id)
+            .outerjoin(Course, Assessment.course_id == Course.id)  # tasks with no course too
             .where(
                 Assessment.user_id == user.id,
                 Assessment.done.is_(False),

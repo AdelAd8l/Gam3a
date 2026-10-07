@@ -28,8 +28,8 @@ export function DeadlineRow({ item, course, onToggle, onOpen }: Props) {
       <button type="button" className="deadline-main" onClick={onOpen}>
         <span className="deadline-title">{item.title}</span>
         <span className="deadline-meta">
-          <span className="swatch" style={{ background: course?.color }} />
-          <span>{course?.code || course?.name}</span>
+          <span className="swatch" style={{ background: course?.color ?? 'var(--ink-3)' }} />
+          <span>{course ? course.code || course.name : t('deadlines.noCourse')}</span>
           <span className="faint">· {t(`akind.${item.kind}`)}</span>
           {item.weight !== null && <span className="faint">· {t('deadlines.weight', { n: formatNumber(item.weight, 1) })}</span>}
           {item.points_earned !== null && item.points_max !== null ? (

@@ -226,6 +226,31 @@ def _popup(minutes: int) -> dict:
 KIND_NAMES = {"lecture": "Lecture", "lab": "Lab", "section": "Section", "tutorial": "Tutorial"}
 
 
+TASKS = 0  # the calendar for tasks with no course (course ids start at 1)
+
+
+def _deadline_event(a: Assessment, course: str, description: str, tz: str, deadline_lead: int) -> dict:
+    """A deadline as a Google event: a half hour ending at its time, or all day without one."""
+    body = {
+        "summary": f"{'✓ ' if a.done else ''}{a.title}" + (f" · {course}" if course else ""),
+        "description": description,
+        "transparency": "transparent",
+        "reminders": NO_REMINDERS,
+    }
+    # Reminders count from the event's start, so aim them at the due time itself.
+    lead = deadline_lead if deadline_lead > 0 and not a.done else -1
+    if a.due_time:  # a half-hour block ending at the due time
+        due = datetime.combine(a.due_date, time(*map(int, a.due_time.split(":"))))
+        body["start"] = {"dateTime": (due - timedelta(minutes=30)).isoformat(), "timeZone": tz}
+        body["end"] = {"dateTime": due.isoformat(), "timeZone": tz}
+        body["reminders"] = _popup(max(0, lead - 30) if lead > 0 else -1)
+    else:  # all-day: Google counts from midnight; the deadline itself is 09:00
+        body["start"] = {"date": a.due_date.isoformat()}
+        body["end"] = {"date": (a.due_date + timedelta(days=1)).isoformat()}
+        body["reminders"] = _popup(max(0, lead - UNTIMED_DUE_MINUTES) if lead > 0 else -1)
+    return body
+
+
 def desired(db: Session, user: User, link: GoogleLink) -> Wanted:
     """Everything that should be on Google for this user right now."""
     from .routers.plan import build_plan  # late import: routers import this module
@@ -289,24 +314,22 @@ def desired(db: Session, user: User, link: GoogleLink) -> Wanted:
         )
         for a in items:
             c = courses[a.course_id]
-            body = {
-                "summary": f"{'✓ ' if a.done else ''}{a.title} · {c.code or c.name}",
-                "description": f"{c.name} · {a.kind}",
-                "transparency": "transparent",
-                "reminders": NO_REMINDERS,
-            }
-            # Reminders count from the event's start, so aim them at the due time itself.
-            lead = deadline_lead if deadline_lead > 0 and not a.done else -1
-            if a.due_time:  # a half-hour block ending at the due time
-                due = datetime.combine(a.due_date, time(*map(int, a.due_time.split(":"))))
-                body["start"] = {"dateTime": (due - timedelta(minutes=30)).isoformat(), "timeZone": tz}
-                body["end"] = {"dateTime": due.isoformat(), "timeZone": tz}
-                body["reminders"] = _popup(max(0, lead - 30) if lead > 0 else -1)
-            else:  # all-day: Google counts from midnight; the deadline itself is 09:00
-                body["start"] = {"date": a.due_date.isoformat()}
-                body["end"] = {"date": (a.due_date + timedelta(days=1)).isoformat()}
-                body["reminders"] = _popup(max(0, lead - UNTIMED_DUE_MINUTES) if lead > 0 else -1)
-            wanted.events[f"a{a.id}"] = (c.id, body)
+            wanted.events[f"a{a.id}"] = (c.id, _deadline_event(a, c.code or c.name, f"{c.name} · {a.kind}", tz, deadline_lead))
+
+    # Tasks with no course go to their own calendar, "Gam3a · Tasks" (pseudo course id 0).
+    tasks = db.scalars(
+        select(Assessment).where(
+            Assessment.user_id == user.id,
+            Assessment.course_id.is_(None),
+            Assessment.due_date.is_not(None),
+            Assessment.due_date >= today - timedelta(days=60),
+        )
+    ).all()
+    if tasks:
+        name = "Gam3a · مهام" if user.lang == "ar" else "Gam3a · Tasks"
+        wanted.calendars[TASKS] = WantedCalendar(TASKS, {"summary": name, "description": "Gam3a", "timeZone": tz}, "#8A8F98")
+        for a in tasks:
+            wanted.events[f"a{a.id}"] = (TASKS, _deadline_event(a, "", a.kind, tz, deadline_lead))
     return wanted
 
 

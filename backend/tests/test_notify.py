@@ -138,3 +138,11 @@ def test_time_zone_is_automatic_until_picked_by_hand(client, user):
     assert client.get("/api/auth/me").json()["timezone_auto"] is True
     me = client.patch("/api/auth/me", json={"timezone": "Asia/Dubai", "timezone_auto": False}).json()
     assert (me["timezone"], me["timezone_auto"]) == ("Asia/Dubai", False)
+
+
+def test_tasks_with_no_course_get_reminders_too(client, term, pushed):
+    client.post("/api/assessments", json={"course_id": None, "kind": "other", "title": "Renew ID", "due_date": "2026-09-29"})
+    client.post("/api/push/subscribe", json=SUB)
+    assert run(cairo(28, 9, 0)) == 1
+    assert pushed[-1]["title"] == "Renew ID is due tomorrow"
+    assert "body" in pushed[-1]

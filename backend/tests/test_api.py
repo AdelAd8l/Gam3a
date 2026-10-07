@@ -208,3 +208,28 @@ def test_commitments_have_a_color(client, term):
     assert client.post("/api/busy", json={**base, "color": "pink"}).status_code == 422
     blocks = client.get(f"/api/terms/{term['id']}/plan").json()["blocks"]
     assert sorted(b["color"] for b in blocks if b["kind"] == "busy") == ["#00AA55", "#E91E63"]
+
+
+def test_tasks_with_no_course(client, term):
+    task = client.post(
+        "/api/assessments",
+        json={"course_id": None, "title": " Pay rent ", "kind": "other", "due_date": "2026-10-01", "weight": 20, "score": 90},
+    )
+    assert task.status_code == 201, task.text
+    t = task.json()
+    assert (t["course_id"], t["title"], t["weight"], t["score"]) == (None, "Pay rent", None, None)  # nothing to grade
+    # it belongs to no term, so it shows in every term's list
+    other = client.post("/api/terms", json={"name": "Next", "start_date": "2027-02-01", "end_date": "2027-05-31"}).json()
+    for term_id in (term["id"], other["id"]):
+        assert [a["title"] for a in client.get("/api/assessments", params={"term_id": term_id}).json()] == ["Pay rent"]
+    # a course can be added later, and taken away again
+    c = add_course(client, term["id"])
+    moved = client.put(f"/api/assessments/{t['id']}", json={**t, "course_id": c["id"]}).json()
+    assert moved["course_id"] == c["id"]
+    assert client.get("/api/assessments", params={"term_id": other["id"]}).json() == []
+    back = client.put(f"/api/assessments/{t['id']}", json={**t, "course_id": None}).json()
+    assert back["course_id"] is None
+    # grades ignore it; the term's calendar file includes it
+    assert client.get(f"/api/courses/{c['id']}").json()["progress"]["listed_weight"] == 0
+    ics = client.get(f"/api/terms/{term['id']}/calendar.ics").text
+    assert "SUMMARY:Pay rent\r\n" in ics

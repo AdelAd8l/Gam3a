@@ -2,7 +2,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import Response
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -117,17 +117,26 @@ def calendar(term_id: int, study: bool = True, user: User = Depends(current_user
         lines.append("END:VEVENT")
 
     items = db.scalars(
-        select(Assessment).where(Assessment.course_id.in_(list(courses)), Assessment.due_date.is_not(None))
+        select(Assessment).where(
+            Assessment.user_id == user.id,
+            Assessment.due_date.is_not(None),
+            or_(
+                Assessment.course_id.in_(list(courses)),
+                # tasks with no course that fall within the term
+                Assessment.course_id.is_(None) & Assessment.due_date.between(term.start_date, term.end_date),
+            ),
+        )
     )
     for a in items:
-        course = courses[a.course_id]
+        course = courses.get(a.course_id)
         lines += ["BEGIN:VEVENT", f"UID:gam3a-assessment-{a.id}@gam3a", f"DTSTAMP:{stamp}"]
         if a.due_time:
             lines.append(f"DTSTART:{a.due_date:%Y%m%d}T{a.due_time.replace(':', '')}00")
         else:
             lines += [f"DTSTART;VALUE=DATE:{a.due_date:%Y%m%d}",
                       f"DTEND;VALUE=DATE:{a.due_date + timedelta(days=1):%Y%m%d}"]
-        lines += [f"SUMMARY:{_esc(f'{a.title} — {course.code or course.name}')}", "END:VEVENT"]
+        summary = f"{a.title} — {course.code or course.name}" if course else a.title
+        lines += [f"SUMMARY:{_esc(summary)}", "END:VEVENT"]
 
     lines.append("END:VCALENDAR")
     filename = "".join(ch if ch.isalnum() else "-" for ch in term.name).strip("-") or "term"

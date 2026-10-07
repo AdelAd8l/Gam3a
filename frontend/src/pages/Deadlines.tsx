@@ -33,7 +33,7 @@ export default function Deadlines() {
 
   const visible = (items.data ?? []).filter(
     (a) =>
-      (filter === 'all' || (filter === 'done' ? a.done : !a.done)) && (!courseId || a.course_id === Number(courseId)),
+      (filter === 'all' || (filter === 'done' ? a.done : !a.done)) && (!courseId || (courseId === 'none' ? a.course_id === null : a.course_id === Number(courseId))),
   )
   const today = todayISO()
   const week = addDays(today, 7)
@@ -63,7 +63,7 @@ export default function Deadlines() {
         </div>
         <SwatchSelect
           className="select select-auto"
-          colorOf={(v) => (v ? byId.get(Number(v))?.color : undefined)}
+          colorOf={(v) => (v === 'none' ? '#8A8F98' : v ? byId.get(Number(v))?.color : undefined)}
           value={courseId}
           onChange={setCourseId}
         >
@@ -73,6 +73,7 @@ export default function Deadlines() {
               {c.code || c.name}
             </option>
           ))}
+          <option value="none">{t('deadlines.noCourse')}</option>
         </SwatchSelect>
       </div>
 
@@ -99,7 +100,7 @@ export default function Deadlines() {
                   <DeadlineRow
                     key={a.id}
                     item={a}
-                    course={byId.get(a.course_id)}
+                    course={a.course_id === null ? undefined : byId.get(a.course_id)}
                     onToggle={() => toggle.mutate(a)}
                     onOpen={() => editAssessment(a)}
                   />

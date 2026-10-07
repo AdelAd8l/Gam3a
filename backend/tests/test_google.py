@@ -278,3 +278,18 @@ def test_reminder_times_can_be_changed_or_turned_off(client, term, google, user)
     assert _reminder(events["MTH203"]) == 30
     assert _reminder(events["HW"]) is None
     assert client.put("/api/google/settings", json={"class_reminder": -5}).status_code == 422
+
+
+def test_tasks_with_no_course_get_their_own_calendar(client, term, google, user):
+    add_course(client, term["id"], meetings=[LECTURE])
+    client.post("/api/assessments", json={"course_id": None, "title": "Renew ID", "kind": "other", "due_date": "2026-10-03"})
+    connect(client)
+    tasks = [c for c in google.calendars.values() if c["body"]["summary"] == "Gam3a · Tasks"]
+    assert len(tasks) == 1 and tasks[0]["color"][0] == "#8A8F98"
+    (event,) = tasks[0]["events"].values()
+    assert event["summary"] == "Renew ID" and event["start"] == {"date": "2026-10-03"}
+    # deleting the last task removes the calendar
+    item = client.get("/api/assessments", params={"term_id": term["id"]}).json()[0]
+    client.delete(f"/api/assessments/{item['id']}")
+    sync(user["id"])
+    assert not any(c["body"]["summary"] == "Gam3a · Tasks" for c in google.calendars.values())

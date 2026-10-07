@@ -123,7 +123,8 @@ export interface Busy {
 export type BusyInput = Omit<Busy, 'id'>
 export interface Assessment {
   id: number
-  course_id: number
+  /** null: a task with no course (everyday or non-university), shown in every term */
+  course_id: number | null
   title: string
   kind: AssessmentKind
   due_date: string | null

@@ -125,7 +125,7 @@ export default function Today() {
                   <DeadlineRow
                     key={a.id}
                     item={a}
-                    course={courses.get(a.course_id)}
+                    course={a.course_id === null ? undefined : courses.get(a.course_id)}
                     onToggle={() => toggle.mutate(a.id)}
                     onOpen={() => editAssessment(a)}
                   />

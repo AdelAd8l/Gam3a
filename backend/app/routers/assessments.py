@@ -1,7 +1,7 @@
 from datetime import date
 
 from fastapi import APIRouter, Depends, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -25,7 +25,9 @@ def list_assessments(
 ):
     stmt = select(Assessment).where(Assessment.user_id == user.id)
     if term_id is not None:
-        stmt = stmt.where(Assessment.course_id.in_(select(Course.id).where(Course.term_id == term_id)))
+        # The term's courses, plus tasks with no course, which belong to every term.
+        in_term = Assessment.course_id.in_(select(Course.id).where(Course.term_id == term_id))
+        stmt = stmt.where(or_(in_term, Assessment.course_id.is_(None)))
     if course_id is not None:
         stmt = stmt.where(Assessment.course_id == course_id)
     if start:
@@ -41,7 +43,8 @@ def list_assessments(
 
 @router.post("", response_model=AssessmentOut, status_code=status.HTTP_201_CREATED)
 def create_assessment(data: AssessmentIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    get_owned(db, Course, data.course_id, user)
+    if data.course_id is not None:
+        get_owned(db, Course, data.course_id, user)
     item = Assessment(user_id=user.id, **data.model_dump())
     item.title = item.title.strip()
     db.add(item)
@@ -52,7 +55,8 @@ def create_assessment(data: AssessmentIn, user: User = Depends(current_user), db
 @router.put("/{item_id}", response_model=AssessmentOut)
 def update_assessment(item_id: int, data: AssessmentIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     item = get_owned(db, Assessment, item_id, user)
-    get_owned(db, Course, data.course_id, user)
+    if data.course_id is not None:
+        get_owned(db, Course, data.course_id, user)
     for field, value in data.model_dump().items():
         setattr(item, field, value)
     item.title = item.title.strip()

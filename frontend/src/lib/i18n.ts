@@ -212,7 +212,7 @@ const en = {
   'deadlines.scoreLabel': 'Your score (%)',
   'deadlines.doneLabel': 'Done',
   'deadlines.confirmDelete': 'Delete this deadline?',
-  'deadlines.needCourse': 'Add a course first, then its deadlines.',
+  'deadlines.noCourse': 'No course',
 
   'grades.title': 'Grades',
   'grades.cgpa': 'Cumulative GPA',
@@ -681,7 +681,7 @@ const ar: Record<Key, string> = {
   'deadlines.scoreLabel': 'درجتك (٪)',
   'deadlines.doneLabel': 'تم',
   'deadlines.confirmDelete': 'حذف هذا الموعد؟',
-  'deadlines.needCourse': 'أضف مادة أولاً، ثم مواعيدها.',
+  'deadlines.noCourse': 'بدون مادة',
 
   'grades.title': 'الدرجات',
   'grades.cgpa': 'المعدل التراكمي',
