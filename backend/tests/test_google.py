@@ -293,3 +293,13 @@ def test_tasks_with_no_course_get_their_own_calendar(client, term, google, user)
     client.delete(f"/api/assessments/{item['id']}")
     sync(user["id"])
     assert not any(c["body"]["summary"] == "Gam3a · Tasks" for c in google.calendars.values())
+
+
+def test_a_consent_link_started_elsewhere_cant_connect(client, user, google):
+    # Someone starts connecting on their own account and sends the Google link to another person.
+    r = client.get("/api/google/connect", follow_redirects=False)
+    state = parse_qs(urlparse(r.headers["location"]).query)["state"][0]
+    other = client.__class__(client.app)  # the other person's browser: no cookie from /connect
+    back = other.get("/api/google/callback", params={"code": "abc", "state": state}, follow_redirects=False)
+    assert back.headers["location"] == "/settings?google=expired"
+    assert client.get("/api/google/status").json()["connected"] is False

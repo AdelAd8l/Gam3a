@@ -146,7 +146,15 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "",
     if user is None:
         user = db.scalar(select(User).where(User.email == email))
         if user is not None:
-            user.google_sub = sub  # the same person: link the Google account to it
+            # The same email: link the Google account to it. Google has proved this person owns
+            # the email, but whoever chose the account's password never had to (sign-up doesn't
+            # check emails). So that password stops working and other devices are signed out:
+            # someone who signed up first with another person's email can't keep a way in.
+            user.google_sub = sub
+            if user.password_hash:
+                user.password_hash = ""
+                user.must_change_password = False
+                user.session_version = (user.session_version or 0) + 1
         elif not signup_open(db):
             return back("closed")
         else:

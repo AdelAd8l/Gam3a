@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     admin_email: str = "adool1832007@gmail.com"
     # Shown on the public privacy page (/privacy). Empty = the admin email.
     contact_email: str = ""
-    admin_password: str = "admin"
+    admin_password: str = ""  # empty = a random one, printed to the log
     # Google (optional): "Continue with Google" and Calendar sync. From Google Cloud: an OAuth client
     # of type "Web application" with the redirect URIs <public_url>/api/auth/google/callback and
     # <public_url>/api/google/callback. Leave empty to hide both.

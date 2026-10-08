@@ -1,5 +1,7 @@
+from urllib.parse import urlsplit
+
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -16,9 +18,31 @@ class Keys(BaseModel):
     auth: str = Field(max_length=100)
 
 
+# The browsers' push services. The server sends to whatever address a phone registers, so only
+# these are accepted (never an address inside the server's own network).
+PUSH_HOSTS = (
+    "fcm.googleapis.com",
+    "android.googleapis.com",
+    "updates.push.services.mozilla.com",
+    ".push.services.mozilla.com",
+    ".notify.windows.com",
+    "web.push.apple.com",
+    ".push.apple.com",
+)
+
+
 class SubscriptionIn(BaseModel):
     endpoint: str = Field(pattern=r"^https://", max_length=1000)
     keys: Keys
+
+    @field_validator("endpoint")
+    @classmethod
+    def known_push_service(cls, v: str) -> str:
+        url = urlsplit(v)
+        host = (url.hostname or "").lower()
+        if url.port not in (None, 443) or not any(host == h or (h[0] == "." and host.endswith(h)) for h in PUSH_HOSTS):
+            raise ValueError("not a browser push service")
+        return v
 
 
 class EndpointIn(BaseModel):

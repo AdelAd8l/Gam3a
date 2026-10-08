@@ -3,7 +3,7 @@ import mimetypes
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
@@ -29,6 +29,36 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Gam3a", version="1.0.0", lifespan=lifespan)
+
+# Sent with every response: no framing by other sites (clickjacking), no type sniffing, only this
+# site's own scripts, and (behind HTTPS) always HTTPS.
+CSP = (
+    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; "
+    "font-src 'self' data:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; "
+    "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+)
+HEADERS = {
+    "Content-Security-Policy": CSP,
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for name, value in HEADERS.items():
+        if name == "Content-Security-Policy" and request.url.path in ("/docs", "/redoc"):
+            continue  # the API docs page loads its viewer from a CDN
+        response.headers.setdefault(name, value)
+    if get_settings().cookie_secure:
+        response.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    if request.url.path.startswith("/api/"):
+        response.headers.setdefault("Cache-Control", "no-store")  # private data: not kept in shared caches
+    return response
 
 for module in (auth, terms, courses, busy, assessments, plan, grades, push, admin, google, google_login):
     app.include_router(module.router)

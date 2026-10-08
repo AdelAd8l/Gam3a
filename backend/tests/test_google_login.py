@@ -103,3 +103,16 @@ def test_must_finish_in_the_browser_that_started(client, google):
     assert client.get("/api/auth/me").status_code == 401
     r = client.get("/api/auth/google/callback", params={"error": "access_denied"}, follow_redirects=False)
     assert r.headers["location"] == "/login?google=cancelled"
+
+
+def test_someone_who_signed_up_first_with_your_email_loses_their_way_in(client, google):
+    # Someone signs up with Nour's email (sign-up doesn't check emails) and stays signed in.
+    attacker = client.__class__(client.app)
+    signup(attacker, email="nour@gmail.com", password="attacker-knows-this")
+    # Nour then uses Continue with Google: Google proves the email is theirs.
+    sign_in_with_google(client)
+    assert client.get("/api/auth/me").json()["has_password"] is False
+    # The password chosen by the other person no longer works, and their session is over.
+    assert attacker.get("/api/auth/me").status_code == 401
+    login = {"email": "nour@gmail.com", "password": "attacker-knows-this"}
+    assert attacker.post("/api/auth/login", json=login).status_code == 401

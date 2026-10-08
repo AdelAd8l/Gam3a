@@ -1,3 +1,5 @@
+import time
+from collections import defaultdict, deque
 from datetime import UTC, datetime, timedelta
 
 import bcrypt
@@ -13,14 +15,54 @@ COOKIE_NAME = "gam3a_session"
 ALGORITHM = "HS256"
 
 
+MAX_PASSWORD_BYTES = 72  # bcrypt reads no further
+
+
 def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    raw = password.encode()
+    if len(raw) > MAX_PASSWORD_BYTES:  # e.g. a long Arabic password (2 bytes a letter)
+        raise HTTPException(422, "That password is too long. Use a shorter one.")
+    return bcrypt.hashpw(raw, bcrypt.gensalt()).decode()
 
 
 def verify_password(password: str, hashed: str) -> bool:
     if not hashed:  # an account made with Google has no password
         return False
-    return bcrypt.checkpw(password.encode(), hashed.encode())
+    return bcrypt.checkpw(password.encode()[:MAX_PASSWORD_BYTES], hashed.encode())
+
+
+# Wrong passwords: after this many in the window, that email (or that address) has to wait.
+FAILS_PER_EMAIL = 10
+FAILS_PER_IP = 30
+FAIL_WINDOW = 15 * 60  # seconds
+_fails: dict[str, deque[float]] = defaultdict(deque)
+
+
+def _recent(key: str, now: float) -> deque[float]:
+    q = _fails[key]
+    while q and q[0] < now - FAIL_WINDOW:
+        q.popleft()
+    if not q:
+        _fails.pop(key, None)
+    return q
+
+
+def check_attempts(request: Request, email: str) -> None:
+    """Refuse a sign-in try while this email or this address has failed too often lately."""
+    now = time.monotonic()
+    ip = request.client.host if request.client else ""
+    if len(_recent(f"e:{email}", now)) >= FAILS_PER_EMAIL or len(_recent(f"i:{ip}", now)) >= FAILS_PER_IP:
+        raise HTTPException(429, "Too many wrong passwords. Wait 15 minutes and try again.")
+
+
+def record_failure(request: Request, email: str) -> None:
+    now = time.monotonic()
+    ip = request.client.host if request.client else ""
+    if len(_fails) > 10_000:  # keep memory bounded
+        for key in list(_fails):
+            _recent(key, now)
+    _fails[f"e:{email}"].append(now)
+    _fails[f"i:{ip}"].append(now)
 
 
 def set_session_cookie(response: Response, user: User) -> None:

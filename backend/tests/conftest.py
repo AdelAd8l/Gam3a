@@ -4,11 +4,13 @@ import os
 os.environ["GAM3A_DATABASE_URL"] = os.environ.get("TEST_DATABASE_URL", "sqlite://")
 os.environ["GAM3A_STATIC_DIR"] = "/nonexistent"
 os.environ["GAM3A_NOTIFICATIONS"] = "false"
+os.environ["GAM3A_ADMIN_PASSWORD"] = "admin"
 os.environ["GAM3A_SECRET_KEY"] = "test-secret-key-that-is-long-enough-for-hs256"
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app import security  # noqa: E402
 from app.database import Base, engine  # noqa: E402
 from app.main import app  # noqa: E402
 
@@ -17,6 +19,7 @@ from app.main import app  # noqa: E402
 def client():
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
+    security._fails.clear()  # sign-in throttling starts fresh
     with TestClient(app) as c:
         yield c
 

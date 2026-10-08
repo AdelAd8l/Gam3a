@@ -18,6 +18,8 @@ from ..security import COOKIE_NAME, current_user
 
 router = APIRouter(prefix="/api/google", tags=["google"])
 
+CONNECT_COOKIE = "google_connect"
+
 
 class GoogleStatus(BaseModel):
     configured: bool
@@ -73,8 +75,9 @@ def connect(request: Request, user: User = Depends(current_user)):
     if not gc.configured():
         raise HTTPException(503, "Google Calendar isn't set up on this server")
     settings = get_settings()
+    nonce = secrets.token_urlsafe(16)
     state = jwt.encode(
-        {"uid": user.id, "n": secrets.token_urlsafe(8), "exp": datetime.now(UTC) + timedelta(minutes=15)},
+        {"uid": user.id, "n": nonce, "exp": datetime.now(UTC) + timedelta(minutes=15)},
         settings.secret_key,
         algorithm="HS256",
     )
@@ -90,7 +93,13 @@ def connect(request: Request, user: User = Depends(current_user)):
     }
     from urllib.parse import urlencode
 
-    return RedirectResponse(f"{gc.AUTH_URL}?{urlencode(query)}", status_code=302)
+    response = RedirectResponse(f"{gc.AUTH_URL}?{urlencode(query)}", status_code=302)
+    # The answer from Google can only finish in this browser: someone can't send another person
+    # a consent link they started, and so get that person's Google Calendar on their account.
+    response.set_cookie(
+        CONNECT_COOKIE, nonce, max_age=900, httponly=True, samesite="lax", secure=settings.cookie_secure, path="/api/google"
+    )
+    return response
 
 
 @router.get("/callback")
@@ -98,7 +107,11 @@ def callback(
     request: Request, code: str = "", state: str = "", error: str = "", db: Session = Depends(get_db)
 ):
     """Google sends the browser back here after the consent screen."""
-    back = lambda result: RedirectResponse(f"/settings?google={result}", status_code=302)  # noqa: E731
+    def back(result: str) -> RedirectResponse:
+        response = RedirectResponse(f"/settings?google={result}", status_code=302)
+        response.delete_cookie(CONNECT_COOKIE, path="/api/google")
+        return response
+
     if error:
         return back("cancelled")
     try:
@@ -106,6 +119,8 @@ def callback(
         user_id = int(claims["uid"])
     except (jwt.PyJWTError, KeyError, ValueError):
         return back("expired")
+    if not claims.get("n") or request.cookies.get(CONNECT_COOKIE) != claims["n"]:
+        return back("expired")  # not started in this browser
     # If someone is signed in here, it must be the same person who started connecting.
     cookie = request.cookies.get(COOKIE_NAME)
     if cookie:

@@ -51,7 +51,7 @@ def make_student(client, email="nour@example.com"):
     course = add_course(client, term["id"], meetings=[meeting])
     client.post("/api/assessments", json={"course_id": course["id"], "title": "Quiz", "due_date": "2026-10-01"})
     client.post("/api/busy", json={"term_id": term["id"], "title": "Gym", "weekday": 2, "start": "18:00", "end": "19:00"})
-    sub = {"endpoint": f"https://push.example.com/{email}", "keys": {"p256dh": "k", "auth": "a"}}
+    sub = {"endpoint": f"https://fcm.googleapis.com/fcm/send/{email}", "keys": {"p256dh": "k", "auth": "a"}}
     client.post("/api/push/subscribe", json=sub)
     uid = client.get("/api/auth/me").json()["id"]
     client.post("/api/auth/logout")

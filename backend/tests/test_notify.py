@@ -13,7 +13,7 @@ from app.models import PushSubscription
 from .conftest import add_course
 
 CAIRO = ZoneInfo("Africa/Cairo")
-SUB = {"endpoint": "https://push.example.com/abc", "keys": {"p256dh": "BPk3", "auth": "a1"}}
+SUB = {"endpoint": "https://fcm.googleapis.com/fcm/send/abc", "keys": {"p256dh": "BPk3", "auth": "a1"}}
 MONDAY = {"weekday": 0, "start": "10:00", "end": "11:40", "kind": "lecture", "location": "Hall 3"}
 
 
