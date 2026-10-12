@@ -52,3 +52,27 @@ def test_push_only_to_real_push_services(client):
     ):
         r = client.post("/api/push/subscribe", json={"endpoint": endpoint, "keys": keys})
         assert r.status_code == 204, endpoint
+
+
+def test_using_the_app_keeps_you_signed_in(client):
+    from datetime import UTC, datetime, timedelta
+
+    import jwt
+
+    from app.config import get_settings
+    from app.security import ALGORITHM, COOKIE_NAME
+
+    user = signup(client)
+    # a sign-in from 10 days ago, with 5 days left
+    old = datetime.now(UTC) - timedelta(days=10)
+    claims = {"sub": str(user["id"]), "v": 0, "iat": old, "exp": old + timedelta(days=15)}
+    client.cookies.set(COOKIE_NAME, jwt.encode(claims, get_settings().secret_key, algorithm=ALGORITHM))
+    r = client.get("/api/auth/me")
+    assert r.status_code == 200
+    renewed = jwt.decode(r.cookies[COOKIE_NAME], get_settings().secret_key, algorithms=[ALGORITHM])
+    assert renewed["exp"] > (datetime.now(UTC) + timedelta(days=80)).timestamp()
+    # a fresh sign-in isn't sent again on every call
+    client.cookies.clear()
+    client.cookies.set(COOKIE_NAME, r.cookies[COOKIE_NAME])
+    r = client.get("/api/auth/me")
+    assert r.status_code == 200 and "set-cookie" not in r.headers

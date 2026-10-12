@@ -10,7 +10,7 @@ import './index.css'
 import './app.css'
 
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
-import { onlineManager, QueryClient } from '@tanstack/react-query'
+import { MutationCache, onlineManager, QueryCache, QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
@@ -24,7 +24,26 @@ import { startOfflineSync } from './lib/offline'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
-const queryClient = new QueryClient({
+// The server says the sign-in is over (expired, or ended from another device): go to the sign-in
+// page instead of showing the saved copy with "Not signed in" errors.
+const signedOut = (error: Error) => {
+  if (error instanceof ApiError && error.status === 401 && queryClient.getQueryData(['me'])) {
+    queryClient.setQueryData(['me'], null)
+  }
+}
+
+// The app opens from its saved copy; ask the server too (when there's a connection) whether the
+// sign-in still holds, on opening and whenever the app comes back to the screen.
+function checkSignIn() {
+  if (navigator.onLine && queryClient.getQueryData(['me'])) void queryClient.refetchQueries({ queryKey: ['me'] })
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') checkSignIn()
+})
+
+const queryClient: QueryClient = new QueryClient({
+  queryCache: new QueryCache({ onError: signedOut }),
+  mutationCache: new MutationCache({ onError: signedOut }),
   defaultOptions: {
     queries: {
       staleTime: 30_000,
@@ -83,7 +102,8 @@ createRoot(document.getElementById('root')!).render(
         buster: 'v1',
         // Keep anything we have data for, even if its last refresh failed for lack of signal.
         dehydrateOptions: { shouldDehydrateQuery: (q) => q.state.data !== undefined },
-      }}>
+      }}
+      onSuccess={checkSignIn}>
       <BrowserRouter>
         <App />
         <ConfirmHost />

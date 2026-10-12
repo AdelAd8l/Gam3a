@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./gam3a.db"
     # Override in production: GAM3A_SECRET_KEY=$(python -c "import secrets; print(secrets.token_hex(32))")
     secret_key: str = "dev-only-insecure-key-change-me-in-production"
-    session_days: int = 14
+    # How long a sign-in lasts without using the app; every day it's used starts the count again.
+    session_days: int = 90
     cookie_secure: bool = False
     # Directory with the built frontend (frontend/dist). Served by FastAPI when present.
     static_dir: str = "../frontend/dist"

@@ -67,8 +67,9 @@ def record_failure(request: Request, email: str) -> None:
 
 def set_session_cookie(response: Response, user: User) -> None:
     settings = get_settings()
-    expires = datetime.now(UTC) + timedelta(days=settings.session_days)
-    claims = {"sub": str(user.id), "v": user.session_version or 0, "exp": expires}
+    now = datetime.now(UTC)
+    expires = now + timedelta(days=settings.session_days)
+    claims = {"sub": str(user.id), "v": user.session_version or 0, "iat": now, "exp": expires}
     token = jwt.encode(claims, settings.secret_key, algorithm=ALGORITHM)
     response.set_cookie(
         COOKIE_NAME,
@@ -89,8 +90,13 @@ def clear_session_cookie(response: Response) -> None:
 PASSWORD_GATE = {("GET", "/api/auth/me"), ("POST", "/api/auth/password")}
 
 
+# A sign-in older than this is renewed by the next call, so using the app keeps you signed in.
+RENEW_AFTER = 86400  # seconds
+
+
 def current_user(
     request: Request,
+    response: Response,
     db: Session = Depends(get_db),
     token: str | None = Cookie(default=None, alias=COOKIE_NAME),
 ) -> User:
@@ -101,12 +107,15 @@ def current_user(
         payload = jwt.decode(token, get_settings().secret_key, algorithms=[ALGORITHM])
         user_id = int(payload["sub"])
         version = int(payload.get("v", 0))
+        issued = int(payload.get("iat", 0))
     except (jwt.PyJWTError, KeyError, ValueError):
         raise unauthorized from None
     user = db.get(User, user_id)
     # A deleted account, or a session from before the last password change.
     if user is None or version != (user.session_version or 0):
         raise unauthorized
+    if time.time() - issued > RENEW_AFTER:
+        set_session_cookie(response, user)
     if user.must_change_password and (request.method, request.url.path) not in PASSWORD_GATE:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Choose a new password first")
     return user
