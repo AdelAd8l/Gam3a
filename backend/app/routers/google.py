@@ -1,6 +1,7 @@
 """Connect a Google account and keep one calendar per course in sync (see app/google_calendar.py)."""
 
 import secrets
+import time
 from datetime import UTC, datetime, timedelta
 
 import jwt
@@ -149,11 +150,21 @@ def callback(
     return back("connected")
 
 
+_last_sync: dict[int, float] = {}
+SYNC_COOLDOWN = 20  # seconds: "Sync now" re-sends everything to Google, so it can't be hammered
+
+
 @router.post("/sync", response_model=GoogleStatus)
 def sync_now(user: User = Depends(current_user), db: Session = Depends(get_db)):
     link = db.get(GoogleLink, user.id)
     if link is None:
         raise HTTPException(409, "Google Calendar isn't connected")
+    now = time.monotonic()
+    if now - _last_sync.get(user.id, -SYNC_COOLDOWN) < SYNC_COOLDOWN:
+        raise HTTPException(429, "Wait a few seconds before syncing again")
+    if len(_last_sync) > 5000:
+        _last_sync.clear()
+    _last_sync[user.id] = now
     link.last_error = ""
     db.commit()
     gc.sync(db, user, force=True)

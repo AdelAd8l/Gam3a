@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     static_dir: str = "../frontend/dist"
     # Create demo@gam3a.dev on startup and offer it on the sign-in page (for public demos).
     demo: bool = False
+    # The interactive API docs (/docs, /redoc, /openapi.json) list every endpoint: off unless you ask for them.
+    docs: bool = False
     # Turn off after creating your own account to keep a personal deployment private.
     allow_signup: bool = True
     # The admin account, created on first start if it doesn't exist. The password is only a

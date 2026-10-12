@@ -18,9 +18,10 @@ import { BrowserRouter } from 'react-router-dom'
 
 import App from './App'
 import ConfirmHost from './components/ConfirmHost'
-import { ApiError } from './lib/api'
+import { ApiError, type User } from './lib/api'
 import { NetworkError } from './lib/http'
 import { startOfflineSync } from './lib/offline'
+import { adoptUser, dropPrivateData } from './lib/wipe'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
 
@@ -29,6 +30,7 @@ const WEEK = 7 * 24 * 60 * 60 * 1000
 const signedOut = (error: Error) => {
   if (error instanceof ApiError && error.status === 401 && queryClient.getQueryData(['me'])) {
     queryClient.setQueryData(['me'], null)
+    dropPrivateData(queryClient) // the saved copy must not outlive the sign-in
   }
 }
 
@@ -58,6 +60,13 @@ const queryClient: QueryClient = new QueryClient({
     // Writes never pause: offline they go to the outbox (see lib/offline.ts).
     mutations: { networkMode: 'always' },
   },
+})
+
+// Whoever signs in on this device: the saved data and waiting changes of somebody else are thrown away.
+queryClient.getQueryCache().subscribe((event) => {
+  if (event.type === 'updated' && event.query.queryKey[0] === 'me') {
+    adoptUser(queryClient, (event.query.state.data as User | null | undefined)?.id)
+  }
 })
 
 // React Query assumes "online" until an event says otherwise; opening the app offline sends none.

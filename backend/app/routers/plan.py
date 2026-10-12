@@ -1,3 +1,4 @@
+import re
 from datetime import UTC, date, datetime, timedelta
 
 from fastapi import APIRouter, Depends
@@ -77,8 +78,14 @@ def get_plan(term_id: int, user: User = Depends(current_user), db: Session = Dep
 # ---- calendar export -------------------------------------------------------------
 
 
+_CONTROL = re.compile(r"[\x00-\x09\x0b-\x1f\x7f]")  # every control character except the line break
+
+
 def _esc(text: str) -> str:
-    return text.replace("\\", "\\\\").replace(";", "\;").replace(",", "\\,").replace("\n", "\\n")
+    # A bare carriage return (or any control character) in a title could start a new calendar line and inject extra
+    # properties or events into the downloaded file: they are removed, and the rest is escaped as the format asks.
+    text = _CONTROL.sub("", text)
+    return text.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\n", "\\n")
 
 
 def _first_on_or_after(start: date, weekday: int) -> date:
@@ -139,7 +146,8 @@ def calendar(term_id: int, study: bool = True, user: User = Depends(current_user
         lines += [f"SUMMARY:{_esc(summary)}", "END:VEVENT"]
 
     lines.append("END:VCALENDAR")
-    filename = "".join(ch if ch.isalnum() else "-" for ch in term.name).strip("-") or "term"
+    # the header can only carry plain letters and digits: an Arabic term name used to make this download fail
+    filename = "".join(ch if ch.isascii() and ch.isalnum() else "-" for ch in term.name).strip("-") or "term"
     return Response(
         "\r\n".join(lines) + "\r\n",
         media_type="text/calendar",

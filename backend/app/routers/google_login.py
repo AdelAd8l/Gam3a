@@ -21,12 +21,13 @@ import jwt
 import requests
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
 
+from .. import google_calendar as gc
 from ..config import get_settings
 from ..database import get_db
-from ..models import User
+from ..models import PushSubscription, User
 from ..security import set_session_cookie
 from ..site_settings import signup_open
 
@@ -83,6 +84,7 @@ def start(request: Request, tz: str = "", lang: str = "en", currency: str = ""):
     nonce = secrets.token_urlsafe(16)
     state = jwt.encode(
         {
+            "typ": "google-login",  # a sign-in session token is never accepted as this state, or the other way round
             "n": nonce,
             "tz": tz[:64],
             "lang": lang if lang in ("en", "ar") else "en",
@@ -121,7 +123,14 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "",
         prefs = jwt.decode(state, settings.secret_key, algorithms=["HS256"])
     except jwt.PyJWTError:
         return back("expired")
-    if not code or request.cookies.get(COOKIE) != prefs.get("n"):
+    nonce, cookie = prefs.get("n"), request.cookies.get(COOKIE)
+    if (
+        prefs.get("typ") != "google-login"
+        or not code
+        or not nonce
+        or not cookie
+        or not secrets.compare_digest(str(cookie), str(nonce))
+    ):
         return back("expired")  # not started in this browser (or too long ago)
 
     status, tokens = call(
@@ -145,6 +154,10 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "",
     user = db.scalar(select(User).where(User.google_sub == sub))
     if user is None:
         user = db.scalar(select(User).where(User.email == email))
+        if user is not None and user.google_sub and user.google_sub != sub:
+            # This email already belongs to a DIFFERENT Google account (an address that was given to someone else
+            # later): never hand that account's data to the new holder.
+            return back("failed")
         if user is not None:
             # The same email: link the Google account to it. Google has proved this person owns
             # the email, but whoever chose the account's password never had to (sign-up doesn't
@@ -155,6 +168,13 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "",
                 user.password_hash = ""
                 user.must_change_password = False
                 user.session_version = (user.session_version or 0) + 1
+                # Whatever the first person attached to this account before the real owner arrived (their phone
+                # for reminders, THEIR Google Calendar) must not keep receiving the owner's schedule.
+                db.execute(delete(PushSubscription).where(PushSubscription.user_id == user.id))
+                try:
+                    gc.disconnect(db, user, False)
+                except Exception:  # noqa: BLE001
+                    db.rollback()
         elif not signup_open(db):
             return back("closed")
         else:

@@ -5,6 +5,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limits import MAX_ASSESSMENTS, ensure_room
 from ..models import Assessment, Course, User
 from ..schemas import AssessmentIn, AssessmentOut
 from ..security import current_user
@@ -45,6 +46,7 @@ def list_assessments(
 def create_assessment(data: AssessmentIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if data.course_id is not None:
         get_owned(db, Course, data.course_id, user)
+    ensure_room(db, Assessment, user.id, MAX_ASSESSMENTS, "tasks and deadlines")
     item = Assessment(user_id=user.id, **data.model_dump())
     item.title = item.title.strip()
     db.add(item)

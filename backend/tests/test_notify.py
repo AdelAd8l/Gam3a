@@ -114,6 +114,10 @@ def test_test_notification_and_unsubscribe(client, user, pushed):
     assert client.post("/api/push/test").status_code == 409
     client.post("/api/push/subscribe", json=SUB)
     assert client.post("/api/push/test").json() == {"sent": 1}
+    assert client.post("/api/push/test").status_code == 429  # a second test right away has to wait
+    from app.routers import push
+
+    push._last_test.clear()
     client.post("/api/push/unsubscribe", json={"endpoint": SUB["endpoint"]})
     assert client.post("/api/push/test").status_code == 409
 

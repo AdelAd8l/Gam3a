@@ -205,7 +205,8 @@ export const api = {
   updateMe: (data: Partial<Omit<User, 'id' | 'email'>>) => request<User>('PATCH', '/auth/me', data),
   changePassword: (current_password: string, new_password: string) =>
     request<void>('POST', '/auth/password', { current_password, new_password }),
-  deleteMe: () => request<void>('DELETE', '/auth/me'),
+  deleteMe: (confirmation: { password?: string; confirm_email?: string }) =>
+    request<void>('DELETE', '/auth/me', confirmation),
 
   terms: () => request<Term[]>('GET', '/terms'),
   saveTerm: (data: TermInput, id?: number) =>

@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { api, type User } from '../lib/api'
 import { t } from '../lib/i18n'
+import { useSignOut } from '../lib/signout'
 import Logo from './Logo'
 
 /** Shown instead of the app until the person replaces a temporary password with their own. */
@@ -17,11 +18,7 @@ export default function PasswordGate({ user }: { user: User }) {
     mutationFn: () => api.changePassword(current, next),
     onSuccess: () => qc.setQueryData<User>(['me'], { ...user, must_change_password: false }),
   })
-  const signOut = async () => {
-    await api.logout()
-    qc.clear()
-    qc.setQueryData(['me'], null)
-  }
+  const signOut = useSignOut()
 
   return (
     <div className="gate">

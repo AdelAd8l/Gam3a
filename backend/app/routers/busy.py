@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limits import MAX_BUSY, ensure_room
 from ..models import Busy, Term, User
 from ..schemas import BusyIn, BusyOut
 from ..security import current_user
@@ -20,6 +21,7 @@ def list_busy(term_id: int, user: User = Depends(current_user), db: Session = De
 @router.post("", response_model=BusyOut, status_code=status.HTTP_201_CREATED)
 def create_busy(data: BusyIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     get_owned(db, Term, data.term_id, user)
+    ensure_room(db, Busy, user.id, MAX_BUSY, "busy slots")
     busy = Busy(user_id=user.id, **data.model_dump())
     db.add(busy)
     db.commit()

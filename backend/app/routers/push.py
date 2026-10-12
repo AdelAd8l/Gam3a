@@ -1,3 +1,4 @@
+import time
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -7,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from .. import notify
 from ..database import get_db
+from ..limits import MAX_PUSH_DEVICES, ensure_room
 from ..models import PushSubscription, User
 from ..security import current_user
 
@@ -57,6 +59,8 @@ def key(db: Session = Depends(get_db)):
 @router.post("/subscribe", status_code=204)
 def subscribe(data: SubscriptionIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     sub = db.scalar(select(PushSubscription).where(PushSubscription.endpoint == data.endpoint))
+    if sub is None or sub.user_id != user.id:
+        ensure_room(db, PushSubscription, user.id, MAX_PUSH_DEVICES, "notification devices")
     if sub is None:
         sub = PushSubscription(endpoint=data.endpoint)
         db.add(sub)
@@ -75,8 +79,15 @@ def unsubscribe(data: EndpointIn, user: User = Depends(current_user), db: Sessio
         db.commit()
 
 
+_last_test: dict[int, float] = {}
+TEST_COOLDOWN = 30  # seconds between two test notifications for one account
+
+
 @router.post("/test")
 def test(user: User = Depends(current_user), db: Session = Depends(get_db)):
+    now = time.monotonic()
+    if now - _last_test.get(user.id, -TEST_COOLDOWN) < TEST_COOLDOWN:
+        raise HTTPException(429, "Wait a moment before sending another test")
     ar = user.lang == "ar"
     payload = {
         "title": "Gam3a",
@@ -87,4 +98,7 @@ def test(user: User = Depends(current_user), db: Session = Depends(get_db)):
     sent = notify.send_to_user(db, user.id, payload)
     if not sent:
         raise HTTPException(409, "No device is set up for notifications yet")
+    if len(_last_test) > 5000:
+        _last_test.clear()
+    _last_test[user.id] = now  # only a test that really went out starts the wait
     return {"sent": sent}

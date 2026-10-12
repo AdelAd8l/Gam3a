@@ -1,13 +1,14 @@
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from .. import google_calendar as gc
 from ..database import get_db
 from ..grading import BANDS, SCALES, bands_for, cutoffs_for, points_for, user_bands, user_cutoffs, user_points
 from ..models import User, delete_user
-from ..schemas import LoginIn, PasswordChange, RegisterIn, UserOut, UserUpdate
+from ..schemas import DeleteAccountIn, LoginIn, PasswordChange, RegisterIn, UserOut, UserUpdate
 from ..security import (
     check_attempts,
     clear_session_cookie,
@@ -155,6 +156,28 @@ def change_password(
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
-def delete_me(response: Response, user: User = Depends(current_user), db: Session = Depends(get_db)):
+def delete_me(
+    request: Request,
+    response: Response,
+    data: DeleteAccountIn | None = None,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    data = data or DeleteAccountIn()
+    # Someone at an unlocked phone (or holding a stolen session) must not be able to destroy the account
+    # in two taps: ask for the password again, or the email typed out for an account without a password.
+    if user.password_hash:
+        check_attempts(request, user.email)
+        if not verify_password(data.password, user.password_hash):
+            record_failure(request, user.email)
+            raise HTTPException(400, "Password is incorrect")
+    elif data.confirm_email.strip().lower() != user.email.lower():
+        raise HTTPException(400, "Type your email address to confirm")
+    if user.is_admin and (db.scalar(select(func.count()).select_from(User).where(User.is_admin.is_(True))) or 0) <= 1:
+        raise HTTPException(409, "The only admin account cannot delete itself")
+    try:  # leaving must also take Gam3a's access to the person's Google account away
+        gc.disconnect(db, user, True)
+    except Exception:  # noqa: BLE001  (Google being unreachable must not block deleting the account)
+        db.rollback()
     delete_user(db, user)
     clear_session_cookie(response)

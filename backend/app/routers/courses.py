@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..grading import SCALES, Graded, course_progress, is_valid_grade, letter_for, user_cutoffs
+from ..limits import MAX_COURSES, ensure_room
 from ..models import Assessment, Course, Meeting, Term, User
 from ..schemas import CourseIn, CourseOut, GradeIn, MeetingOut, ProgressOut
 from ..security import current_user
@@ -90,6 +91,7 @@ def list_courses(term_id: int | None = None, user: User = Depends(current_user),
 @router.post("", response_model=CourseOut, status_code=status.HTTP_201_CREATED)
 def create_course(data: CourseIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     get_owned(db, Term, data.term_id, user)
+    ensure_room(db, Course, user.id, MAX_COURSES, "courses")
     values = data.model_dump(exclude={"meetings"})
     values["grade"] = check_grade(data.grade, user)
     values["target_grade"] = check_target(data.target_grade, user)

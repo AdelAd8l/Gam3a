@@ -59,7 +59,7 @@ def test_users_cannot_see_each_others_data(client, term):
 def test_delete_account_removes_everything(client, term):
     add_course(client, term["id"], meetings=[{"weekday": 0, "start": "09:00", "end": "10:00"}])
     client.post("/api/busy", json={"term_id": term["id"], "title": "Gym", "weekday": 1, "start": "18:00", "end": "19:00"})
-    assert client.delete("/api/auth/me").status_code == 204
+    assert client.request("DELETE", "/api/auth/me", json={"password": "correct-horse"}).status_code == 204
     assert client.get("/api/auth/me").status_code == 401
     signup(client)  # email is free again
     assert client.get("/api/terms").json() == []

@@ -30,7 +30,8 @@ async function page(request) {
       fetch(request),
       new Promise((_, reject) => setTimeout(() => reject(new Error('slow')), 4000)),
     ])
-    if (res.ok) cache.put('/', res.clone())
+    // only a real page is kept as the app shell: never an error page, a redirect or a file
+    if (res.ok && !res.redirected && (res.headers.get('content-type') || '').includes('text/html')) cache.put('/', res.clone())
     return res
   } catch {
     return (await cache.match('/')) || Response.error()
@@ -92,7 +93,10 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 // Tapping a reminder opens the app (or focuses it) on the right page.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const url = new URL(event.notification.data?.url || '/', location.origin).href
+  // a reminder opens a page of this app, never somewhere else
+  let target = new URL(event.notification.data?.url || '/', location.origin)
+  if (target.origin !== location.origin) target = new URL('/', location.origin)
+  const url = target.href
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       const open = list.find((c) => c.url.startsWith(location.origin))

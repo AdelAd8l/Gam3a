@@ -13,8 +13,8 @@ import { ask } from '../lib/confirm'
 import { weekdayName, weekOrder } from '../lib/format'
 import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
-import { clearOutbox } from '../lib/offline'
 import { useSignOut } from '../lib/signout'
+import { wipeDevice } from '../lib/wipe'
 
 export default function Settings() {
   const user = useUser()
@@ -23,6 +23,7 @@ export default function Settings() {
   const navigate = useNavigate()
   const lang = useLang()
   const signOut = useSignOut()
+  const [sure, setSure] = useState('') // the password (or, for a Google-only account, the email) typed to delete
   const [name, setName] = useState(user.name)
   const [university, setUniversity] = useState(user.university)
   const [scale, setScale] = useState<Scale>(user.scale)
@@ -52,10 +53,9 @@ export default function Settings() {
     },
   })
   const remove = useMutation({
-    mutationFn: api.deleteMe,
+    mutationFn: () => api.deleteMe(user.has_password ? { password: sure } : { confirm_email: sure }),
     onSuccess: () => {
-      clearOutbox()
-      qc.clear()
+      wipeDevice(qc)
       qc.setQueryData(['me'], null)
       navigate('/signup')
     },
@@ -231,13 +231,32 @@ export default function Settings() {
           <h3>{t('settings.delete')}</h3>
           <p className="muted">{t('settings.deleteHint')}</p>
         </div>
-        <div className="panel panel-pad form-foot">
-          <button className="btn btn-danger" onClick={async () =>
-              (await ask({ title: t('settings.confirmDelete'), confirm: t('settings.deleteBtn') })) && remove.mutate()
-            }>
-            {t('settings.deleteBtn')}
-          </button>
-        </div>
+        <form
+          className="stack panel panel-pad"
+          onSubmit={async (e) => {
+            e.preventDefault()
+            if (await ask({ title: t('settings.confirmDelete'), confirm: t('settings.deleteBtn') })) remove.mutate()
+          }}
+        >
+          <label className="field">
+            <span>{t(user.has_password ? 'settings.deletePassword' : 'settings.deleteEmail')}</span>
+            <input
+              className="input"
+              dir="ltr"
+              type={user.has_password ? 'password' : 'email'}
+              autoComplete={user.has_password ? 'current-password' : 'off'}
+              value={sure}
+              onChange={(e) => setSure(e.target.value)}
+              required
+            />
+          </label>
+          <div className="form-foot">
+            {remove.error && <span className="danger-text">{remove.error.message}</span>}
+            <button className="btn btn-danger" disabled={remove.isPending}>
+              {t('settings.deleteBtn')}
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   )

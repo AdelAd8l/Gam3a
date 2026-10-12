@@ -364,3 +364,10 @@ class GradesOut(BaseModel):
 
 
 CourseOut.model_rebuild()
+
+
+class DeleteAccountIn(BaseModel):
+    """Deleting an account asks again: the password, or (for a Google-only account) the email typed out."""
+
+    password: str = Field(default="", max_length=200)
+    confirm_email: str = Field(default="", max_length=254)

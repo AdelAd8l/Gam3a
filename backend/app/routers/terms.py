@@ -3,6 +3,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
+from ..limits import MAX_TERMS, ensure_room
 from ..models import Term, User
 from ..schemas import TermIn, TermOut
 from ..security import current_user
@@ -41,6 +42,7 @@ def list_terms(user: User = Depends(current_user), db: Session = Depends(get_db)
 
 @router.post("", response_model=TermOut, status_code=status.HTTP_201_CREATED)
 def create_term(data: TermIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    ensure_room(db, Term, user.id, MAX_TERMS, "terms")
     term = Term(user_id=user.id)
     apply(term, data)
     db.add(term)
