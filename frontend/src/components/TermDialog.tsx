@@ -4,9 +4,10 @@ import { useState } from 'react'
 import { api, type Term } from '../lib/api'
 import { ask } from '../lib/confirm'
 import { addDays, todayISO } from '../lib/format'
-import { useRefresh } from '../lib/hooks'
+import { useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Modal from './Modal'
+import { DateField } from './pickers'
 
 interface Props {
   open: boolean
@@ -17,6 +18,7 @@ interface Props {
 
 export default function TermDialog({ open, term, onClose, onCreated }: Props) {
   const refresh = useRefresh()
+  const user = useUser()
   const [name, setName] = useState(term?.name ?? '')
   const [start, setStart] = useState(term?.start_date ?? todayISO())
   const [end, setEnd] = useState(term?.end_date ?? addDays(todayISO(), 7 * 15 - 1))
@@ -74,11 +76,11 @@ export default function TermDialog({ open, term, onClose, onCreated }: Props) {
         <div className="grid-2">
           <label className="field">
             <span>{t('terms.start')}</span>
-            <input className="input" type="date" value={start} onChange={(e) => setStart(e.target.value)} required />
+            <DateField value={start} onChange={setStart} weekStart={user.week_start} required />
           </label>
           <label className="field">
             <span>{t('terms.end')}</span>
-            <input className="input" type="date" value={end} min={start} onChange={(e) => setEnd(e.target.value)} required />
+            <DateField value={end} min={start} onChange={setEnd} weekStart={user.week_start} required />
           </label>
         </div>
         {(save.error || remove.error) && <p className="form-error">{(save.error ?? remove.error)!.message}</p>}

@@ -81,6 +81,7 @@ export interface Meeting {
   end: string
   kind: MeetingKind
   location: string
+  ta: string
 }
 export interface Course {
   id: number

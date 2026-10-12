@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-sans-arabic/500.css'
 import '@fontsource/ibm-plex-sans-arabic/600.css'
 import './index.css'
 import './app.css'
+import './pickers.css'
 
 import { createSyncStoragePersister } from '@tanstack/query-sync-storage-persister'
 import { MutationCache, onlineManager, QueryCache, QueryClient } from '@tanstack/react-query'

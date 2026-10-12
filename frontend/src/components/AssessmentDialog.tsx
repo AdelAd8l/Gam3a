@@ -4,10 +4,11 @@ import { useState } from 'react'
 import { api, type Assessment, type AssessmentKind } from '../lib/api'
 import { ask } from '../lib/confirm'
 import { addDays, todayISO } from '../lib/format'
-import { useCourses, useRefresh, useTerm } from '../lib/hooks'
+import { useCourses, useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import Modal from './Modal'
 import SwatchSelect from './SwatchSelect'
+import { DateField, Select, TimeField } from './pickers'
 
 const KINDS: AssessmentKind[] = ['assignment', 'quiz', 'midterm', 'final', 'project', 'other']
 
@@ -26,6 +27,7 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
   const { term } = useTerm()
   const { data: courses = [] } = useCourses(term?.id)
   const refresh = useRefresh()
+  const user = useUser()
 
   // A course id, or NONE for a task with no course. New tasks start on the first course, or on
   // "no course" when there are none yet.
@@ -121,7 +123,7 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
           </label>
           <label className="field">
             <span>{t('deadlines.type')}</span>
-            <select
+            <Select
               className="select"
               value={kind}
               onChange={(e) => {
@@ -134,19 +136,19 @@ export default function AssessmentDialog({ open, item, courseId, onClose }: Prop
                   {t(`akind.${k}`)}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
         </div>
         <div className="grid-2">
           <label className="field">
             <span>{t('deadlines.dueDate')}</span>
-            <input className="input" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+            <DateField value={date} onChange={setDate} weekStart={user.week_start} />
           </label>
           <label className="field">
             <span>
               {t('deadlines.dueTime')} <span className="faint">({t('common.optional')})</span>
             </span>
-            <input className="input" type="time" value={time} disabled={!date} onChange={(e) => setTime(e.target.value)} />
+            <TimeField value={time} disabled={!date} onChange={setTime} />
           </label>
         </div>
         {/* weight and mark count toward a course's grade, so only a course's items have them */}

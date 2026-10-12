@@ -14,6 +14,7 @@ import Icon, { type IconName } from './Icon'
 import Logo from './Logo'
 import SyncStatus from './SyncStatus'
 import TermDialog from './TermDialog'
+import { Select } from './pickers'
 
 const NAV: { to: string; label: Key; icon: IconName }[] = [
   { to: '/', label: 'nav.today', icon: 'sun' },
@@ -121,13 +122,13 @@ export default function Layout({ user }: { user: User }) {
               {term && (
                 <label className="term-switch">
                   <span className="visually-hidden">{t('shell.term')}</span>
-                  <select className="select" value={term.id} onChange={(e) => setTermId(Number(e.target.value))}>
+                  <Select className="select" value={term.id} onChange={(e) => setTermId(Number(e.target.value))}>
                     {terms.map((x) => (
                       <option key={x.id} value={x.id}>
                         {x.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </label>
               )}
               <button className="btn btn-primary new-btn" onClick={() => dialogs.editAssessment()} disabled={!term}>

@@ -33,7 +33,7 @@ def build_plan(db: Session, term: Term, user: User) -> PlanOut:
         c = courses[m.course_id]
         blocks.append(
             Block(kind="class", weekday=m.weekday, start=m.start, end=m.end, course_id=c.id, ref_id=m.id,
-                  title=c.code or c.name, detail=m.kind if not m.location else f"{m.kind} · {m.location}")
+                  title=c.code or c.name, detail=" · ".join(x for x in (m.kind, m.location, m.ta) if x))
         )
         tagged.append(("class", len(blocks) - 1, Slot(m.weekday, to_minutes(m.start), to_minutes(m.end))))
     for b in busy:

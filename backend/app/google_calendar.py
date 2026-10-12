@@ -283,7 +283,7 @@ def desired(db: Session, user: User, link: GoogleLink) -> Wanted:
                 {
                     "summary": f"{c.code or c.name} · {KIND_NAMES.get(m.kind, m.kind)}",
                     "location": m.location,
-                    "description": c.name,
+                    "description": f"{c.name}\nTA: {m.ta}" if m.ta else c.name,
                     "start": {"dateTime": _at(day, m.start), "timeZone": tz},
                     "end": {"dateTime": _at(day, m.end), "timeZone": tz},
                     "recurrence": [until],

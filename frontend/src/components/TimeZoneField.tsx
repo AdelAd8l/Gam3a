@@ -1,5 +1,6 @@
 import { t } from '../lib/i18n'
 import { browserTimeZone } from '../lib/push'
+import { Select } from './pickers'
 
 // The zones people using this app are most likely in, shown first.
 const COMMON = [
@@ -61,7 +62,7 @@ export default function TimeZoneField({ value, auto, onChange }: Props) {
     <div className="field">
       <label className="field">
         <span>{t('notify.timezone')}</span>
-        <select
+        <Select
           className="select"
           value={auto ? AUTO : value}
           onChange={(e) =>
@@ -83,7 +84,7 @@ export default function TimeZoneField({ value, auto, onChange }: Props) {
               </option>
             ))}
           </optgroup>
-        </select>
+        </Select>
         <small className="faint">{t(auto ? 'notify.zoneAutoHint' : 'notify.zoneHint')}</small>
       </label>
       {!auto && device !== value && (

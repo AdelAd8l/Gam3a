@@ -8,6 +8,7 @@ import { api, type AdminUser, type Scale } from '../lib/api'
 import { formatDate } from '../lib/format'
 import { useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
+import { Select } from '../components/pickers'
 
 /** Every account on this server: search, edit, reset a password, delete with all its data. */
 export default function Admin() {
@@ -131,10 +132,10 @@ function EditUser({ user, self, onClose }: { user: AdminUser; self: boolean; onC
           </label>
           <label className="field">
             <span>{t('settings.scale')}</span>
-            <select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
+            <Select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
               <option value="4">{t('settings.scale4')}</option>
               <option value="5">{t('settings.scale5')}</option>
-            </select>
+            </Select>
           </label>
         </div>
         <label className="field">

@@ -73,6 +73,7 @@ export default function Courses() {
                     <span className="faint">
                       {t(`kind.${m.kind}`)}
                       {m.location ? ` · ${m.location}` : ''}
+                      {m.ta ? ` · ${t('courses.taShown', { name: m.ta })}` : ''}
                     </span>
                   </li>
                 ))}

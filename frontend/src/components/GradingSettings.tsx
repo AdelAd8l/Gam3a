@@ -6,6 +6,7 @@ import { formatNumber, GRADES } from '../lib/format'
 import { useRefresh } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import { BANDS, bandLetters } from '../lib/labels'
+import { Select } from './pickers'
 
 const asStrings = (o: Record<string, number>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, String(v)]))
 const asNumbers = (o: Record<string, string>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, Number(v)]))
@@ -157,13 +158,13 @@ export default function GradingSettings({ user }: { user: User }) {
 
       <label className="field">
         <span>{t('settings.defaultTarget')}</span>
-        <select className="select" value={defaultTarget} onChange={(e) => setDefaultTarget(e.target.value)}>
+        <Select className="select" value={defaultTarget} onChange={(e) => setDefaultTarget(e.target.value)}>
           {letters.map((g) => (
             <option key={g} value={g}>
               {g} ({formatNumber(Number(cutoffs[g] ?? 0), 2)}%+)
             </option>
           ))}
-        </select>
+        </Select>
       </label>
 
       <div className="form-foot">

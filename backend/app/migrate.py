@@ -28,6 +28,7 @@ COLUMNS = [
     ("users", "must_change_password", "BOOLEAN NOT NULL DEFAULT FALSE"),
     ("users", "session_version", "INTEGER NOT NULL DEFAULT 0"),
     ("courses", "target_grade", "VARCHAR(3)"),
+    ("meetings", "ta", "VARCHAR(80) NOT NULL DEFAULT ''"),
     ("google_links", "class_reminder", "INTEGER NOT NULL DEFAULT 10"),
     ("google_links", "deadline_reminder", "INTEGER NOT NULL DEFAULT 1440"),
     ("assessments", "points_earned", "FLOAT"),

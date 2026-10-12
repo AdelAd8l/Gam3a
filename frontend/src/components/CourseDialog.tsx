@@ -10,6 +10,7 @@ import Icon from './Icon'
 import Modal from './Modal'
 import ColorField from './ColorField'
 import { PALETTE } from './palette'
+import { Select, TimeField } from './pickers'
 
 const KINDS: MeetingKind[] = ['lecture', 'section', 'lab', 'tutorial']
 
@@ -51,7 +52,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
         ...list,
         last
           ? { ...last, id: undefined, weekday: days[(days.indexOf(last.weekday) + 1) % 7] }
-          : { weekday: days[0], start: '10:00', end: addMinutes('10:00', user.class_minutes), kind: 'lecture', location: '' },
+          : { weekday: days[0], start: '10:00', end: addMinutes('10:00', user.class_minutes), kind: 'lecture', location: '', ta: '' },
       ]
     })
 
@@ -68,12 +69,13 @@ export default function CourseDialog({ open, course, onClose }: Props) {
           grade: grade || null,
           in_gpa: grade === 'P' ? false : inGpa,
           target_grade: target || null,
-          meetings: meetings.map(({ weekday, start, end, kind, location }) => ({
+          meetings: meetings.map(({ weekday, start, end, kind, location, ta }) => ({
             weekday,
             start,
             end,
             kind,
             location: location.trim(),
+            ta: kind === 'lecture' ? '' : ta.trim(),
           })),
         },
         course?.id,
@@ -153,7 +155,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
           <legend>{t('courses.classTimes')}</legend>
           {meetings.map((m, i) => (
             <div className="meeting-row" key={i}>
-              <select
+              <Select
                 className="select"
                 aria-label={t('common.day')}
                 value={m.weekday}
@@ -164,24 +166,20 @@ export default function CourseDialog({ open, course, onClose }: Props) {
                     {weekdayName(d)}
                   </option>
                 ))}
-              </select>
-              <input
-                className="input"
-                type="time"
+              </Select>
+              <TimeField
                 aria-label={t('common.from')}
                 value={m.start}
-                onChange={(e) => setStart(i, e.target.value)}
+                onChange={(v) => setStart(i, v)}
                 required
               />
-              <input
-                className="input"
-                type="time"
+              <TimeField
                 aria-label={t('common.to')}
                 value={m.end}
-                onChange={(e) => updateMeeting(i, { end: e.target.value })}
+                onChange={(v) => updateMeeting(i, { end: v })}
                 required
               />
-              <select
+              <Select
                 className="select"
                 aria-label={t('deadlines.type')}
                 value={m.kind}
@@ -192,7 +190,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
                     {t(`kind.${k}`)}
                   </option>
                 ))}
-              </select>
+              </Select>
               <input
                 className="input"
                 placeholder={t('courses.location')}
@@ -209,6 +207,16 @@ export default function CourseDialog({ open, course, onClose }: Props) {
               >
                 <Icon name="x" size={16} />
               </button>
+              {m.kind !== 'lecture' && (
+                <input
+                  className="input meeting-ta"
+                  placeholder={t('courses.ta')}
+                  aria-label={t('courses.ta')}
+                  value={m.ta}
+                  maxLength={80}
+                  onChange={(e) => updateMeeting(i, { ta: e.target.value })}
+                />
+              )}
             </div>
           ))}
           <button type="button" className="btn btn-sm add-row" onClick={addMeeting}>
@@ -219,7 +227,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
         <div className="grid-3">
           <label className="field">
             <span>{t('course.target')}</span>
-            <select className="select" value={target} onChange={(e) => setTarget(e.target.value)}>
+            <Select className="select" value={target} onChange={(e) => setTarget(e.target.value)}>
               <option value="">
                 {user.default_target} ({formatNumber(user.cutoffs[user.default_target] ?? 0, 1)}%+)
               </option>
@@ -228,18 +236,18 @@ export default function CourseDialog({ open, course, onClose }: Props) {
                   {g} ({formatNumber(user.cutoffs[g] ?? 0, 1)}%+)
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span>{t('courses.grade')}</span>
-            <select className="select" value={grade} onChange={(e) => setGrade(e.target.value)}>
+            <Select className="select" value={grade} onChange={(e) => setGrade(e.target.value)}>
               <option value="">{t('courses.inProgress')}</option>
               {[...GRADES[user.scale], ...SPECIAL_GRADES].map((g) => (
                 <option key={g} value={g}>
                   {g}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <label className="check">
             <input type="checkbox" checked={grade === 'P' ? false : inGpa} disabled={grade === 'P'} onChange={(e) => setInGpa(e.target.checked)} />

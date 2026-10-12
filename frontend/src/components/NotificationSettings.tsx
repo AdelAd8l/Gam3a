@@ -6,6 +6,7 @@ import { durationLabel } from '../lib/format'
 import { t } from '../lib/i18n'
 import { browserTimeZone, disablePush, enablePush, pushState, type PushState } from '../lib/push'
 import TimeZoneField from './TimeZoneField'
+import { Select } from './pickers'
 
 const CLASS_LEADS = [5, 10, 15, 30, 60]
 const DEADLINE_LEADS = [60, 180, 720, 1440, 2880]
@@ -68,7 +69,7 @@ export default function NotificationSettings({ user }: { user: User }) {
   const test = useMutation({ mutationFn: api.pushTest })
 
   const leadSelect = (value: number, options: number[], field: 'class_lead' | 'deadline_lead', label: string) => (
-    <select
+    <Select
       className="select"
       aria-label={label}
       value={value}
@@ -81,7 +82,7 @@ export default function NotificationSettings({ user }: { user: User }) {
             {t('notify.before', { time: leadLabel(m) })}
           </option>
         ))}
-    </select>
+    </Select>
   )
 
   return (

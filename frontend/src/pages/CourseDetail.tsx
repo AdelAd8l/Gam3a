@@ -7,6 +7,7 @@ import { api, type Assessment, type Course } from '../lib/api'
 import { courseInput, formatDate, formatNumber, formatTime, GRADES, weekOrder, weekdayName } from '../lib/format'
 import { useDialogs, useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
+import { Select } from '../components/pickers'
 
 const pct = (n: number) => `${formatNumber(n, 2)}%`
 
@@ -117,6 +118,7 @@ function MeetingsLine({ course }: { course: Course }) {
         <span key={i}>
           {weekdayName(m.weekday, 'short')} {formatTime(m.start)} · {t(`kind.${m.kind}`)}
           {m.location ? ` · ${m.location}` : ''}
+          {m.ta ? ` · ${t('courses.taShown', { name: m.ta })}` : ''}
         </span>
       ))}
     </p>
@@ -154,7 +156,7 @@ function GoalPanel({ course, items }: { course: Course; items: Assessment[] }) {
       <div className="goal-body">
         <label className="field">
           <span>{t('course.target')}</span>
-          <select
+          <Select
             className="select"
             value={p.target_grade}
             onChange={(e) => setTarget.mutate(e.target.value)}
@@ -165,7 +167,7 @@ function GoalPanel({ course, items }: { course: Course; items: Assessment[] }) {
                 {g} ({formatNumber(user.cutoffs[g] ?? 0, 1)}%+)
               </option>
             ))}
-          </select>
+          </Select>
         </label>
 
         <dl className="goal-figures">

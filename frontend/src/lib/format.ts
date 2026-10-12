@@ -144,6 +144,6 @@ export function courseInput(c: import('./api').Course): import('./api').CourseIn
     grade: c.grade,
     in_gpa: c.in_gpa,
     target_grade: c.target_grade,
-    meetings: c.meetings.map(({ weekday, start, end, kind, location }) => ({ weekday, start, end, kind, location })),
+    meetings: c.meetings.map(({ weekday, start, end, kind, location, ta }) => ({ weekday, start, end, kind, location, ta })),
   }
 }

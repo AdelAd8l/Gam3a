@@ -9,6 +9,7 @@ import { formatTime, weekdayName } from '../lib/format'
 import { setLang, t, useLang, type Key } from '../lib/i18n'
 import { browserTimeZone } from '../lib/push'
 import { LanguageSwitch } from './Settings'
+import { Select } from '../components/pickers'
 
 // A day from a timetable, drawn as the sign-in page artwork.
 const ART = [
@@ -124,10 +125,10 @@ export default function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
                 </label>
                 <label className="field">
                   <span>{t('settings.scale')}</span>
-                  <select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
+                  <Select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
                     <option value="4">{t('settings.scale4')}</option>
                     <option value="5">{t('settings.scale5')}</option>
-                  </select>
+                  </Select>
                 </label>
               </div>
             )}

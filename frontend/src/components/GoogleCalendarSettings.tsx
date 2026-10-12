@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router-dom'
 import { api, type GoogleStatus } from '../lib/api'
 import { durationLabel } from '../lib/format'
 import { t, type Key } from '../lib/i18n'
+import { Select } from './pickers'
 
 const RESULTS: Record<string, { key: Key; ok: boolean }> = {
   connected: { key: 'google.resultConnected', ok: true },
@@ -119,7 +120,7 @@ export default function GoogleCalendarSettings() {
           <div className="google-reminders">
             <label className="field">
               <span>{t('google.classReminder')}</span>
-              <select
+              <Select
                 className="select"
                 value={s.class_reminder}
                 onChange={(e) => save.mutate({ class_reminder: Number(e.target.value) })}
@@ -129,11 +130,11 @@ export default function GoogleCalendarSettings() {
                     {leadLabel(m)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
             <label className="field">
               <span>{t('google.deadlineReminder')}</span>
-              <select
+              <Select
                 className="select"
                 value={s.deadline_reminder}
                 onChange={(e) => save.mutate({ deadline_reminder: Number(e.target.value) })}
@@ -143,7 +144,7 @@ export default function GoogleCalendarSettings() {
                     {leadLabel(m)}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
           </div>
           <p className="faint help">{t('google.doubleAlerts')}</p>

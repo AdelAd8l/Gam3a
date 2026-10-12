@@ -111,6 +111,7 @@ class Meeting(Base):
     end: Mapped[str] = mapped_column(String(5))
     kind: Mapped[str] = mapped_column(String(12), default="lecture")
     location: Mapped[str] = mapped_column(String(60), default="")
+    ta: Mapped[str] = mapped_column(String(80), default="")  # who gives the section / lab
 
 
 class Busy(Base):

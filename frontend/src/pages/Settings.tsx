@@ -15,6 +15,7 @@ import { useRefresh, useUser } from '../lib/hooks'
 import { setLang, t, useLang, type Lang } from '../lib/i18n'
 import { useSignOut } from '../lib/signout'
 import { wipeDevice } from '../lib/wipe'
+import { Select } from '../components/pickers'
 
 export default function Settings() {
   const user = useUser()
@@ -156,20 +157,20 @@ export default function Settings() {
         >
           <label className="field">
             <span>{t('settings.scale')}</span>
-            <select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
+            <Select className="select" value={scale} onChange={(e) => setScale(e.target.value as Scale)}>
               <option value="4">{t('settings.scale4')}</option>
               <option value="5">{t('settings.scale5')}</option>
-            </select>
+            </Select>
           </label>
           <label className="field">
             <span>{t('settings.weekStart')}</span>
-            <select className="select" value={weekStart} onChange={(e) => setWeekStart(Number(e.target.value))}>
+            <Select className="select" value={weekStart} onChange={(e) => setWeekStart(Number(e.target.value))}>
               {weekOrder(5).map((d) => (
                 <option key={d} value={d}>
                   {weekdayName(d)}
                 </option>
               ))}
-            </select>
+            </Select>
           </label>
           <div className="field">
             <span>{t('settings.classLength')}</span>

@@ -174,6 +174,7 @@ class MeetingIn(BaseModel):
     end: str = Field(pattern=HHMM)
     kind: MeetingKind = "lecture"
     location: str = Field(default="", max_length=60)
+    ta: str = Field(default="", max_length=80)
 
     @model_validator(mode="after")
     def check(self):
@@ -188,6 +189,7 @@ class MeetingOut(ORM):
     end: str
     kind: MeetingKind
     location: str
+    ta: str
 
 
 class CourseIn(BaseModel):

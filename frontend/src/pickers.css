@@ -1,0 +1,454 @@
+/* Drop-downs, date and time pickers (components/pickers.tsx): same paper-and-ink look as the rest of the app. */
+
+.pk {
+  position: relative;
+  display: block;
+  min-width: 0;
+}
+
+.pk-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  text-align: start;
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.pk-trigger .pk-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pk-trigger[data-empty] .pk-value {
+  color: var(--ink-3);
+}
+
+.pk-trigger > svg {
+  flex: none;
+  color: var(--ink-3);
+}
+
+.pk-trigger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pk-trigger[aria-expanded='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--focus);
+}
+
+/* carries the "required" check of the form, invisible */
+.pk-req {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- the panel ---- */
+
+.pk-scrim {
+  display: none;
+}
+
+.pk-sheet-head {
+  display: none;
+}
+
+.pk-panel {
+  position: fixed;
+  z-index: 1000;
+  box-sizing: border-box;
+  padding: 8px;
+  color: var(--ink);
+  font-size: 0.9rem;
+  background: var(--panel);
+  border: 1px solid var(--rule-strong);
+  border-radius: 10px;
+  box-shadow:
+    0 18px 40px -14px rgb(0 0 0 / 0.35),
+    0 2px 6px rgb(0 0 0 / 0.08);
+  outline: none;
+  animation: pk-in 0.12s ease-out;
+}
+
+@keyframes pk-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+
+.pk-date {
+  width: 296px;
+}
+
+.pk-timepanel {
+  width: 272px;
+}
+
+.pk-select {
+  max-width: min(420px, calc(100vw - 16px));
+}
+
+.pk-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rule);
+}
+
+/* ---- drop-down list ---- */
+
+.pk-search {
+  height: 34px;
+  margin-bottom: 6px;
+}
+
+.pk-list {
+  max-height: 280px;
+  overflow-y: auto;
+  outline: none;
+}
+
+.pk-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pk-opt[data-active='true'] {
+  background: var(--accent-soft);
+}
+
+.pk-opt[aria-selected='true'] {
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.pk-opt[aria-disabled='true'] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pk-group {
+  padding: 8px 10px 4px;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.pk-none {
+  padding: 12px;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+/* ---- calendar ---- */
+
+.pk-cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.pk-nav,
+.pk-title {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pk-nav {
+  width: 32px;
+  padding: 0;
+  color: var(--ink-2);
+}
+
+.pk-nav:hover,
+.pk-title:hover {
+  background: var(--accent-soft);
+}
+
+.pk-title {
+  flex: 1;
+}
+
+.pk-title-back {
+  flex: none;
+  font-weight: 500;
+  color: var(--ink-2);
+}
+
+.pk-chev {
+  color: var(--ink-3);
+}
+
+[dir='rtl'] .pk-arrow {
+  transform: scaleX(-1);
+}
+
+.pk-year-input {
+  width: 88px;
+  height: 32px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.pk-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.pk-dow {
+  padding: 4px 0;
+  font-size: 0.74rem;
+  color: var(--ink-3);
+  text-align: center;
+}
+
+.pk-day {
+  height: 36px;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pk-day:hover:not(:disabled) {
+  background: var(--accent-soft);
+}
+
+.pk-day:focus-visible,
+.pk-nav:focus-visible,
+.pk-title:focus-visible,
+.pk-cell:focus-visible,
+.pk-year:focus-visible,
+.pk-month:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.pk-faded {
+  color: var(--ink-3);
+}
+
+.pk-today {
+  border-color: var(--accent);
+}
+
+.pk-day.pk-selected {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.pk-day:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ---- month / year chooser ---- */
+
+.pk-pick {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+  height: 238px;
+}
+
+.pk-years {
+  overflow-y: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.pk-year,
+.pk-month,
+.pk-cell {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pk-year {
+  display: block;
+  width: 100%;
+  height: 34px;
+}
+
+.pk-months {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
+  gap: 4px;
+}
+
+.pk-year:hover,
+.pk-month:hover:not(:disabled),
+.pk-cell:hover {
+  background: var(--accent-soft);
+}
+
+.pk-on,
+.pk-year.pk-on:hover,
+.pk-month.pk-on:hover:not(:disabled),
+.pk-cell.pk-on:hover {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+.pk-month:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* ---- time ---- */
+
+.pk-time {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  height: 204px;
+}
+
+.pk-col {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+
+.pk-cell {
+  display: block;
+  width: 100%;
+  height: 34px;
+}
+
+.pk-colon {
+  align-self: center;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+.pk-ampm {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 64px;
+}
+
+.pk-ampm .pk-cell {
+  height: 40px;
+  border: 1px solid var(--rule);
+}
+
+/* ---- phones: a sheet from the bottom ---- */
+
+@media (max-width: 640px) {
+  .pk-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    display: block;
+    background: rgb(20 20 18 / 0.4);
+  }
+
+  .pk-panel {
+    top: auto !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 12px 14px calc(14px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+    animation: pk-sheet 0.16s ease-out;
+  }
+
+  .pk-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2px 10px;
+  }
+
+  .pk-day {
+    height: 42px;
+  }
+
+  .pk-opt {
+    padding: 12px 10px;
+  }
+
+  .pk-list {
+    max-height: 55vh;
+  }
+
+  .pk-time,
+  .pk-pick {
+    height: 240px;
+  }
+}
+
+@keyframes pk-sheet {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+
+/* the TA of a section / lab sits on its own line under the class-time row */
+.meeting-row .meeting-ta {
+  grid-column: 1 / -1;
+}
+
+/* slim scrollbars inside the panels */
+.pk-list,
+.pk-years,
+.pk-col {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rule-strong) transparent;
+}

@@ -9,6 +9,7 @@ import ColorField from './ColorField'
 import Icon from './Icon'
 import Modal from './Modal'
 import DurationField from './DurationField'
+import { TimeField } from './pickers'
 
 /** One day of a commitment: its own hours, and the saved row's id if it has one. */
 interface DayTime {
@@ -135,21 +136,17 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
       <div className="field">
         <span>{t('timings.window')}</span>
         <div className="time-pair">
-          <input
-            className="input"
-            type="time"
+          <TimeField
             aria-label={t('common.from')}
             value={studyStart}
-            onChange={(e) => setStudyStart(e.target.value)}
+            onChange={(v) => setStudyStart(v)}
             required
           />
           <span className="faint">–</span>
-          <input
-            className="input"
-            type="time"
+          <TimeField
             aria-label={t('common.to')}
             value={studyEnd}
-            onChange={(e) => setStudyEnd(e.target.value)}
+            onChange={(v) => setStudyEnd(v)}
             required
           />
         </div>
@@ -248,20 +245,16 @@ function TimingsForm({ term, initial, onClose }: { term: Term; initial: Busy[]; 
                 {c.days.map((d) => (
                   <div className="commitment-day" key={d.weekday}>
                     <span>{weekdayName(d.weekday, 'short')}</span>
-                    <input
-                      className="input"
-                      type="time"
+                    <TimeField
                       aria-label={`${weekdayName(d.weekday)} · ${t('common.from')}`}
                       value={d.start}
-                      onChange={(e) => setTime(c.key, d.weekday, { start: e.target.value })}
+                      onChange={(v) => setTime(c.key, d.weekday, { start: v })}
                       required
                     />
-                    <input
-                      className="input"
-                      type="time"
+                    <TimeField
                       aria-label={`${weekdayName(d.weekday)} · ${t('common.to')}`}
                       value={d.end}
-                      onChange={(e) => setTime(c.key, d.weekday, { end: e.target.value })}
+                      onChange={(v) => setTime(c.key, d.weekday, { end: v })}
                       required
                     />
                   </div>

@@ -9,6 +9,7 @@ import { mirror } from '../lib/chart'
 import { formatGpa, formatGpaAtLeast, formatNumber, GRADES, SPECIAL_GRADES } from '../lib/format'
 import { useRefresh, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
+import { Select } from '../components/pickers'
 
 export default function Grades() {
   const user = useUser()
@@ -90,7 +91,7 @@ export default function Grades() {
                           </td>
                           <td className="num-col num">{formatNumber(c.credits, 1)}</td>
                           <td className="num-col">
-                            <select
+                            <Select
                               className="select select-grade"
                               value={c.grade ?? ''}
                               aria-label={`${t('grades.gradeCol')} · ${c.name}`}
@@ -100,7 +101,7 @@ export default function Grades() {
                               {[...GRADES[g.scale], ...SPECIAL_GRADES].map((x) => (
                                 <option key={x}>{x}</option>
                               ))}
-                            </select>
+                            </Select>
                           </td>
                           <td className="num-col num faint">
                             {c.grade && c.in_gpa && user.points[c.grade] !== undefined
@@ -201,7 +202,7 @@ function Projection({ data, courses, scale, points }: ProjectionProps) {
             <span>
               <span className="swatch" style={{ background: c.color }} /> {c.code || c.name}
             </span>
-            <select
+            <Select
               className="select select-grade"
               aria-label={`${t('grades.expected')} · ${c.name}`}
               value={expected[c.id] ?? ''}
@@ -211,7 +212,7 @@ function Projection({ data, courses, scale, points }: ProjectionProps) {
               {GRADES[scale].map((g) => (
                 <option key={g}>{g}</option>
               ))}
-            </select>
+            </Select>
           </li>
         ))}
       </ul>
