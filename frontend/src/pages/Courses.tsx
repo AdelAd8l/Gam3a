@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 import PageHeader from '../components/PageHeader'
 import StatusBadge from '../components/StatusBadge'
-import { formatNumber, formatTime, toMinutes, weekOrder, weekdayName } from '../lib/format'
+import { formatNumber, formatTime, toMinutes, weekOrder, weekdayName, whoGives } from '../lib/format'
 import { useCourses, useDialogs, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 
@@ -73,7 +73,7 @@ export default function Courses() {
                     <span className="faint">
                       {t(`kind.${m.kind}`)}
                       {m.location ? ` · ${m.location}` : ''}
-                      {m.ta ? ` · ${t('courses.taShown', { name: m.ta })}` : ''}
+                      {whoGives(m, c.instructor) ? ` · ${t(m.kind === 'lecture' ? 'courses.drShown' : 'courses.taShown', { name: whoGives(m, c.instructor) })}` : ''}
                     </span>
                   </li>
                 ))}

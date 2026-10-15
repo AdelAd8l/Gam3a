@@ -4,7 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import Icon from '../components/Icon'
 import StatusBadge from '../components/StatusBadge'
 import { api, type Assessment, type Course } from '../lib/api'
-import { courseInput, formatDate, formatNumber, formatTime, GRADES, weekOrder, weekdayName } from '../lib/format'
+import { courseInput, formatDate, formatNumber, formatTime, GRADES, weekOrder, weekdayName, whoGives } from '../lib/format'
 import { useDialogs, useRefresh, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
 import { Select } from '../components/pickers'
@@ -118,7 +118,7 @@ function MeetingsLine({ course }: { course: Course }) {
         <span key={i}>
           {weekdayName(m.weekday, 'short')} {formatTime(m.start)} · {t(`kind.${m.kind}`)}
           {m.location ? ` · ${m.location}` : ''}
-          {m.ta ? ` · ${t('courses.taShown', { name: m.ta })}` : ''}
+          {whoGives(m, course.instructor) ? ` · ${t(m.kind === 'lecture' ? 'courses.drShown' : 'courses.taShown', { name: whoGives(m, course.instructor) })}` : ''}
         </span>
       ))}
     </p>

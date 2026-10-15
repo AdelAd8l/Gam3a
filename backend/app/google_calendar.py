@@ -29,7 +29,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from .config import get_settings
-from .models import Assessment, Course, GoogleCalendar, GoogleEvent, GoogleLink, Meeting, Term, User
+from .models import Assessment, Course, GoogleCalendar, GoogleEvent, GoogleLink, Meeting, Term, User, leader
 
 log = logging.getLogger("gam3a.google")
 
@@ -209,6 +209,11 @@ def _first_on_or_after(start: date, weekday: int) -> date:
     return start + timedelta(days=(weekday - start.weekday()) % 7)
 
 
+def _description(c, m) -> str:
+    who = leader(c, m)
+    return f"{c.name}\n{'Dr' if m.kind == 'lecture' else 'TA'}: {who}" if who else c.name
+
+
 def _at(day: date, hhmm: str) -> str:
     h, m = map(int, hhmm.split(":"))
     return datetime.combine(day, time(h, m)).isoformat()
@@ -283,7 +288,7 @@ def desired(db: Session, user: User, link: GoogleLink) -> Wanted:
                 {
                     "summary": f"{c.code or c.name} · {KIND_NAMES.get(m.kind, m.kind)}",
                     "location": m.location,
-                    "description": f"{c.name}\nTA: {m.ta}" if m.ta else c.name,
+                    "description": _description(c, m),
                     "start": {"dateTime": _at(day, m.start), "timeZone": tz},
                     "end": {"dateTime": _at(day, m.end), "timeZone": tz},
                     "recurrence": [until],

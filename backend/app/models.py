@@ -114,6 +114,11 @@ class Meeting(Base):
     ta: Mapped[str] = mapped_column(String(80), default="")  # who gives the section / lab
 
 
+def leader(course: "Course", meeting: "Meeting") -> str:
+    """Who gives a class: the TA of a section / lab; the doctor of a lecture (the course's main one unless set)."""
+    return meeting.ta or (course.instructor if meeting.kind == "lecture" else "")
+
+
 class Busy(Base):
     """A personal weekly commitment the study planner must work around (job, gym, commute…)."""
 

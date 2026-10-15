@@ -7,7 +7,7 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..database import get_db
-from ..models import Assessment, Busy, Course, Meeting, Term, User
+from ..models import Assessment, Busy, Course, Meeting, Term, User, leader
 from ..planner import CourseNeed, Slot, find_conflicts, plan_week, to_hhmm, to_minutes
 from ..schemas import Block, Conflict, PlanOut
 from ..security import current_user
@@ -33,7 +33,7 @@ def build_plan(db: Session, term: Term, user: User) -> PlanOut:
         c = courses[m.course_id]
         blocks.append(
             Block(kind="class", weekday=m.weekday, start=m.start, end=m.end, course_id=c.id, ref_id=m.id,
-                  title=c.code or c.name, detail=" · ".join(x for x in (m.kind, m.location, m.ta) if x))
+                  title=c.code or c.name, detail=" · ".join(x for x in (m.kind, m.location, leader(c, m)) if x))
         )
         tagged.append(("class", len(blocks) - 1, Slot(m.weekday, to_minutes(m.start), to_minutes(m.end))))
     for b in busy:

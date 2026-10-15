@@ -29,6 +29,10 @@ export function daysBetween(a: string, b: string) {
 export const weekdayOf = (iso: string) => (parseISO(iso).getDay() + 6) % 7
 
 /** The 7 weekdays in the user's order, e.g. Saturday first. */
+/** Who gives a class: the TA of a section / lab; the doctor of a lecture (the course's main one unless set per class). */
+export const whoGives = (m: { ta: string; kind: string }, instructor: string) =>
+  m.ta || (m.kind === 'lecture' ? instructor : '')
+
 export const weekOrder = (weekStart: number) => Array.from({ length: 7 }, (_, i) => (weekStart + i) % 7)
 
 export function weekdayName(weekday: number, style: 'long' | 'short' = 'long') {

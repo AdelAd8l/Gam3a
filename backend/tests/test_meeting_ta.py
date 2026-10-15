@@ -43,3 +43,16 @@ def test_old_databases_get_the_column(tmp_path):
     assert "ta" in {c["name"] for c in inspect(engine).get_columns("meetings")}
     with engine.connect() as conn:
         assert conn.execute(text("SELECT ta FROM meetings")).scalar() == ""
+
+
+def test_lecture_doctor_is_saved_and_defaults_to_the_courses_main_one(client, term):
+    from app.models import Course, Meeting, leader
+
+    lecture = {**LAB, "kind": "lecture", "ta": "Dr. Hany"}
+    course = add_course(client, term["id"], meetings=[lecture])
+    assert course["meetings"][0]["ta"] == "Dr. Hany"
+
+    c = Course(instructor="Prof. Main")
+    assert leader(c, Meeting(kind="lecture", ta="")) == "Prof. Main"
+    assert leader(c, Meeting(kind="lecture", ta="Dr. Hany")) == "Dr. Hany"
+    assert leader(c, Meeting(kind="lab", ta="")) == ""  # a lab never borrows the doctor's name

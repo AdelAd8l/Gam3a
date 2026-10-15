@@ -75,7 +75,7 @@ export default function CourseDialog({ open, course, onClose }: Props) {
             end,
             kind,
             location: location.trim(),
-            ta: kind === 'lecture' ? '' : ta.trim(),
+            ta: ta.trim(),
           })),
         },
         course?.id,
@@ -207,16 +207,14 @@ export default function CourseDialog({ open, course, onClose }: Props) {
               >
                 <Icon name="x" size={16} />
               </button>
-              {m.kind !== 'lecture' && (
-                <input
-                  className="input meeting-ta"
-                  placeholder={t('courses.ta')}
-                  aria-label={t('courses.ta')}
-                  value={m.ta}
-                  maxLength={80}
-                  onChange={(e) => updateMeeting(i, { ta: e.target.value })}
-                />
-              )}
+              <input
+                className="input meeting-ta"
+                placeholder={m.kind === 'lecture' ? instructor.trim() || t('courses.dr') : t('courses.ta')}
+                aria-label={m.kind === 'lecture' ? t('courses.dr') : t('courses.ta')}
+                value={m.ta}
+                maxLength={80}
+                onChange={(e) => updateMeeting(i, { ta: e.target.value })}
+              />
             </div>
           ))}
           <button type="button" className="btn btn-sm add-row" onClick={addMeeting}>

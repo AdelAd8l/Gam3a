@@ -26,7 +26,7 @@ from sqlalchemy.orm import Session
 
 from .config import get_settings
 from .database import SessionLocal
-from .models import AppKey, Assessment, Course, Meeting, PushSubscription, SentNotice, Term, User
+from .models import AppKey, Assessment, Course, Meeting, PushSubscription, SentNotice, Term, User, leader
 
 log = logging.getLogger("gam3a.notify")
 
@@ -110,7 +110,7 @@ def class_message(course: Course, meeting: Meeting, minutes: int, lang: str) -> 
     kind = KINDS[lang].get(meeting.kind, meeting.kind)
     name = course.code or course.name
     title = f"{name} · {kind} {_in(minutes, lang)}" if lang == "en" else f"{kind} {name} {_in(minutes, lang)}"
-    parts = (f"{meeting.start}–{meeting.end}", meeting.location, meeting.ta, course.name if course.code else "")
+    parts = (f"{meeting.start}–{meeting.end}", meeting.location, leader(course, meeting), course.name if course.code else "")
     body = " · ".join(x for x in parts if x)
     return {"title": title, "body": body, "url": "/", "tag": f"class-{meeting.id}"}
 
@@ -121,7 +121,7 @@ def class_now_message(course: Course, meeting: Meeting, lang: str) -> dict:
     name = course.code or course.name
     title = f"{name} · {kind} now" if lang == "en" else f"{kind} {name} الآن"
     until = f"until {meeting.end}" if lang == "en" else f"حتى {meeting.end}"
-    body = " · ".join(x for x in (until, meeting.location, meeting.ta, course.name if course.code else "") if x)
+    body = " · ".join(x for x in (until, meeting.location, leader(course, meeting), course.name if course.code else "") if x)
     return {"title": title, "body": body, "url": "/", "tag": f"class-now-{meeting.id}"}
 
 
