@@ -10,7 +10,8 @@
 import type { QueryClient, QueryKey } from '@tanstack/react-query'
 import { useSyncExternalStore } from 'react'
 
-import type { Assessment, Busy, Course, Progress, Term } from './api'
+import type { Assessment, Busy, Course, Progress, Term, User } from './api'
+import { refreshDerived, resolveUser } from './derive'
 import { ApiError, NetworkError, send } from './http'
 
 interface Entry {
@@ -107,6 +108,7 @@ export async function write<T>(method: string, path: string, body?: unknown): Pr
   save([...load(), entry])
   const result = standIn(entry)
   applyToCache(entry, result)
+  if (client) refreshDerived(client) // progress, GPA / CGPA and the study plan follow the change
   void syncNow()
   return result as T
 }
@@ -116,6 +118,8 @@ function standIn(entry: Entry): unknown {
   if (entry.method === 'DELETE') return undefined
   const body = (entry.body ?? {}) as Record<string, unknown>
   const [, resource, rawId] = entry.path.split('/')
+  // a settings change: the signed-in user with the new values (grading tables resolved like the server does)
+  if (resource === 'auth') return resolveUser(client?.getQueryData<User>(['me']) as User, body as Partial<User>)
   const id = entry.tempId ?? Number(rawId)
   const previous = findCached(resource, id)
   if (resource === 'courses' && entry.path.endsWith('/grade')) return { ...previous, grade: body.grade ?? null }
@@ -201,6 +205,10 @@ function belongs(resource: string, key: QueryKey, item: Item): boolean {
 function applyToCache(entry: Entry, result: unknown) {
   if (!client) return
   const [, resource, rawId] = entry.path.split('/')
+  if (resource === 'auth') {
+    client.setQueryData(['me'], result)
+    return
+  }
   const id = entry.tempId ?? Number(rawId)
   for (const [key, data] of client.getQueriesData<unknown>({ queryKey: [resource] })) {
     if (Array.isArray(data)) {

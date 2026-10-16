@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
@@ -8,6 +9,8 @@ import PageHeader from '../components/PageHeader'
 import TimingsDialog from '../components/TimingsDialog'
 import WeekGrid from '../components/WeekGrid'
 import { api, type Block } from '../lib/api'
+import { ask } from '../lib/confirm'
+import { calendarFromDevice, saveText } from '../lib/ics'
 import { formatNumber, todayISO, weekOrder, weekdayName, weekdayOf } from '../lib/format'
 import { useCourses, useDialogs, usePlan, useTerm, useUser } from '../lib/hooks'
 import { t } from '../lib/i18n'
@@ -151,6 +154,7 @@ function Legend({ withStudy }: { withStudy: boolean }) {
 
 function ExportDialog({ open, termId, onClose }: { open: boolean; termId: number; onClose: () => void }) {
   const [study, setStudy] = useState(false)
+  const qc = useQueryClient()
   return (
     <Modal title={t('schedule.export')} open={open} onClose={onClose} width={420}>
       <div className="stack">
@@ -170,7 +174,20 @@ function ExportDialog({ open, termId, onClose }: { open: boolean; termId: number
           <button className="btn" onClick={onClose}>
             {t('common.close')}
           </button>
-          <a className="btn btn-primary" href={api.calendarUrl(termId, study)} download onClick={onClose}>
+          <a
+            className="btn btn-primary"
+            href={api.calendarUrl(termId, study)}
+            download
+            onClick={(e) => {
+              if (navigator.onLine) return onClose()
+              // no connection: build the file from what this device has saved
+              e.preventDefault()
+              const file = calendarFromDevice(qc, termId, study)
+              if (file) saveText(file.text, file.name, 'text/calendar')
+              else void ask({ title: t('schedule.export'), body: t('schedule.exportOffline'), confirm: t('common.close'), danger: false })
+              onClose()
+            }}
+          >
             <Icon name="download" size={16} /> {t('schedule.download')}
           </a>
         </footer>

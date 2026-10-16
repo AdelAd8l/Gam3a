@@ -192,8 +192,10 @@ async function request<T>(method: string, path: string, body?: unknown, query?: 
     if (pendingCount() && navigator.onLine) await syncNow()
     return send<T>(method, path, body, query)
   }
-  // Account and notification calls need the server's answer; they never go to the outbox.
-  if (['/auth/', '/push/', '/admin/', '/google/'].some((p) => path.startsWith(p))) return send<T>(method, path, body, query)
+  // Sign-in, password, notification, admin and Google calls need the server's answer; they never go to the outbox.
+  // Profile and settings changes (PATCH /auth/me) do: they are shown at once and sent later.
+  const profile = method === 'PATCH' && path === '/auth/me'
+  if (!profile && ['/auth/', '/push/', '/admin/', '/google/'].some((p) => path.startsWith(p))) return send<T>(method, path, body, query)
   return write<T>(method, path, body)
 }
 

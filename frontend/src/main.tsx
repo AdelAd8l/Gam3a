@@ -22,6 +22,7 @@ import ConfirmHost from './components/ConfirmHost'
 import { ApiError, type User } from './lib/api'
 import { NetworkError } from './lib/http'
 import { startOfflineSync } from './lib/offline'
+import { startWarmup } from './lib/warm'
 import { adoptUser, dropPrivateData } from './lib/wipe'
 
 const WEEK = 7 * 24 * 60 * 60 * 1000
@@ -75,6 +76,7 @@ onlineManager.setOnline(navigator.onLine)
 
 const persister = createSyncStoragePersister({ storage: window.localStorage, key: 'gam3a.cache', throttleTime: 500 })
 startOfflineSync(queryClient)
+startWarmup(queryClient)
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => void navigator.serviceWorker.register('/sw.js'))

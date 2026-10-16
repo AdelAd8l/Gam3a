@@ -106,6 +106,11 @@ def test_plan_blocks_conflicts_and_calendar(client, term):
     assert plan["study_minutes"] == (3 + 2) * 2 * 60
     assert {b["title"] for b in plan["blocks"] if b["kind"] == "study"} == {"CSE221", "MTH203"}
     assert len(plan["conflicts"]) == 1
+    # the pair really is two things that overlap (the list is sorted after the pair is found)
+    clash = plan["conflicts"][0]
+    assert {clash["a"]["kind"], clash["b"]["kind"]} == {"class"}
+    assert clash["a"]["weekday"] == clash["b"]["weekday"]
+    assert clash["a"]["start"] < clash["b"]["end"] and clash["b"]["start"] < clash["a"]["end"]
     # Saturday-first week: blocks come in week order
     order = [5, 6, 0, 1, 2, 3, 4]
     days = [order.index(b["weekday"]) for b in plan["blocks"]]

@@ -57,8 +57,9 @@ def build_plan(db: Session, term: Term, user: User) -> PlanOut:
                             course_id=c.id, title=c.code or c.name))
 
     order = week_order(user)
-    blocks.sort(key=lambda b: (order.index(b.weekday), b.start))
+    # the pairs point into the list by position, so they are taken before it is sorted
     conflicts = [Conflict(a=blocks[i], b=blocks[j]) for _, i, _, j in find_conflicts(tagged)]
+    blocks.sort(key=lambda b: (order.index(b.weekday), b.start))
     minutes = lambda kind: sum(to_minutes(b.end) - to_minutes(b.start) for b in blocks if b.kind == kind)  # noqa: E731
     return PlanOut(
         term_id=term.id,
