@@ -13,6 +13,7 @@ interface Props {
 
 export function DeadlineRow({ item, course, onToggle, onOpen }: Props) {
   const overdue = !item.done && item.due_date !== null && item.due_date < todayISO()
+  const steps = item.subtasks ?? []
   return (
     <li className={`deadline${item.done ? ' is-done' : ''}${overdue ? ' is-overdue' : ''}`}>
       <button
@@ -31,9 +32,10 @@ export function DeadlineRow({ item, course, onToggle, onOpen }: Props) {
           <span className="swatch" style={{ background: course?.color ?? 'var(--ink-3)' }} />
           <span>{course ? course.code || course.name : t('deadlines.noCourse')}</span>
           <span className="faint">· {t(`akind.${item.kind}`)}</span>
-          {item.subtasks.length > 0 && (
+          {/* tasks saved on the device before steps existed have no list yet */}
+          {steps.length > 0 && (
             <span className="faint num">
-              · {t('task.progressShort', { done: item.subtasks.filter((s) => s.done).length, total: item.subtasks.length })}
+              · {t('task.progressShort', { done: steps.filter((s) => s.done).length, total: steps.length })}
             </span>
           )}
           {item.weight !== null && <span className="faint">· {t('deadlines.weight', { n: formatNumber(item.weight, 1) })}</span>}
