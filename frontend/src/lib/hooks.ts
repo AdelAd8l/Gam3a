@@ -48,6 +48,8 @@ export function useAssessment(id: number | undefined) {
     queryKey: ['assessments', 'one', id],
     queryFn: () => api.assessment(id!),
     enabled: id !== undefined && id > 0,
+    // the saved copy opens it at once, but it counts as old: the server is asked too (a phone may have changed it)
+    initialDataUpdatedAt: 0,
     initialData: () => {
       if (id === undefined) return undefined
       for (const [, data] of qc.getQueriesData<Assessment[] | Assessment>({ queryKey: ['assessments'] })) {

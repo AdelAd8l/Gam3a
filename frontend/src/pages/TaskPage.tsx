@@ -38,6 +38,10 @@ export default function TaskPage() {
   const taskId = id ? Number(id) : undefined
   const existing = useAssessment(taskId)
   if (taskId !== undefined && existing.isPending && !existing.data) return <div className="page page-narrow" aria-busy="true" />
+  // the form starts from what it is given, so wait for the server's answer rather than show an old copy
+  if (existing.data && existing.dataUpdatedAt === 0 && existing.isFetching && navigator.onLine) {
+    return <div className="page page-narrow" aria-busy="true" />
+  }
   if (taskId !== undefined && !existing.data) {
     return (
       <div className="page page-narrow">

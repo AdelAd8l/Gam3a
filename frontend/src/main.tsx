@@ -21,7 +21,7 @@ import App from './App'
 import ConfirmHost from './components/ConfirmHost'
 import { ApiError, type User } from './lib/api'
 import { NetworkError } from './lib/http'
-import { startOfflineSync } from './lib/offline'
+import { pendingCount, startOfflineSync } from './lib/offline'
 import { startWarmup } from './lib/warm'
 import { adoptUser, dropPrivateData } from './lib/wipe'
 
@@ -41,9 +41,21 @@ const signedOut = (error: Error) => {
 function checkSignIn() {
   if (navigator.onLine && queryClient.getQueryData(['me'])) void queryClient.refetchQueries({ queryKey: ['me'] })
 }
+// Coming back to the app (or its window), pick up what was changed on another device. Not while changes
+// of this device are still waiting to be sent: the refresh would show the old values over them.
+let lastRefresh = 0
+function refreshFromServer() {
+  if (!navigator.onLine || pendingCount() > 0 || Date.now() - lastRefresh < 30_000) return
+  lastRefresh = Date.now()
+  void queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== 'me' })
+}
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') checkSignIn()
+  if (document.visibilityState === 'visible') {
+    checkSignIn()
+    refreshFromServer()
+  }
 })
+window.addEventListener('focus', refreshFromServer)
 
 const queryClient: QueryClient = new QueryClient({
   queryCache: new QueryCache({ onError: signedOut }),
