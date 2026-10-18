@@ -41,6 +41,25 @@ export function useCourses(termId: number | undefined) {
   return { ...query, byId }
 }
 
+/** One task for its own page. A task made offline (negative id) only exists in the saved lists. */
+export function useAssessment(id: number | undefined) {
+  const qc = useQueryClient()
+  return useQuery({
+    queryKey: ['assessments', 'one', id],
+    queryFn: () => api.assessment(id!),
+    enabled: id !== undefined && id > 0,
+    initialData: () => {
+      if (id === undefined) return undefined
+      for (const [, data] of qc.getQueriesData<Assessment[] | Assessment>({ queryKey: ['assessments'] })) {
+        const list = Array.isArray(data) ? data : data ? [data] : []
+        const hit = list.find((a) => a?.id === id)
+        if (hit) return hit
+      }
+      return undefined
+    },
+  })
+}
+
 export const usePlan = (termId: number | undefined) =>
   useQuery({ queryKey: ['plan', termId], queryFn: () => api.plan(termId!), enabled: termId !== undefined })
 

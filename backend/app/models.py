@@ -156,6 +156,9 @@ class Assessment(Base):
     points_earned: Mapped[float | None] = mapped_column(Float, nullable=True)
     points_max: Mapped[float | None] = mapped_column(Float, nullable=True)
     done: Mapped[bool] = mapped_column(Boolean, default=False)
+    # The steps that make up the task (e.g. intro, topic 1, topic 2, conclusion), kept as JSON text:
+    # [{"title": "...", "done": false}, ...]. They live with the task, so one save writes both.
+    subtasks: Mapped[str] = mapped_column(Text, default="[]", server_default="[]")
 
 
 class PushSubscription(Base):

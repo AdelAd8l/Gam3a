@@ -1,5 +1,6 @@
 """Request/response models."""
 
+import json
 from datetime import date
 from typing import Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -269,6 +270,24 @@ class BusyOut(ORM):
 # ---- assessments ---------------------------------------------------------------
 
 
+class Subtask(BaseModel):
+    """One step of a task, e.g. "Intro" for a presentation."""
+
+    title: str = Field(min_length=1, max_length=100)
+    done: bool = False
+
+    @field_validator("title")
+    @classmethod
+    def trim(cls, v: str) -> str:
+        v = v.strip()
+        if not v:
+            raise ValueError("A step needs a title")
+        return v
+
+
+MAX_SUBTASKS = 40
+
+
 class AssessmentIn(BaseModel):
     course_id: int | None = None  # None: a task with no course
     title: str = Field(min_length=1, max_length=100)
@@ -280,6 +299,7 @@ class AssessmentIn(BaseModel):
     points_earned: float | None = Field(default=None, ge=0)
     points_max: float | None = Field(default=None, gt=0, le=10000)
     done: bool = False
+    subtasks: list[Subtask] = Field(default_factory=list, max_length=MAX_SUBTASKS)
 
     @model_validator(mode="after")
     def derive_score(self):
@@ -308,6 +328,18 @@ class AssessmentOut(ORM):
     points_earned: float | None
     points_max: float | None
     done: bool
+    subtasks: list[Subtask] = []
+
+    @field_validator("subtasks", mode="before")
+    @classmethod
+    def parse_subtasks(cls, v):
+        """Stored as JSON text; an unreadable value means no steps rather than an error."""
+        if isinstance(v, str):
+            try:
+                v = json.loads(v or "[]")
+            except ValueError:
+                return []
+        return v if isinstance(v, list) else []
 
 
 # ---- plan & grades -------------------------------------------------------------

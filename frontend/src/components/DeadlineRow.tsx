@@ -31,6 +31,11 @@ export function DeadlineRow({ item, course, onToggle, onOpen }: Props) {
           <span className="swatch" style={{ background: course?.color ?? 'var(--ink-3)' }} />
           <span>{course ? course.code || course.name : t('deadlines.noCourse')}</span>
           <span className="faint">· {t(`akind.${item.kind}`)}</span>
+          {item.subtasks.length > 0 && (
+            <span className="faint num">
+              · {t('task.progressShort', { done: item.subtasks.filter((s) => s.done).length, total: item.subtasks.length })}
+            </span>
+          )}
           {item.weight !== null && <span className="faint">· {t('deadlines.weight', { n: formatNumber(item.weight, 1) })}</span>}
           {item.points_earned !== null && item.points_max !== null ? (
             <span className="faint num">

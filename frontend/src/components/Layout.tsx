@@ -1,6 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 
 import { api, type Assessment, type Course, type Term, type User } from '../lib/api'
 import { pickDefaultTerm } from '../lib/format'
@@ -8,7 +8,6 @@ import { DialogContext, TermContext, useTerms } from '../lib/hooks'
 import { t, useLang, type Key } from '../lib/i18n'
 import { browserTimeZone, pushState, refreshPush } from '../lib/push'
 import { useSignOut } from '../lib/signout'
-import AssessmentDialog from './AssessmentDialog'
 import CourseDialog from './CourseDialog'
 import Icon, { type IconName } from './Icon'
 import Logo from './Logo'
@@ -63,15 +62,16 @@ export default function Layout({ user }: { user: User }) {
   // Dialogs are remounted (new key) on every open so their state always starts fresh.
   const [courseDlg, setCourseDlg] = useState<Open<Course>>(null)
   const [termDlg, setTermDlg] = useState<Open<Term>>(null)
-  const [assessDlg, setAssessDlg] = useState<(Open<Assessment> & { courseId?: number }) | null>(null)
+  const navigate = useNavigate()
   const dialogs = useMemo(
     () => ({
       editCourse: (item?: Course) => setCourseDlg({ item, key: Date.now() }),
       editTerm: (item?: Term) => setTermDlg({ item, key: Date.now() }),
+      // a task has its own page (details, and the steps that make it up)
       editAssessment: (item?: Assessment, preset?: { course_id?: number }) =>
-        setAssessDlg({ item, courseId: preset?.course_id, key: Date.now() }),
+        navigate(item ? `/deadlines/${item.id}` : `/deadlines/new${preset?.course_id ? `?course=${preset.course_id}` : ''}`),
     }),
-    [],
+    [navigate],
   )
 
   // "D" anywhere (outside a field) adds a deadline; e.code works on an Arabic keyboard too.
@@ -193,13 +193,6 @@ export default function Layout({ user }: { user: User }) {
           term={termDlg?.item}
           onClose={() => setTermDlg(null)}
           onCreated={(created) => setTermId(created.id)}
-        />
-        <AssessmentDialog
-          key={`a${assessDlg?.key ?? 0}`}
-          open={!!assessDlg}
-          item={assessDlg?.item}
-          courseId={assessDlg?.courseId}
-          onClose={() => setAssessDlg(null)}
         />
       </DialogContext.Provider>
     </TermContext.Provider>

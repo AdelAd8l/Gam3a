@@ -33,6 +33,7 @@ COLUMNS = [
     ("google_links", "deadline_reminder", "INTEGER NOT NULL DEFAULT 1440"),
     ("assessments", "points_earned", "FLOAT"),
     ("assessments", "points_max", "FLOAT"),
+    ("assessments", "subtasks", "TEXT NOT NULL DEFAULT '[]'"),
 ]
 
 

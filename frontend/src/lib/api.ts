@@ -122,6 +122,11 @@ export interface Busy {
   color: string
 }
 export type BusyInput = Omit<Busy, 'id'>
+/** One step of a task, e.g. "Intro" for a presentation. */
+export interface Subtask {
+  title: string
+  done: boolean
+}
 export interface Assessment {
   id: number
   /** null: a task with no course (everyday or non-university), shown in every term */
@@ -135,6 +140,7 @@ export interface Assessment {
   points_earned: number | null
   points_max: number | null
   done: boolean
+  subtasks: Subtask[]
 }
 export type AssessmentInput = Omit<Assessment, 'id'>
 export interface Block {
@@ -231,6 +237,7 @@ export const api = {
   deleteBusy: (id: number) => request<void>('DELETE', `/busy/${id}`),
 
   assessments: (query: Query) => request<Assessment[]>('GET', '/assessments', undefined, query),
+  assessment: (id: number) => request<Assessment>('GET', `/assessments/${id}`),
   saveAssessment: (data: AssessmentInput, id?: number) =>
     id ? request<Assessment>('PUT', `/assessments/${id}`, data) : request<Assessment>('POST', '/assessments', data),
   deleteAssessment: (id: number) => request<void>('DELETE', `/assessments/${id}`),

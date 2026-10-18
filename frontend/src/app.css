@@ -3740,3 +3740,121 @@ code {
   height: 100%;
   background: var(--c);
 }
+
+/* ---- task page: details and steps ------------------------------------------------------------- */
+
+.task-h {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.task-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.task-steps-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.task-hint {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.step-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--track);
+  overflow: hidden;
+}
+
+.step-bar span {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s ease;
+}
+
+.step-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.step .step-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.step.is-done .step-title {
+  color: var(--ink-3);
+  text-decoration: line-through;
+}
+
+.step-actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.icon-btn:hover:not(:disabled) {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.step-add {
+  display: flex;
+  gap: 8px;
+}
+
+.step-add .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.step-templates {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.task-actions {
+  padding-bottom: 24px;
+}
+
+@media (max-width: 520px) {
+  .step-add {
+    flex-direction: column;
+  }
+}

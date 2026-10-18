@@ -1,3 +1,4 @@
+import json
 from datetime import date
 
 from fastapi import APIRouter, Depends, status
@@ -12,6 +13,13 @@ from ..security import current_user
 from .deps import get_owned
 
 router = APIRouter(prefix="/api/assessments", tags=["deadlines"])
+
+
+def _fields(data: AssessmentIn) -> dict:
+    """The columns to store: the steps go in as JSON text."""
+    values = data.model_dump(exclude={"subtasks"})
+    values["subtasks"] = json.dumps([s.model_dump() for s in data.subtasks], ensure_ascii=False)
+    return values
 
 
 @router.get("", response_model=list[AssessmentOut])
@@ -42,12 +50,17 @@ def list_assessments(
     return db.scalars(stmt).all()
 
 
+@router.get("/{item_id}", response_model=AssessmentOut)
+def get_assessment(item_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return get_owned(db, Assessment, item_id, user)
+
+
 @router.post("", response_model=AssessmentOut, status_code=status.HTTP_201_CREATED)
 def create_assessment(data: AssessmentIn, user: User = Depends(current_user), db: Session = Depends(get_db)):
     if data.course_id is not None:
         get_owned(db, Course, data.course_id, user)
     ensure_room(db, Assessment, user.id, MAX_ASSESSMENTS, "tasks and deadlines")
-    item = Assessment(user_id=user.id, **data.model_dump())
+    item = Assessment(user_id=user.id, **_fields(data))
     item.title = item.title.strip()
     db.add(item)
     db.commit()
@@ -59,7 +72,7 @@ def update_assessment(item_id: int, data: AssessmentIn, user: User = Depends(cur
     item = get_owned(db, Assessment, item_id, user)
     if data.course_id is not None:
         get_owned(db, Course, data.course_id, user)
-    for field, value in data.model_dump().items():
+    for field, value in _fields(data).items():
         setattr(item, field, value)
     item.title = item.title.strip()
     db.commit()

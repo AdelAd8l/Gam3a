@@ -10,6 +10,7 @@ import Privacy from './pages/Privacy'
 import CourseDetail from './pages/CourseDetail'
 import Courses from './pages/Courses'
 import Deadlines from './pages/Deadlines'
+import TaskPage from './pages/TaskPage'
 import Grades from './pages/Grades'
 import Insights from './pages/Insights'
 import Schedule from './pages/Schedule'
@@ -48,6 +49,8 @@ export default function App() {
         <Route path="courses" element={<Courses />} />
         <Route path="courses/:id" element={<CourseDetail />} />
         <Route path="deadlines" element={<Deadlines />} />
+        <Route path="deadlines/new" element={<TaskPage />} />
+        <Route path="deadlines/:id" element={<TaskPage />} />
         <Route path="grades" element={<Grades />} />
         <Route path="insights" element={<Insights />} />
         <Route path="terms" element={<Terms />} />
